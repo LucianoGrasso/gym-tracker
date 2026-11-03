@@ -5,6 +5,7 @@ use App\Http\Controllers\ExerciseHistoryController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\RoutineController;
 use App\Http\Controllers\RoutineDayController;
+use App\Http\Controllers\RoutineDayExerciseController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -39,5 +40,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/routine-days/{routineDay}', [RoutineDayController::class, 'update']);
         Route::delete('/routine-days/{routineDay}', [RoutineDayController::class, 'destroy']);
         Route::post('/routine-days/{routineDay}/duplicate', [RoutineDayController::class, 'duplicate']);
+        Route::post('/routine-days/{routineDay}/exercises', [RoutineDayExerciseController::class, 'store']);
+        Route::put('/routine-days/{routineDay}/exercises/reorder', [RoutineDayExerciseController::class, 'reorder']);
+    });
+    Route::middleware('can:manage,routineDayExercise')->group(function () {
+        Route::put('/routine-day-exercises/{routineDayExercise}', [RoutineDayExerciseController::class, 'update']);
+        Route::delete('/routine-day-exercises/{routineDayExercise}', [RoutineDayExerciseController::class, 'destroy']);
     });
 });
