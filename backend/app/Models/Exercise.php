@@ -39,4 +39,9 @@ class Exercise extends Model
     {
         return $this->hasMany(WorkoutExercise::class);
     }
+
+    public function routineDayExercises(): HasMany
+    {
+        return $this->hasMany(RoutineDayExercise::class);
+    }
 }
