@@ -60,7 +60,7 @@ gym-tracker/
 
 ### 4.2 Mismo origen
 
-- **Desarrollo:** el dev server de Angular hace proxy de `/api/*`, `/login`, `/logout` y `/sanctum/*` a Laravel. Frontend y API comparten origen.
+- **Desarrollo:** el dev server de Angular hace proxy de `/api/*`, `/auth/*` y `/sanctum/*` a Laravel. Frontend y API comparten origen.
 - **Producción:** CloudFront sirve `/*` desde S3 y `/api/*` (más rutas de auth) desde API Gateway → Lambda.
 - Consecuencia: Sanctum en modo SPA con cookies de sesión + CSRF funciona igual en ambos entornos.
 
@@ -79,7 +79,7 @@ Route → Controller (delgado) → FormRequest (validación) → Service (lógic
 ### 4.4 Autenticación
 
 - Solo login/logout; **sin registro público**. El usuario se crea por seeder o comando `php artisan app:create-user`.
-- Rutas: `GET /sanctum/csrf-cookie`, `POST /login`, `POST /logout`, `GET /api/user`.
+- Rutas: `GET /sanctum/csrf-cookie`, `POST /auth/login`, `POST /auth/logout`, `GET /api/user`. Se usa el prefijo `/auth` para no chocar con la ruta `/login` de Angular (página de login) en el proxy y en CloudFront.
 
 ## 5. Modelo de datos
 
@@ -113,7 +113,7 @@ Reglas:
 
 ## 6. API REST
 
-Todas las rutas `/api/*` requieren autenticación (`auth:sanctum`) y se restringen al usuario.
+Todas las rutas `/api/*` requieren autenticación (`auth:sanctum`) y se restringen al usuario, excepto `GET /api/health`, que es pública para poder despertar la BD antes del login.
 
 ```
 Salud      GET    /api/health                              consulta mínima a la BD (despierta Aurora)
@@ -256,7 +256,7 @@ Visualización (fase 4, ECharts): líneas para 1RM/mejor peso/volumen/reps total
 
 ```
 gym.dominio ──► CloudFront ──┬── /*                            → S3 (Angular build)
-                             └── /api/*, /login, /logout,
+                             └── /api/*, /auth/*,
                                  /sanctum/*                    → API Gateway HTTP API → Lambda (Laravel + Bref)
                                                                                          │ (VPC, subredes privadas, sin NAT)
                                                                                          ▼
@@ -274,8 +274,8 @@ EventBridge Scheduler (lun, mar, jue, vie 18:45 America/Santiago) → Lambda "wa
 
 | Fase | Contenido | Criterio de cierre |
 |---|---|---|
-| 1. Base | Monorepo, Laravel + Sanctum, Angular + Tailwind + spartan/ui, Docker Compose, migraciones, modelos, policies, seeders (ejercicios y rutina de la sección 12), login, `CLAUDE.md` actualizado | Login funciona en el navegador vía proxy; migraciones + seeders corren; tests en verde |
-| 2. Ejercicios y rutinas | CRUD con búsqueda y filtro, archivar/restaurar, rutinas con días, reordenar (CDK), duplicar día, rutina activa, pantalla "Hoy" | Crear ejercicio y rutina y ver "hoy te toca…" |
+| 1. Base | Monorepo, Laravel + Sanctum, Angular + Tailwind + spartan/ui, Docker Compose, migraciones, modelos con scope por usuario, seeders (ejercicios y rutina de la sección 12), login, `CLAUDE.md` actualizado | Login funciona en el navegador vía proxy; migraciones + seeders corren; tests en verde |
+| 2. Ejercicios y rutinas | Policies, CRUD con búsqueda y filtro, archivar/restaurar, rutinas con días, reordenar (CDK), duplicar día, rutina activa, pantalla "Hoy" | Crear ejercicio y rutina y ver "hoy te toca…" |
 | 3. Registro | Flujo de sesión, series, stepper, temporizador, "última vez", Bilbo, editar/borrar pasado, **guardado local + outbox** | Sesión completa en el celular, también sin conexión |
 | 4. Estadísticas | Servicios con tests; endpoints; gráficos ECharts | 1RM, volumen y reps totales por ejercicio en el tiempo |
 | 5. Producción | Importar CSV/Excel (`Fecha, Ejercicio, Serie, Peso (kg), Reps, 1RM estimado, Notas`, ofreciendo crear ejercicios faltantes), exportar CSV, PWA instalable, infraestructura AWS y CI/CD | App desplegada y accesible en AWS |
