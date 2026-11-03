@@ -5,8 +5,17 @@ import { AuthService } from './auth.service';
 export const authGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
+  const toLogin = router.createUrlTree(['/login']);
 
-  const user = auth.user() === undefined ? await auth.loadUser() : auth.user();
+  if (auth.user() !== undefined) {
+    return auth.user() ? true : toLogin;
+  }
 
-  return user ? true : router.createUrlTree(['/login']);
+  try {
+    return (await auth.loadUser()) ? true : toLogin;
+  } catch {
+    // API caída o respuesta inválida (p. ej. la BD despertando): mejor mostrar el login,
+    // que informa el error al intentar entrar, que dejar la navegación colgada en negro.
+    return toLogin;
+  }
 };

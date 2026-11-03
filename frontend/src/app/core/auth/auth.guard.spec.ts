@@ -33,6 +33,13 @@ describe('authGuard', () => {
     expect(auth.loadUser).toHaveBeenCalledOnce();
   });
 
+  it('redirects to /login instead of failing when the API errors', async () => {
+    const { auth, run } = setup(undefined);
+    auth.loadUser.mockRejectedValue(new Error('Http failure during parsing'));
+    const result = await run();
+    expect(TestBed.inject(Router).serializeUrl(result as UrlTree)).toBe('/login');
+  });
+
   it('redirects guests to /login', async () => {
     const { run } = setup(null);
     const result = await run();
