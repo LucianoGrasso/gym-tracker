@@ -15,7 +15,15 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'hoy' },
       { path: 'hoy', title: 'Hoy · GymTracker', loadComponent: () => import('./features/today/today-page').then((m) => m.TodayPage) },
-      { path: 'rutinas', title: 'Rutinas · GymTracker', loadComponent: () => import('./features/routines/routines-page').then((m) => m.RoutinesPage) },
+      {
+        path: 'rutinas',
+        title: 'Rutinas · GymTracker',
+        children: [
+          { path: '', loadComponent: () => import('./features/routines/routines-page').then((m) => m.RoutinesPage) },
+          { path: ':id', loadComponent: () => import('./features/routines/routine-detail-page').then((m) => m.RoutineDetailPage) },
+          { path: ':id/dias/:dayId', loadComponent: () => import('./features/routines/routine-day-page').then((m) => m.RoutineDayPage) },
+        ],
+      },
       {
         path: 'ejercicios',
         title: 'Ejercicios · GymTracker',
