@@ -1,20 +1,22 @@
 import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
-import { provideHttpClient, withFetch, withXsrfConfiguration } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors, withXsrfConfiguration } from '@angular/common/http';
 import localeEsCl from '@angular/common/locales/es-CL';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { routes } from './app.routes';
+import { csrfRetryInterceptor } from './core/auth/csrf-retry.interceptor';
 
 registerLocaleData(localeEsCl);
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
+    provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(
       withFetch(),
       // Angular solo envía X-XSRF-TOKEN en peticiones mutantes a URLs relativas (nuestro caso, vía proxy/CloudFront).
       withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' }),
+      withInterceptors([csrfRetryInterceptor]),
     ),
     { provide: LOCALE_ID, useValue: 'es-CL' },
   ],

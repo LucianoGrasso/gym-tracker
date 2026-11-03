@@ -15,7 +15,9 @@
       "@spartan-ng/helm/button": ["./libs/ui/button/src/index.ts"],
       "@spartan-ng/helm/utils": ["./libs/ui/utils/src/index.ts"],
       "@spartan-ng/helm/input": ["./libs/ui/input/src/index.ts"],
-      "@spartan-ng/helm/label": ["./libs/ui/label/src/index.ts"]
+      "@spartan-ng/helm/label": ["./libs/ui/label/src/index.ts"],
+      "@spartan-ng/helm/textarea": ["./libs/ui/textarea/src/index.ts"],
+      "@spartan-ng/helm/badge": ["./libs/ui/badge/src/index.ts"]
     }
   },
   "angularCompilerOptions": {
