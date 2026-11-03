@@ -6,6 +6,7 @@ use App\Http\Controllers\HealthController;
 use App\Http\Controllers\RoutineController;
 use App\Http\Controllers\RoutineDayController;
 use App\Http\Controllers\RoutineDayExerciseController;
+use App\Http\Controllers\TodayController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,7 @@ Route::get('/health', HealthController::class);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn (Request $request) => new UserResource($request->user()));
+    Route::get('/today', TodayController::class);
 
     Route::get('/exercises', [ExerciseController::class, 'index']);
     Route::post('/exercises', [ExerciseController::class, 'store']);
