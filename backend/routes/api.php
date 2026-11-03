@@ -3,6 +3,8 @@
 use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\ExerciseHistoryController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\RoutineController;
+use App\Http\Controllers\RoutineDayController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -21,5 +23,21 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/exercises/{exercise}/archive', [ExerciseController::class, 'archive']);
         Route::post('/exercises/{exercise}/restore', [ExerciseController::class, 'restore']);
         Route::get('/exercises/{exercise}/history', ExerciseHistoryController::class);
+    });
+
+    Route::get('/routines', [RoutineController::class, 'index']);
+    Route::post('/routines', [RoutineController::class, 'store']);
+    Route::middleware('can:manage,routine')->group(function () {
+        Route::get('/routines/{routine}', [RoutineController::class, 'show']);
+        Route::put('/routines/{routine}', [RoutineController::class, 'update']);
+        Route::delete('/routines/{routine}', [RoutineController::class, 'destroy']);
+        Route::post('/routines/{routine}/activate', [RoutineController::class, 'activate']);
+        Route::post('/routines/{routine}/days', [RoutineDayController::class, 'store']);
+        Route::put('/routines/{routine}/days/reorder', [RoutineDayController::class, 'reorder']);
+    });
+    Route::middleware('can:manage,routineDay')->group(function () {
+        Route::put('/routine-days/{routineDay}', [RoutineDayController::class, 'update']);
+        Route::delete('/routine-days/{routineDay}', [RoutineDayController::class, 'destroy']);
+        Route::post('/routine-days/{routineDay}/duplicate', [RoutineDayController::class, 'duplicate']);
     });
 });
