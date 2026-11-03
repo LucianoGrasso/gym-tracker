@@ -16,7 +16,16 @@ export const routes: Routes = [
       { path: '', pathMatch: 'full', redirectTo: 'hoy' },
       { path: 'hoy', title: 'Hoy · GymTracker', loadComponent: () => import('./features/today/today-page').then((m) => m.TodayPage) },
       { path: 'rutinas', title: 'Rutinas · GymTracker', loadComponent: () => import('./features/routines/routines-page').then((m) => m.RoutinesPage) },
-      { path: 'ejercicios', title: 'Ejercicios · GymTracker', loadComponent: () => import('./features/exercises/exercises-page').then((m) => m.ExercisesPage) },
+      {
+        path: 'ejercicios',
+        title: 'Ejercicios · GymTracker',
+        children: [
+          { path: '', loadComponent: () => import('./features/exercises/exercises-page').then((m) => m.ExercisesPage) },
+          { path: 'nuevo', loadComponent: () => import('./features/exercises/exercise-form-page').then((m) => m.ExerciseFormPage) },
+          { path: ':id', loadComponent: () => import('./features/exercises/exercise-detail-page').then((m) => m.ExerciseDetailPage) },
+          { path: ':id/editar', loadComponent: () => import('./features/exercises/exercise-form-page').then((m) => m.ExerciseFormPage) },
+        ],
+      },
       { path: 'estadisticas', title: 'Estadísticas · GymTracker', loadComponent: () => import('./features/stats/stats-page').then((m) => m.StatsPage) },
     ],
   },
