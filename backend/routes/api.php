@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ExerciseController;
+use App\Http\Controllers\ExerciseHistoryController;
 use App\Http\Controllers\HealthController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
@@ -19,5 +20,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/exercises/{exercise}', [ExerciseController::class, 'destroy']);
         Route::post('/exercises/{exercise}/archive', [ExerciseController::class, 'archive']);
         Route::post('/exercises/{exercise}/restore', [ExerciseController::class, 'restore']);
+        Route::get('/exercises/{exercise}/history', ExerciseHistoryController::class);
     });
 });
