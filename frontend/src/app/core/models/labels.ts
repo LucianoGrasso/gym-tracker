@@ -1,4 +1,5 @@
 import type { Equipment, MuscleGroup, SetType } from './exercise';
+import type { StatsPeriod } from './stats';
 
 export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {
   chest: 'Pecho',
@@ -42,3 +43,13 @@ export const MUSCLE_GROUPS = Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[];
 export const EQUIPMENTS = Object.keys(EQUIPMENT_LABELS) as Equipment[];
 export const SET_TYPES = Object.keys(SET_TYPE_LABELS) as SetType[];
 export const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7];
+
+export const PERIOD_LABELS: Record<StatsPeriod, string> = {
+  '4w': '4 sem',
+  '12w': '12 sem',
+  '6m': '6 meses',
+  '1y': '1 año',
+  all: 'Todo',
+};
+
+export const STATS_PERIODS = Object.keys(PERIOD_LABELS) as StatsPeriod[];
