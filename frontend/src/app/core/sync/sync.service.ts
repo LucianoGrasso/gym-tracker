@@ -25,7 +25,15 @@ export class SyncService {
   private started = false;
 
   async enqueue(method: OutboxOp['method'], url: string, body: unknown = null): Promise<void> {
-    await this.db.outbox.add({ method, url, body, createdAt: Date.now(), attempts: 0, failed: false, lastError: null });
+    await this.db.outbox.add({
+      method,
+      url,
+      body,
+      createdAt: Date.now(),
+      attempts: 0,
+      failed: false,
+      lastError: null,
+    });
     await this.refreshCounts();
     void this.flush();
   }
@@ -87,11 +95,18 @@ export class SyncService {
           return;
         }
         if (status >= 400 && status < 500 && !RETRYABLE_4XX.has(status)) {
-          await this.db.outbox.update(op.seq!, { failed: true, attempts: op.attempts + 1, lastError: apiErrorMessage(error) });
+          await this.db.outbox.update(op.seq!, {
+            failed: true,
+            attempts: op.attempts + 1,
+            lastError: apiErrorMessage(error),
+          });
           await this.refreshCounts();
           continue;
         }
-        await this.db.outbox.update(op.seq!, { attempts: op.attempts + 1, lastError: apiErrorMessage(error) });
+        await this.db.outbox.update(op.seq!, {
+          attempts: op.attempts + 1,
+          lastError: apiErrorMessage(error),
+        });
         this.state.set(status === 0 ? 'offline' : 'error');
         this.scheduleRetry();
         return;
