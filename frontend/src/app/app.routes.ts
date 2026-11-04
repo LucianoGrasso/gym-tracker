@@ -34,6 +34,11 @@ export const routes: Routes = [
           { path: ':id/editar', loadComponent: () => import('./features/exercises/exercise-form-page').then((m) => m.ExerciseFormPage) },
         ],
       },
+      {
+        path: 'entrenamiento/:id',
+        title: 'Entrenamiento · GymTracker',
+        loadComponent: () => import('./features/workout/workout-page').then((m) => m.WorkoutPage),
+      },
       { path: 'estadisticas', title: 'Estadísticas · GymTracker', loadComponent: () => import('./features/stats/stats-page').then((m) => m.StatsPage) },
     ],
   },

@@ -14,12 +14,18 @@ import { syncLabel } from '../../core/sync/sync-label';
       [class.text-amber-300]="!ok()"
       aria-live="polite"
     >
-      <span class="size-2 rounded-full" [class.bg-primary]="ok()" [class.bg-amber-400]="!ok()"></span>
+      <span
+        class="size-2 rounded-full"
+        [class.bg-primary]="ok()"
+        [class.bg-amber-400]="!ok()"
+      ></span>
       {{ label() }}
       @if (sync.state() === 'auth') {
         <a routerLink="/login" class="font-semibold underline">Entrar</a>
       } @else if (sync.failed() > 0) {
-        <button type="button" class="font-semibold underline" (click)="sync.retryFailed()">Reintentar</button>
+        <button type="button" class="font-semibold underline" (click)="sync.retryFailed()">
+          Reintentar
+        </button>
       }
     </p>
   `,
