@@ -13,7 +13,7 @@ import { AuthService } from '../../core/auth/auth.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <main class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4">
-      <h1 class="mb-8 text-3xl font-bold">GymTracker</h1>
+      <h1 class="mb-8 page-title text-5xl">Gym<span class="text-primary">Tracker</span></h1>
       <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4" novalidate>
         <div class="flex flex-col gap-2">
           <label hlmLabel for="email">Correo</label>

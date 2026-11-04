@@ -17,7 +17,7 @@ import { filterExercises } from './filter-exercises';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="mb-4 flex items-center justify-between">
-      <h1 class="text-2xl font-bold">Ejercicios</h1>
+      <h1 class="page-title">Ejercicios</h1>
       <a hlmBtn routerLink="/ejercicios/nuevo" class="h-12 px-4"><ng-icon name="lucidePlus" /> Nuevo</a>
     </header>
 
@@ -43,7 +43,7 @@ import { filterExercises } from './filter-exercises';
     } @else if (exercises.error()) {
       <p class="text-destructive">No se pudieron cargar los ejercicios.</p>
     } @else {
-      <ul class="divide-y divide-border rounded-lg border border-border">
+      <ul class="divide-y divide-border card">
         @for (exercise of visible(); track exercise.id) {
           <li>
             <a [routerLink]="['/ejercicios', exercise.id]" class="flex min-h-14 items-center justify-between gap-3 px-4 py-3">

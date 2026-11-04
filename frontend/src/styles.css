@@ -5,19 +5,30 @@
 
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
 
+/* Tipografía empaquetada (no CDN): la app debe verse igual sin conexión. */
+@import '@fontsource/barlow/400.css';
+@import '@fontsource/barlow/500.css';
+@import '@fontsource/barlow/600.css';
+@import '@fontsource/barlow-condensed/500.css';
+@import '@fontsource/barlow-condensed/600.css';
+@import '@fontsource/barlow-condensed/700.css';
+
+/* `font-display`: números y títulos condensados (dirección visual "Pista"). */
+@theme {
+  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+}
+
 :root {
   color-scheme: light;
 
-  --font-sans:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
-    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-sans: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
+  --radius: 0.875rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -49,37 +60,38 @@
 :root.dark {
   color-scheme: dark;
 
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.985 0 0);
-  --sidebar-primary-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
+  /* Dirección visual "Pista": casi negro verdoso, acento lima. */
+  --chart-1: #c8f135;
+  --chart-2: #7cf2c4;
+  --chart-3: #ffd23f;
+  --chart-4: #8b9cff;
+  --chart-5: #ff8a5b;
+  --background: #0e0f0c;
+  --foreground: #f2f4ec;
+  --card: #181a15;
+  --card-foreground: #f2f4ec;
+  --popover: #181a15;
+  --popover-foreground: #f2f4ec;
+  --primary: #c8f135;
+  --primary-foreground: #0e0f0c;
+  --secondary: #20231c;
+  --secondary-foreground: #f2f4ec;
+  --muted: #20231c;
+  --muted-foreground: #9ba192;
+  --accent: #20231c;
+  --accent-foreground: #f2f4ec;
+  --destructive: #ff6b5b;
+  --border: #2a2d25;
+  --input: #2a2d25;
+  --ring: #c8f135;
+  --sidebar: #181a15;
+  --sidebar-foreground: #f2f4ec;
+  --sidebar-primary: #c8f135;
+  --sidebar-primary-foreground: #0e0f0c;
+  --sidebar-accent: #20231c;
+  --sidebar-accent-foreground: #f2f4ec;
+  --sidebar-border: #2a2d25;
+  --sidebar-ring: #c8f135;
 }
 
 @layer base {
@@ -98,4 +110,25 @@ html.dark {
 body {
   @apply antialiased;
   min-height: 100dvh;
+}
+
+@layer components {
+  /* Título de pantalla: condensado, en mayúsculas. */
+  .page-title {
+    @apply font-display text-3xl leading-none font-bold tracking-wide uppercase;
+  }
+  .section-title {
+    @apply font-display text-xl font-semibold tracking-wide uppercase;
+  }
+  /* Rótulo pequeño sobre un título o un campo. */
+  .eyebrow {
+    @apply text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase;
+  }
+  .card {
+    @apply rounded-2xl border border-border bg-card;
+  }
+  /* Pesos, reps y tiempos: columnas alineadas. */
+  .num {
+    @apply font-display tabular-nums;
+  }
 }

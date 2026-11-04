@@ -40,7 +40,7 @@ import { RoutineExerciseForm } from './routine-exercise-form';
 
       <ul cdkDropList (cdkDropListDropped)="drop($event)" class="mb-6 flex flex-col gap-2">
         @for (item of d.exercises; track item.id) {
-          <li cdkDrag class="rounded-lg border border-border bg-background p-2">
+          <li cdkDrag class="card p-2">
             @if (editingId() === item.id) {
               <p class="mb-3 px-2 font-medium">{{ item.exercise.name }}</p>
               <app-routine-exercise-form [initial]="item" submitLabel="Guardar"
@@ -72,8 +72,8 @@ import { RoutineExerciseForm } from './routine-exercise-form';
       </ul>
 
       @if (adding()) {
-        <section class="rounded-lg border border-border p-4">
-          <h2 class="mb-3 font-semibold">Agregar ejercicio</h2>
+        <section class="card p-4">
+          <h2 class="mb-3 section-title">Agregar ejercicio</h2>
           <app-routine-exercise-form [exercises]="availableExercises()" submitLabel="Agregar"
             (saved)="add(d, $event)" (cancelled)="adding.set(false)" />
         </section>

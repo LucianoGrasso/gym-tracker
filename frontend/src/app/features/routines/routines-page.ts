@@ -12,7 +12,7 @@ import type { Routine } from '../../core/models/routine';
   imports: [RouterLink, HlmBadge, HlmButton, HlmInput],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <h1 class="mb-4 text-2xl font-bold">Rutinas</h1>
+    <h1 class="mb-4 page-title">Rutinas</h1>
 
     <form class="mb-6 flex gap-2" (submit)="$event.preventDefault(); create()">
       <input hlmInput class="h-12 flex-1 text-base" placeholder="Nombre de la nueva rutina"
@@ -25,7 +25,7 @@ import type { Routine } from '../../core/models/routine';
     @if (routines.value(); as list) {
       <ul class="flex flex-col gap-3">
         @for (routine of list; track routine.id) {
-          <li class="rounded-lg border border-border p-4">
+          <li class="card p-4">
             <a [routerLink]="['/rutinas', routine.id]" class="block">
               <span class="flex items-center gap-2 text-lg font-semibold">
                 {{ routine.name }}

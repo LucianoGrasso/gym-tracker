@@ -14,24 +14,24 @@ import type { TodayExercise } from '../../core/models/routine';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (today.value(); as t) {
-      <p class="text-sm text-muted-foreground">{{ weekdayLabels[t.weekday] }} {{ formatDate(t.date) }}</p>
+      <p class="eyebrow">{{ weekdayLabels[t.weekday] }} {{ formatDate(t.date) }}</p>
 
       @if (!t.routine) {
-        <h1 class="mt-1 mb-4 text-2xl font-bold">No tienes una rutina activa</h1>
+        <h1 class="mt-1 mb-4 page-title">No tienes una rutina activa</h1>
         <a hlmBtn routerLink="/rutinas" class="h-12 w-full">Ir a rutinas</a>
       } @else if (t.day; as day) {
-        <h1 class="mt-1 mb-4 text-2xl font-bold">{{ day.name }}</h1>
+        <h1 class="mt-1 mb-4 page-title">{{ day.name }}</h1>
 
         <ol class="mb-6 flex flex-col gap-3">
           @for (item of day.exercises; track item.id) {
-            <li class="rounded-lg border border-border p-4">
+            <li class="card p-4">
               <div class="flex items-start justify-between gap-2">
-                <span class="font-semibold">{{ item.exercise.name }}</span>
+                <span class="text-lg font-semibold">{{ item.exercise.name }}</span>
                 @if (item.default_set_type !== 'normal') {
                   <span hlmBadge variant="secondary">{{ setTypeLabels[item.default_set_type] }}</span>
                 }
               </div>
-              <p class="text-sm text-muted-foreground">{{ formatTargets(item) }}</p>
+              <p class="num text-lg text-muted-foreground">{{ formatTargets(item) }}</p>
               @if (item.target_text) { <p class="text-sm text-muted-foreground">{{ item.target_text }}</p> }
               <p class="mt-2 text-sm">{{ lastTime(item) }}</p>
             </li>
@@ -40,15 +40,15 @@ import type { TodayExercise } from '../../core/models/routine';
           }
         </ol>
 
-        <button hlmBtn class="h-14 w-full text-base" disabled>Empezar entrenamiento</button>
+        <button hlmBtn class="num h-14 w-full text-xl font-bold tracking-wide uppercase" disabled>Empezar entrenamiento</button>
         <p class="mt-2 text-center text-xs text-muted-foreground">El registro de series llega en la fase 3.</p>
       } @else {
-        <h1 class="mt-1 mb-2 text-2xl font-bold">Hoy es día de descanso</h1>
+        <h1 class="mt-1 mb-2 page-title">Hoy es día de descanso</h1>
         <p class="mb-4 text-muted-foreground">Días de {{ t.routine.name }}:</p>
         <ul class="flex flex-col gap-2">
           @for (d of t.days; track d.id) {
             <li>
-              <a [routerLink]="['/rutinas', t.routine.id, 'dias', d.id]" class="block rounded-lg border border-border p-4">
+              <a [routerLink]="['/rutinas', t.routine.id, 'dias', d.id]" class="block card p-4">
                 <span class="font-medium">{{ d.name }}</span>
                 @if (d.weekday) { <span class="block text-sm text-muted-foreground">{{ weekdayLabels[d.weekday] }}</span> }
               </a>

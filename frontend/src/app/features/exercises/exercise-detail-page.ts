@@ -17,7 +17,7 @@ import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, SET_TYPE_LABELS } from '../../co
 
     @if (exercise.value(); as ex) {
       <header class="mb-4">
-        <h1 class="text-2xl font-bold">{{ ex.name }}</h1>
+        <h1 class="page-title">{{ ex.name }}</h1>
         <p class="text-muted-foreground">
           {{ muscleLabels[ex.muscle_group] }} · {{ equipmentLabels[ex.equipment] }}
           @if (ex.is_unilateral) { · Unilateral }
@@ -41,9 +41,9 @@ import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, SET_TYPE_LABELS } from '../../co
 
       @if (error()) { <p class="mb-4 text-sm text-destructive" role="alert">{{ error() }}</p> }
 
-      <h2 class="mb-2 text-lg font-semibold">Historial</h2>
+      <h2 class="mb-2 section-title">Historial</h2>
       @for (session of sessions(); track session.workout_id) {
-        <section class="mb-3 rounded-lg border border-border p-3">
+        <section class="mb-3 card p-3">
           <h3 class="mb-1 font-medium">{{ formatDate(session.date) }}</h3>
           <ul class="text-sm">
             @for (set of session.sets; track set.id) {

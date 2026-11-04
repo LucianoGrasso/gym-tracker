@@ -16,7 +16,7 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
   imports: [ReactiveFormsModule, RouterLink, HlmButton, HlmInput, HlmLabel, HlmTextarea],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <h1 class="mb-6 text-2xl font-bold">{{ id() ? 'Editar ejercicio' : 'Nuevo ejercicio' }}</h1>
+    <h1 class="mb-6 page-title">{{ id() ? 'Editar ejercicio' : 'Nuevo ejercicio' }}</h1>
 
     <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-5" novalidate>
       <div class="flex flex-col gap-2">

@@ -38,10 +38,10 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
 
       @if (error()) { <p class="mb-4 text-sm text-destructive" role="alert">{{ error() }}</p> }
 
-      <h2 class="mb-2 text-lg font-semibold">Días</h2>
+      <h2 class="mb-2 section-title">Días</h2>
       <ul cdkDropList (cdkDropListDropped)="dropDay($event)" class="mb-6 flex flex-col gap-2">
         @for (day of r.days; track day.id) {
-          <li cdkDrag class="flex items-center gap-2 rounded-lg border border-border bg-background p-2">
+          <li cdkDrag class="flex items-center gap-2 card p-2">
             <button cdkDragHandle type="button" class="flex size-12 shrink-0 cursor-grab items-center justify-center text-muted-foreground" aria-label="Arrastrar para reordenar">
               <ng-icon name="lucideGripVertical" size="20" />
             </button>
@@ -63,7 +63,7 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
         }
       </ul>
 
-      <h2 class="mb-2 text-lg font-semibold">Agregar día</h2>
+      <h2 class="mb-2 section-title">Agregar día</h2>
       <form [formGroup]="dayForm" (ngSubmit)="addDay(r)" class="mb-8 flex flex-col gap-3" novalidate>
         <div class="flex flex-col gap-2">
           <label hlmLabel for="day_name">Nombre</label>
