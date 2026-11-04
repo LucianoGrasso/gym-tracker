@@ -1,5 +1,8 @@
 <?php
 
+use App\Enums\MuscleGroup;
+use App\Enums\SetType;
+use App\Services\Stats\SetRow;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +50,25 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * SetRow de prueba: press de banca, 100 kg × 5, serie normal, sin peso corporal.
+ *
+ * @param  array<string, mixed>  $overrides
+ */
+function statsSet(array $overrides = []): SetRow
+{
+    return new SetRow(...array_merge([
+        'workoutId' => 'w1',
+        'date' => '2026-11-02',
+        'exerciseId' => 1,
+        'exerciseName' => 'Press de banca',
+        'muscleGroup' => MuscleGroup::Chest,
+        'usesBodyweight' => false,
+        'setType' => SetType::Normal,
+        'weightKg' => 100.0,
+        'reps' => 5,
+        'bodyweightKg' => null,
+    ], $overrides));
 }
