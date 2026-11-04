@@ -28,6 +28,9 @@ import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, SET_TYPE_LABELS } from '../../co
       </header>
 
       <div class="mb-6 grid grid-cols-2 gap-3">
+        @if (ex.has_history) {
+          <a hlmBtn class="col-span-2 h-12" [routerLink]="['/estadisticas/ejercicios', ex.id]">Ver estadísticas</a>
+        }
         <a hlmBtn variant="outline" class="h-12" [routerLink]="['/ejercicios', ex.id, 'editar']">Editar</a>
         @if (ex.archived_at) {
           <button hlmBtn variant="outline" class="h-12" (click)="toggleArchive(ex)">Restaurar</button>
