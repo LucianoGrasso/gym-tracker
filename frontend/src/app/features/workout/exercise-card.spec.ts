@@ -6,18 +6,43 @@ import { WorkoutSessionService } from '../../core/workout/workout-session.servic
 import { ExerciseCard } from './exercise-card';
 
 const item: SessionExercise = {
-  id: 'we1', exercise: { id: 1, name: 'Press de banca', uses_bodyweight: false, is_unilateral: false }, position: 0,
-  target_sets: 1, target_reps_min: null, target_reps_max: null, target_text: '~30 reps', default_set_type: 'bilbo',
-  rest_seconds: 180, notes: null,
+  id: 'we1',
+  exercise: { id: 1, name: 'Press de banca', uses_bodyweight: false, is_unilateral: false },
+  position: 0,
+  target_sets: 1,
+  target_reps_min: null,
+  target_reps_max: null,
+  target_text: '~30 reps',
+  default_set_type: 'bilbo',
+  rest_seconds: 180,
+  notes: null,
   last_performance: {
-    workout_id: 'w0', date: '2026-10-26',
-    sets: [{ id: 's0', set_number: 1, set_type: 'bilbo', weight_kg: 42.5, reps: 31, side: 'both', rir: null, pain_level: null, notes: null }],
+    workout_id: 'w0',
+    date: '2026-10-26',
+    sets: [
+      {
+        id: 's0',
+        set_number: 1,
+        set_type: 'bilbo',
+        weight_kg: 42.5,
+        reps: 31,
+        side: 'both',
+        rir: null,
+        pain_level: null,
+        notes: null,
+      },
+    ],
   },
   sets: [],
 };
 
 async function render(finished = false) {
-  const sessions = { addSet: vi.fn().mockResolvedValue(undefined), updateSet: vi.fn(), deleteSet: vi.fn(), removeExercise: vi.fn() };
+  const sessions = {
+    addSet: vi.fn().mockResolvedValue(undefined),
+    updateSet: vi.fn(),
+    deleteSet: vi.fn(),
+    removeExercise: vi.fn(),
+  };
   const timer = { start: vi.fn() };
   TestBed.configureTestingModule({
     providers: [
@@ -51,7 +76,13 @@ describe('ExerciseCard', () => {
     await fixture.whenStable();
 
     expect(sessions.addSet).toHaveBeenCalledWith('we1', {
-      weight_kg: 45, reps: 31, set_type: 'bilbo', side: 'both', rir: null, pain_level: null, notes: null,
+      weight_kg: 45,
+      reps: 31,
+      set_type: 'bilbo',
+      side: 'both',
+      rir: null,
+      pain_level: null,
+      notes: null,
     });
     expect(timer.start).toHaveBeenCalledWith(180);
   });

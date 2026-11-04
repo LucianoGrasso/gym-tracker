@@ -1,7 +1,10 @@
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { describe, expect, it } from 'vitest';
+import { Router, provideRouter } from '@angular/router';
+import { describe, expect, it, vi } from 'vitest';
 import { TodayApi } from '../../core/api/today-api';
+import { LOCAL_DB, LocalDb } from '../../core/local-db/local-db';
+import { WorkoutSessionService } from '../../core/workout/workout-session.service';
 import type { Today } from '../../core/models/routine';
 import { TodayPage } from './today-page';
 
@@ -29,18 +32,32 @@ const today: Today = {
   days: [{ id: 10, name: 'Lunes – Pecho (Bilbo)', weekday: 1 }],
 };
 
-async function render(data: Today) {
+@Component({ template: '' })
+class Blank {}
+
+async function render(data: Today, activeId: string | null = null) {
+  const sessions = {
+    activeId: signal(activeId),
+    startFromDay: vi.fn().mockResolvedValue({ id: 'new-session' }),
+    startFree: vi.fn().mockResolvedValue({ id: 'free-session' }),
+  };
   TestBed.configureTestingModule({
-    providers: [provideRouter([]), { provide: TodayApi, useValue: { get: () => Promise.resolve(data) } }],
+    providers: [
+      provideRouter([{ path: 'entrenamiento/:id', component: Blank }]),
+      { provide: TodayApi, useValue: { get: () => Promise.resolve(data) } },
+      { provide: WorkoutSessionService, useValue: sessions },
+      { provide: LOCAL_DB, useValue: new LocalDb(`test-${crypto.randomUUID()}`) },
+    ],
   });
   const fixture = TestBed.createComponent(TodayPage);
   await fixture.whenStable();
-  return fixture.nativeElement.textContent as string;
+  const el = fixture.nativeElement as HTMLElement;
+  return { fixture, sessions, el, text: el.textContent as string };
 }
 
 describe('TodayPage', () => {
   it('shows the day, its targets and the last performance', async () => {
-    const text = await render(today);
+    const { text } = await render(today);
     expect(text).toContain('Lunes 02/11/2026');
     expect(text).toContain('Lunes – Pecho (Bilbo)');
     expect(text).toContain('Press de banca');
@@ -49,13 +66,31 @@ describe('TodayPage', () => {
   });
 
   it('shows a rest day with the available days', async () => {
-    const text = await render({ ...today, weekday: 3, date: '2026-11-04', day: null });
+    const { text } = await render({ ...today, weekday: 3, date: '2026-11-04', day: null });
     expect(text).toContain('Hoy es día de descanso');
     expect(text).toContain('Lunes – Pecho (Bilbo)');
   });
 
   it('invites to activate a routine when there is none', async () => {
-    const text = await render({ ...today, routine: null, day: null, days: [] });
+    const { text } = await render({ ...today, routine: null, day: null, days: [] });
     expect(text).toContain('No tienes una rutina activa');
+  });
+
+  it('starts a workout from the day', async () => {
+    const { el, fixture, sessions } = await render(today);
+    const start = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Empezar entrenamiento'))!;
+    expect(start.disabled).toBe(false);
+
+    start.click();
+    await fixture.whenStable();
+
+    expect(sessions.startFromDay).toHaveBeenCalledWith(today);
+    expect(TestBed.inject(Router).url).toBe('/entrenamiento/new-session');
+  });
+
+  it('offers to continue the active workout', async () => {
+    const { el } = await render(today, 'abc');
+    const link = Array.from(el.querySelectorAll('a')).find((a) => a.textContent?.includes('Continuar entrenamiento'))!;
+    expect(link.getAttribute('href')).toBe('/entrenamiento/abc');
   });
 });

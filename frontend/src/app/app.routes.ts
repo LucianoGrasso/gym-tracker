@@ -39,6 +39,11 @@ export const routes: Routes = [
         title: 'Entrenamiento · GymTracker',
         loadComponent: () => import('./features/workout/workout-page').then((m) => m.WorkoutPage),
       },
+      {
+        path: 'entrenamientos',
+        title: 'Entrenamientos · GymTracker',
+        loadComponent: () => import('./features/workout/workouts-page').then((m) => m.WorkoutsPage),
+      },
       { path: 'estadisticas', title: 'Estadísticas · GymTracker', loadComponent: () => import('./features/stats/stats-page').then((m) => m.StatsPage) },
     ],
   },

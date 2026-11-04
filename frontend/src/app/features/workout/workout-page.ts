@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronLeft } from '@ng-icons/lucide';
@@ -38,7 +46,9 @@ function isPending(item: SessionExercise): boolean {
           <ng-icon name="lucideChevronLeft" size="22" />
         </a>
         <div class="min-w-0">
-          <p class="eyebrow">{{ formatDate(s.date) }} · {{ isActive() ? 'En curso' : 'Terminada' }}</p>
+          <p class="eyebrow">
+            {{ formatDate(s.date) }} · {{ isActive() ? 'En curso' : 'Terminada' }}
+          </p>
           <h1 class="page-title truncate">{{ s.name }}</h1>
         </div>
       </header>
@@ -49,7 +59,11 @@ function isPending(item: SessionExercise): boolean {
 
       <div class="flex flex-col gap-3">
         @for (item of s.exercises; track item.id) {
-          <app-exercise-card [item]="item" [finished]="!isActive()" [current]="item.id === currentId()" />
+          <app-exercise-card
+            [item]="item"
+            [finished]="!isActive()"
+            [current]="item.id === currentId()"
+          />
         } @empty {
           <p class="text-muted-foreground">Agrega un ejercicio para empezar.</p>
         }
@@ -65,26 +79,50 @@ function isPending(item: SessionExercise): boolean {
             </select>
             <button hlmBtn class="h-12" (click)="addExercise(+pick.value)">Agregar</button>
           </div>
-          <button type="button" class="mt-2 text-sm text-muted-foreground underline" (click)="picking.set(false)">Cancelar</button>
+          <button
+            type="button"
+            class="mt-2 text-sm text-muted-foreground underline"
+            (click)="picking.set(false)"
+          >
+            Cancelar
+          </button>
         } @else {
-          <button hlmBtn variant="outline" class="h-12 w-full" (click)="startPicking()">Agregar ejercicio</button>
+          <button hlmBtn variant="outline" class="h-12 w-full" (click)="startPicking()">
+            Agregar ejercicio
+          </button>
         }
       </section>
 
       @if (isActive()) {
         <section class="card mt-8 p-4">
-          <label class="eyebrow mb-3 flex flex-col gap-1.5">Peso corporal hoy (opcional, kg)
-            <input hlmInput class="num h-12 text-xl normal-case tracking-normal" inputmode="decimal" #bw placeholder="Ej.: 78,5" />
+          <label class="eyebrow mb-3 flex flex-col gap-1.5"
+            >Peso corporal hoy (opcional, kg)
+            <input
+              hlmInput
+              class="num h-12 text-xl normal-case tracking-normal"
+              inputmode="decimal"
+              #bw
+              placeholder="Ej.: 78,5"
+            />
           </label>
-          <button hlmBtn variant="outline" class="h-14 w-full text-base font-semibold" (click)="finish(bw.value)">
+          <button
+            hlmBtn
+            variant="outline"
+            class="h-14 w-full text-base font-semibold"
+            (click)="finish(bw.value)"
+          >
             Terminar entrenamiento
           </button>
         </section>
       }
 
       <div class="mt-6 flex flex-col gap-2">
-        <a hlmBtn variant="ghost" class="h-12" routerLink="/entrenamientos">Ver entrenamientos anteriores</a>
-        <button hlmBtn variant="ghost" class="h-12 text-destructive" (click)="remove()">Eliminar entrenamiento</button>
+        <a hlmBtn variant="ghost" class="h-12" routerLink="/entrenamientos"
+          >Ver entrenamientos anteriores</a
+        >
+        <button hlmBtn variant="ghost" class="h-12 text-destructive" (click)="remove()">
+          Eliminar entrenamiento
+        </button>
       </div>
     } @else if (error()) {
       <p class="text-destructive">{{ error() }}</p>

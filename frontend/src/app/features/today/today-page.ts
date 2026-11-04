@@ -1,12 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject, resource } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject, resource, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { TodayApi } from '../../core/api/today-api';
 import { formatDate } from '../../core/format/format';
 import { formatBestSet, formatTargets } from '../../core/format/training';
+import { cachedFetch } from '../../core/local-db/cached-fetch';
+import { LOCAL_DB } from '../../core/local-db/local-db';
 import { SET_TYPE_LABELS, WEEKDAY_LABELS } from '../../core/models/labels';
-import type { TodayExercise } from '../../core/models/routine';
+import type { Today, TodayExercise } from '../../core/models/routine';
+import { WorkoutSessionService } from '../../core/workout/workout-session.service';
 
 @Component({
   selector: 'app-today-page',
@@ -19,6 +22,11 @@ import type { TodayExercise } from '../../core/models/routine';
       @if (!t.routine) {
         <h1 class="mt-1 mb-4 page-title">No tienes una rutina activa</h1>
         <a hlmBtn routerLink="/rutinas" class="h-12 w-full">Ir a rutinas</a>
+        @if (sessions.activeId(); as activeId) {
+          <a hlmBtn class="mt-4 num h-14 w-full text-xl font-bold tracking-wide uppercase" [routerLink]="['/entrenamiento', activeId]">Continuar entrenamiento</a>
+        } @else {
+          <button hlmBtn variant="outline" class="mt-4 h-12 w-full" [disabled]="starting()" (click)="startFree(t)">Sesión libre</button>
+        }
       } @else if (t.day; as day) {
         <h1 class="mt-1 mb-4 page-title">{{ day.name }}</h1>
 
@@ -40,8 +48,11 @@ import type { TodayExercise } from '../../core/models/routine';
           }
         </ol>
 
-        <button hlmBtn class="num h-14 w-full text-xl font-bold tracking-wide uppercase" disabled>Empezar entrenamiento</button>
-        <p class="mt-2 text-center text-xs text-muted-foreground">El registro de series llega en la fase 3.</p>
+        @if (sessions.activeId(); as activeId) {
+          <a hlmBtn class="num h-14 w-full text-xl font-bold tracking-wide uppercase" [routerLink]="['/entrenamiento', activeId]">Continuar entrenamiento</a>
+        } @else {
+          <button hlmBtn class="num h-14 w-full text-xl font-bold tracking-wide uppercase" [disabled]="starting()" (click)="start(t)">Empezar entrenamiento</button>
+        }
       } @else {
         <h1 class="mt-1 mb-2 page-title">Hoy es día de descanso</h1>
         <p class="mb-4 text-muted-foreground">Días de {{ t.routine.name }}:</p>
@@ -55,7 +66,14 @@ import type { TodayExercise } from '../../core/models/routine';
             </li>
           }
         </ul>
+        @if (sessions.activeId(); as activeId) {
+          <a hlmBtn class="mt-4 num h-14 w-full text-xl font-bold tracking-wide uppercase" [routerLink]="['/entrenamiento', activeId]">Continuar entrenamiento</a>
+        } @else {
+          <button hlmBtn variant="outline" class="mt-4 h-12 w-full" [disabled]="starting()" (click)="startFree(t)">Sesión libre</button>
+        }
       }
+
+      <a routerLink="/entrenamientos" class="mt-6 block text-center text-sm text-muted-foreground underline">Ver entrenamientos anteriores</a>
     } @else if (today.error()) {
       <p class="text-destructive">No se pudo cargar el día de hoy.</p>
       <button hlmBtn variant="outline" class="mt-3 h-12 w-full" (click)="today.reload()">Reintentar</button>
@@ -66,13 +84,38 @@ import type { TodayExercise } from '../../core/models/routine';
 })
 export class TodayPage {
   private readonly api = inject(TodayApi);
+  private readonly db = inject(LOCAL_DB);
+  private readonly router = inject(Router);
+  protected readonly sessions = inject(WorkoutSessionService);
+  protected readonly starting = signal(false);
 
   protected readonly weekdayLabels = WEEKDAY_LABELS;
   protected readonly setTypeLabels = SET_TYPE_LABELS;
   protected readonly formatDate = formatDate;
   protected readonly formatTargets = formatTargets;
 
-  protected readonly today = resource({ loader: () => this.api.get() });
+  /** Con respaldo local: sin señal muestra el último "Hoy" descargado. */
+  protected readonly today = resource({ loader: () => cachedFetch(this.db, 'today', () => this.api.get()) });
+
+  protected async start(today: Today): Promise<void> {
+    this.starting.set(true);
+    try {
+      const session = await this.sessions.startFromDay(today);
+      await this.router.navigate(['/entrenamiento', session.id]);
+    } finally {
+      this.starting.set(false);
+    }
+  }
+
+  protected async startFree(today: Today): Promise<void> {
+    this.starting.set(true);
+    try {
+      const session = await this.sessions.startFree(today.date);
+      await this.router.navigate(['/entrenamiento', session.id]);
+    } finally {
+      this.starting.set(false);
+    }
+  }
 
   protected lastTime(item: TodayExercise): string {
     const last = item.last_performance;

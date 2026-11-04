@@ -47,7 +47,9 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
           }
           <p class="text-sm text-muted-foreground">{{ lastLine() }}</p>
           @if (hint().target) {
-            <p class="text-sm font-semibold text-primary">Objetivo Bilbo: {{ hint().target }} reps</p>
+            <p class="text-sm font-semibold text-primary">
+              Objetivo Bilbo: {{ hint().target }} reps
+            </p>
           }
           @if (hint().suggestIncrease) {
             <p class="text-sm font-semibold text-primary">
@@ -77,7 +79,11 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
               [class.ring-2]="editingSetId() === set.id"
               [class.ring-primary]="editingSetId() === set.id"
             >
-              <button type="button" class="num flex flex-1 items-center gap-3 py-2 text-left" (click)="edit(set)">
+              <button
+                type="button"
+                class="num flex flex-1 items-center gap-3 py-2 text-left"
+                (click)="edit(set)"
+              >
                 <span class="w-5 text-base text-muted-foreground">{{ i + 1 }}</span>
                 <span class="text-xl font-semibold">{{ setLine(set) }}</span>
               </button>
@@ -98,80 +104,162 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <span class="eyebrow mb-1.5 block">{{ ex.exercise.uses_bodyweight ? 'Peso extra (kg)' : 'Peso (kg)' }}</span>
+          <span class="eyebrow mb-1.5 block">{{
+            ex.exercise.uses_bodyweight ? 'Peso extra (kg)' : 'Peso (kg)'
+          }}</span>
           <div class="flex items-center rounded-xl border border-border bg-background">
-            <button type="button" class="h-14 w-12 shrink-0 text-2xl" (click)="patch({ weight_kg: stepWeight(entry().weight_kg, -2.5) })" aria-label="Restar 2,5 kg">−</button>
+            <button
+              type="button"
+              class="h-14 w-12 shrink-0 text-2xl"
+              (click)="patch({ weight_kg: stepWeight(entry().weight_kg, -2.5) })"
+              aria-label="Restar 2,5 kg"
+            >
+              −
+            </button>
             <input
               class="num w-full min-w-0 bg-transparent text-center text-3xl font-bold outline-none"
               inputmode="decimal"
               aria-label="Peso"
               [value]="formatNumber(entry().weight_kg)"
-              (change)="patch({ weight_kg: parseDecimal($any($event.target).value, entry().weight_kg) })"
+              (change)="
+                patch({ weight_kg: parseDecimal($any($event.target).value, entry().weight_kg) })
+              "
             />
-            <button type="button" class="h-14 w-12 shrink-0 text-2xl" (click)="patch({ weight_kg: stepWeight(entry().weight_kg, 2.5) })" aria-label="Sumar 2,5 kg">+</button>
+            <button
+              type="button"
+              class="h-14 w-12 shrink-0 text-2xl"
+              (click)="patch({ weight_kg: stepWeight(entry().weight_kg, 2.5) })"
+              aria-label="Sumar 2,5 kg"
+            >
+              +
+            </button>
           </div>
         </div>
         <div>
           <span class="eyebrow mb-1.5 block">Reps</span>
           <div class="flex items-center rounded-xl border border-border bg-background">
-            <button type="button" class="h-14 w-12 shrink-0 text-2xl" (click)="patch({ reps: stepReps(entry().reps, -1) })" aria-label="Restar 1 rep">−</button>
+            <button
+              type="button"
+              class="h-14 w-12 shrink-0 text-2xl"
+              (click)="patch({ reps: stepReps(entry().reps, -1) })"
+              aria-label="Restar 1 rep"
+            >
+              −
+            </button>
             <input
               class="num w-full min-w-0 bg-transparent text-center text-3xl font-bold outline-none"
               inputmode="numeric"
               aria-label="Repeticiones"
               [value]="entry().reps"
-              (change)="patch({ reps: Math.round(parseDecimal($any($event.target).value, entry().reps)) })"
+              (change)="
+                patch({ reps: Math.round(parseDecimal($any($event.target).value, entry().reps)) })
+              "
             />
-            <button type="button" class="h-14 w-12 shrink-0 text-2xl" (click)="patch({ reps: stepReps(entry().reps, 1) })" aria-label="Sumar 1 rep">+</button>
+            <button
+              type="button"
+              class="h-14 w-12 shrink-0 text-2xl"
+              (click)="patch({ reps: stepReps(entry().reps, 1) })"
+              aria-label="Sumar 1 rep"
+            >
+              +
+            </button>
           </div>
         </div>
       </div>
 
       @if (showMore()) {
         <div class="mt-3 grid grid-cols-2 gap-3">
-          <label class="eyebrow flex flex-col gap-1.5">Tipo
-            <select [class]="selectClass" [value]="entry().set_type" (change)="patch({ set_type: $any($event.target).value })">
+          <label class="eyebrow flex flex-col gap-1.5"
+            >Tipo
+            <select
+              [class]="selectClass"
+              [value]="entry().set_type"
+              (change)="patch({ set_type: $any($event.target).value })"
+            >
               @for (type of setTypes; track type) {
                 <option [value]="type">{{ setTypeLabels[type] }}</option>
               }
             </select>
           </label>
-          <label class="eyebrow flex flex-col gap-1.5">Lado
-            <select [class]="selectClass" [value]="entry().side" (change)="patch({ side: $any($event.target).value })">
+          <label class="eyebrow flex flex-col gap-1.5"
+            >Lado
+            <select
+              [class]="selectClass"
+              [value]="entry().side"
+              (change)="patch({ side: $any($event.target).value })"
+            >
               <option value="both">Ambos</option>
               <option value="left">Izquierdo</option>
               <option value="right">Derecho</option>
             </select>
           </label>
-          <label class="eyebrow flex flex-col gap-1.5">RIR
-            <select [class]="selectClass" [value]="entry().rir ?? ''" (change)="patch({ rir: toNullableInt($any($event.target).value) })">
+          <label class="eyebrow flex flex-col gap-1.5"
+            >RIR
+            <select
+              [class]="selectClass"
+              [value]="entry().rir ?? ''"
+              (change)="patch({ rir: toNullableInt($any($event.target).value) })"
+            >
               <option value="">—</option>
               @for (n of zeroToFive; track n) {
                 <option [value]="n">{{ n }}</option>
               }
             </select>
           </label>
-          <label class="eyebrow flex flex-col gap-1.5">Molestia (0-10)
-            <select [class]="selectClass" [value]="entry().pain_level ?? ''" (change)="patch({ pain_level: toNullableInt($any($event.target).value) })">
+          <label class="eyebrow flex flex-col gap-1.5"
+            >Molestia (0-10)
+            <select
+              [class]="selectClass"
+              [value]="entry().pain_level ?? ''"
+              (change)="patch({ pain_level: toNullableInt($any($event.target).value) })"
+            >
               <option value="">—</option>
               @for (n of zeroToTen; track n) {
                 <option [value]="n">{{ n }}</option>
               }
             </select>
           </label>
-          <label class="eyebrow col-span-2 flex flex-col gap-1.5">Nota
-            <input hlmInput class="h-12 text-base normal-case tracking-normal" [value]="entry().notes ?? ''" (change)="patch({ notes: $any($event.target).value || null })" />
+          <label class="eyebrow col-span-2 flex flex-col gap-1.5"
+            >Nota
+            <input
+              hlmInput
+              class="h-12 text-base normal-case tracking-normal"
+              [value]="entry().notes ?? ''"
+              (change)="patch({ notes: $any($event.target).value || null })"
+            />
           </label>
         </div>
       }
 
       <div class="mt-3 flex gap-2">
-        <button hlmBtn variant="ghost" class="h-14" (click)="showMore.set(!showMore())">{{ showMore() ? 'Menos' : 'Más' }}</button>
-        <button hlmBtn variant="outline" class="h-14" (click)="copyPrevious()" [disabled]="!ex.sets.length">Copiar anterior</button>
-        <button hlmBtn class="num h-14 flex-1 text-xl font-bold tracking-wide uppercase" (click)="save()">{{ editingSetId() ? 'Actualizar' : 'Guardar serie' }}</button>
+        <button hlmBtn variant="ghost" class="h-14" (click)="showMore.set(!showMore())">
+          {{ showMore() ? 'Menos' : 'Más' }}
+        </button>
+        <button
+          hlmBtn
+          variant="outline"
+          class="h-14"
+          (click)="copyPrevious()"
+          [disabled]="!ex.sets.length"
+        >
+          Copiar anterior
+        </button>
+        <button
+          hlmBtn
+          class="num h-14 flex-1 text-xl font-bold tracking-wide uppercase"
+          (click)="save()"
+        >
+          {{ editingSetId() ? 'Actualizar' : 'Guardar serie' }}
+        </button>
       </div>
       @if (editingSetId()) {
-        <button type="button" class="mt-2 text-sm text-muted-foreground underline" (click)="cancelEdit()">Cancelar edición</button>
+        <button
+          type="button"
+          class="mt-2 text-sm text-muted-foreground underline"
+          (click)="cancelEdit()"
+        >
+          Cancelar edición
+        </button>
       }
     </article>
   `,
@@ -215,7 +303,9 @@ export class ExerciseCard {
     const ex = this.item();
     const last = ex.last_performance;
     const best = last ? formatBestSet(last.sets, ex.exercise.uses_bodyweight) : null;
-    return last && best ? `Última vez: ${best} · ${formatDate(last.date)}` : 'Sin registros anteriores';
+    return last && best
+      ? `Última vez: ${best} · ${formatDate(last.date)}`
+      : 'Sin registros anteriores';
   });
 
   protected setLine(set: WorkoutSet): string {
