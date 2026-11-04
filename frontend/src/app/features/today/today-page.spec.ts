@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { describe, expect, it, vi } from 'vitest';
 import { TodayApi } from '../../core/api/today-api';
+import { AuthService } from '../../core/auth/auth.service';
 import { LOCAL_DB, LocalDb } from '../../core/local-db/local-db';
 import { WorkoutSessionService } from '../../core/workout/workout-session.service';
 import type { Today } from '../../core/models/routine';
@@ -46,6 +47,7 @@ async function render(data: Today, activeId: string | null = null) {
       provideRouter([{ path: 'entrenamiento/:id', component: Blank }]),
       { provide: TodayApi, useValue: { get: () => Promise.resolve(data) } },
       { provide: WorkoutSessionService, useValue: sessions },
+      { provide: AuthService, useValue: { user: signal({ id: 1, name: 'Luciano Grasso', email: 'l@x.cl' }) } },
       { provide: LOCAL_DB, useValue: new LocalDb(`test-${crypto.randomUUID()}`) },
     ],
   });
@@ -63,6 +65,19 @@ describe('TodayPage', () => {
     expect(text).toContain('Press de banca');
     expect(text).toContain('~30 reps explosivas, 40-45 kg');
     expect(text).toContain('Última vez: 42,5 kg × 30 · 26/10/2026');
+  });
+
+  it('greets the user by first name', async () => {
+    const { text } = await render(today);
+    expect(text).toMatch(/Buen(os días|as tardes|as noches)/);
+    expect(text).toContain('Luciano');
+    expect(text).not.toContain('Grasso');
+  });
+
+  it('summarizes the day', async () => {
+    const { text } = await render(today);
+    expect(text).toContain('1 ejercicio');
+    expect(text).toContain('1 serie');
   });
 
   it('shows a rest day with the available days', async () => {
