@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BodyMetricController;
 use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\ExerciseHistoryController;
 use App\Http\Controllers\HealthController;
@@ -19,6 +20,9 @@ Route::get('/health', HealthController::class);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn (Request $request) => new UserResource($request->user()));
     Route::get('/today', TodayController::class);
+
+    Route::get('/body-metrics', [BodyMetricController::class, 'index']);
+    Route::put('/body-metrics/{date}', [BodyMetricController::class, 'upsert']);
 
     Route::get('/exercises', [ExerciseController::class, 'index']);
     Route::post('/exercises', [ExerciseController::class, 'store']);
