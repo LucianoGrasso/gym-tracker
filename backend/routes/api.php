@@ -7,6 +7,7 @@ use App\Http\Controllers\HealthController;
 use App\Http\Controllers\RoutineController;
 use App\Http\Controllers\RoutineDayController;
 use App\Http\Controllers\RoutineDayExerciseController;
+use App\Http\Controllers\StatsController;
 use App\Http\Controllers\TodayController;
 use App\Http\Controllers\WorkoutController;
 use App\Http\Controllers\WorkoutExerciseController;
@@ -24,6 +25,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/body-metrics', [BodyMetricController::class, 'index']);
     Route::put('/body-metrics/{date}', [BodyMetricController::class, 'upsert']);
 
+    Route::get('/stats/overview', [StatsController::class, 'overview']);
+    Route::get('/stats/weekly-volume', [StatsController::class, 'weeklyVolume']);
+    Route::get('/stats/consistency', [StatsController::class, 'consistency']);
+    Route::get('/stats/bodyweight', [StatsController::class, 'bodyweight']);
+
     Route::get('/exercises', [ExerciseController::class, 'index']);
     Route::post('/exercises', [ExerciseController::class, 'store']);
     Route::middleware('can:manage,exercise')->group(function () {
@@ -33,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/exercises/{exercise}/archive', [ExerciseController::class, 'archive']);
         Route::post('/exercises/{exercise}/restore', [ExerciseController::class, 'restore']);
         Route::get('/exercises/{exercise}/history', ExerciseHistoryController::class);
+        Route::get('/stats/exercises/{exercise}', [StatsController::class, 'exercise']);
     });
 
     Route::get('/routines', [RoutineController::class, 'index']);
