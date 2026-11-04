@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Workout extends Model
 {
@@ -36,5 +37,10 @@ class Workout extends Model
     public function exercises(): HasMany
     {
         return $this->hasMany(WorkoutExercise::class)->orderBy('position');
+    }
+
+    public function sets(): HasManyThrough
+    {
+        return $this->hasManyThrough(WorkoutSet::class, WorkoutExercise::class);
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\RoutineController;
 use App\Http\Controllers\RoutineDayController;
 use App\Http\Controllers\RoutineDayExerciseController;
 use App\Http\Controllers\TodayController;
+use App\Http\Controllers\WorkoutController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -49,4 +50,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/routine-day-exercises/{routineDayExercise}', [RoutineDayExerciseController::class, 'update']);
         Route::delete('/routine-day-exercises/{routineDayExercise}', [RoutineDayExerciseController::class, 'destroy']);
     });
+
+    Route::get('/workouts', [WorkoutController::class, 'index']);
+    Route::get('/workouts/{workout}', [WorkoutController::class, 'show']);
+    Route::put('/workouts/{workout}', [WorkoutController::class, 'upsert']);
+    Route::delete('/workouts/{workout}', [WorkoutController::class, 'destroy']);
 });
