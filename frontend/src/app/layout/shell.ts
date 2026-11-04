@@ -9,10 +9,8 @@ import { SyncIndicator } from '../shared/ui/sync-indicator';
   imports: [RouterOutlet, BottomNav, RestTimerBar, SyncIndicator],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="sticky top-0 z-10 bg-background/90 backdrop-blur">
-      <div class="mx-auto flex max-w-lg justify-end px-4 py-2"><app-sync-indicator /></div>
-    </div>
-    <main class="mx-auto max-w-lg px-4 pb-40 pt-2">
+    <app-sync-indicator />
+    <main class="mx-auto max-w-lg px-4 pt-6 pb-40">
       <router-outlet />
     </main>
     <app-rest-timer-bar />

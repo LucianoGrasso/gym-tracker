@@ -41,7 +41,9 @@ import type { WorkoutSummary } from '../../core/models/workout';
                   · <span class="text-amber-300">sin terminar</span>
                 }
               </p>
-              <p class="truncate text-lg font-semibold">{{ w.routine_day_name ?? 'Sesión libre' }}</p>
+              <p class="truncate text-lg font-semibold">
+                {{ w.routine_day_name ?? 'Sesión libre' }}
+              </p>
               <p class="num text-base text-muted-foreground">
                 {{ w.exercises_count }} ejercicios · {{ w.sets_count }} series
               </p>
@@ -57,7 +59,13 @@ import type { WorkoutSummary } from '../../core/models/workout';
     </ul>
 
     @if (hasMore()) {
-      <button hlmBtn variant="outline" class="mt-4 h-12 w-full" [disabled]="loading()" (click)="load()">
+      <button
+        hlmBtn
+        variant="outline"
+        class="mt-4 h-12 w-full"
+        [disabled]="loading()"
+        (click)="load()"
+      >
         Cargar más
       </button>
     }
