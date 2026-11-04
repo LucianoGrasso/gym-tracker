@@ -6,6 +6,7 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
 import { AuthService } from '../../core/auth/auth.service';
+import { SyncService } from '../../core/sync/sync.service';
 
 @Component({
   selector: 'app-login-page',
@@ -38,6 +39,7 @@ import { AuthService } from '../../core/auth/auth.service';
 export class LoginPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly sync = inject(SyncService);
 
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -56,6 +58,8 @@ export class LoginPage {
     try {
       const { email, password } = this.form.getRawValue();
       await this.auth.login(email, password);
+      // Lo que quedó pendiente por un 401 se envía apenas hay sesión.
+      void this.sync.flush();
       await this.router.navigateByUrl('/hoy');
     } catch (e) {
       this.error.set(
