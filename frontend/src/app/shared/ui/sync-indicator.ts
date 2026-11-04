@@ -5,7 +5,10 @@ import { lucideCloudOff, lucideTriangleAlert } from '@ng-icons/lucide';
 import { SyncService } from '../../core/sync/sync.service';
 import { syncLabel } from '../../core/sync/sync-label';
 
-/** Aviso de sincronización: invisible mientras todo se guarda bien; aparece solo ante un problema. */
+/**
+ * Aviso de sincronización: invisible mientras todo se guarda bien; aparece ante un problema
+ * o apenas el navegador pierde la conexión (también en pantallas que no usan la cola).
+ */
 @Component({
   selector: 'app-sync-indicator',
   imports: [RouterLink, NgIcon],
@@ -19,12 +22,20 @@ import { syncLabel } from '../../core/sync/sync-label';
           role="status"
           aria-live="polite"
         >
-          <ng-icon [name]="sync.state() === 'offline' ? 'lucideCloudOff' : 'lucideTriangleAlert'" size="18" aria-hidden="true" />
+          <ng-icon
+            [name]="state() === 'offline' ? 'lucideCloudOff' : 'lucideTriangleAlert'"
+            size="18"
+            aria-hidden="true"
+          />
           <span class="flex-1">{{ label() }}</span>
-          @if (sync.state() === 'auth') {
+          @if (state() === 'auth') {
             <a routerLink="/login" class="font-semibold text-amber-100 underline">Entrar</a>
           } @else if (sync.failed() > 0) {
-            <button type="button" class="font-semibold text-amber-100 underline" (click)="sync.retryFailed()">
+            <button
+              type="button"
+              class="font-semibold text-amber-100 underline"
+              (click)="sync.retryFailed()"
+            >
               Reintentar
             </button>
           }
@@ -35,10 +46,14 @@ import { syncLabel } from '../../core/sync/sync-label';
 })
 export class SyncIndicator {
   protected readonly sync = inject(SyncService);
+  /** Sin red manda "offline", salvo que haya que volver a iniciar sesión. */
+  protected readonly state = computed(() =>
+    !this.sync.online() && this.sync.state() !== 'auth' ? 'offline' : this.sync.state(),
+  );
   protected readonly label = computed(() =>
-    syncLabel(this.sync.state(), this.sync.pending(), this.sync.failed()),
+    syncLabel(this.state(), this.sync.pending(), this.sync.failed()),
   );
   protected readonly ok = computed(
-    () => ['idle', 'syncing'].includes(this.sync.state()) && this.sync.failed() === 0,
+    () => ['idle', 'syncing'].includes(this.state()) && this.sync.failed() === 0,
   );
 }

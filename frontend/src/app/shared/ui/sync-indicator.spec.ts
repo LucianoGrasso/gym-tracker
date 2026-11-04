@@ -6,8 +6,9 @@ import { SyncService } from '../../core/sync/sync.service';
 import type { SyncState } from '../../core/sync/sync-label';
 import { SyncIndicator } from './sync-indicator';
 
-async function render(state: SyncState, pending = 0, failed = 0) {
+async function render(state: SyncState, pending = 0, failed = 0, online = true) {
   const sync = {
+    online: signal(online),
     state: signal(state),
     pending: signal(pending),
     failed: signal(failed),
@@ -30,7 +31,9 @@ describe('SyncIndicator', () => {
 
   it('warns when offline with pending changes', async () => {
     const { el } = await render('offline', 2);
-    expect(el.querySelector('[role="status"]')?.textContent).toContain('Sin conexión · 2 pendientes');
+    expect(el.querySelector('[role="status"]')?.textContent).toContain(
+      'Sin conexión · 2 pendientes',
+    );
   });
 
   it('asks to log in on auth errors', async () => {
@@ -41,7 +44,14 @@ describe('SyncIndicator', () => {
   it('offers to retry failed changes', async () => {
     const { el, sync } = await render('error', 0, 2);
     expect(el.textContent).toContain('2 cambios no se pudieron guardar');
-    Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Reintentar'))!.click();
+    Array.from(el.querySelectorAll('button'))
+      .find((b) => b.textContent?.includes('Reintentar'))!
+      .click();
     expect(sync.retryFailed).toHaveBeenCalled();
+  });
+
+  it('warns as soon as the browser goes offline, even with nothing pending', async () => {
+    const { el } = await render('idle', 0, 0, false);
+    expect(el.querySelector('[role="status"]')?.textContent).toContain('Sin conexión');
   });
 });

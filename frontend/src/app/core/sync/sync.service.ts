@@ -17,6 +17,8 @@ export class SyncService {
   readonly state = signal<SyncState>('idle');
   readonly pending = signal(0);
   readonly failed = signal(0);
+  /** Conexión del navegador (eventos online/offline), independiente de la cola. */
+  readonly online = signal(typeof navigator === 'undefined' ? true : navigator.onLine);
 
   private running = false;
   private rerun = false;
@@ -42,7 +44,11 @@ export class SyncService {
   start(): void {
     if (this.started) return;
     this.started = true;
-    window.addEventListener('online', () => void this.flush());
+    window.addEventListener('online', () => {
+      this.online.set(true);
+      void this.flush();
+    });
+    window.addEventListener('offline', () => this.online.set(false));
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') void this.flush();
     });

@@ -76,4 +76,15 @@ describe('SyncService', () => {
     await vi.waitFor(() => expect(sync.state()).toBe('auth'));
     expect(sync.pending()).toBe(2);
   });
+
+  it('tracks the browser connection once started', async () => {
+    sync.start();
+    expect(sync.online()).toBe(navigator.onLine);
+
+    window.dispatchEvent(new Event('offline'));
+    expect(sync.online()).toBe(false);
+
+    window.dispatchEvent(new Event('online'));
+    expect(sync.online()).toBe(true);
+  });
 });
