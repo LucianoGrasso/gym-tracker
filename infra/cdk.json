@@ -1,0 +1,9 @@
+{
+  "app": "npx tsx bin/gymtracker.ts",
+  "context": {
+    "account": "000000000000",
+    "region": "us-east-2",
+    "githubRepo": "LucianoGrasso/gym-tracker",
+    "warmUp": { "minute": "45", "hour": "18", "weekDay": "MON,TUE,THU,FRI" }
+  }
+}
