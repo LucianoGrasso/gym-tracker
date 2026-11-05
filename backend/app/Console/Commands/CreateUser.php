@@ -3,12 +3,15 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use Database\Seeders\GymTrackerSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
 
 class CreateUser extends Command
 {
-    protected $signature = 'app:create-user {email} {name} {--password= : Si se omite, se pide por consola}';
+    protected $signature = 'app:create-user {email} {name}
+        {--password= : Si se omite, se pide por consola}
+        {--seed : Carga los ejercicios y la rutina inicial para este usuario}';
 
     protected $description = 'Crea un usuario de GymTracker (no hay registro público)';
 
@@ -34,7 +37,12 @@ class CreateUser extends Command
             return self::FAILURE;
         }
 
-        User::create($data); // el cast 'hashed' de User hashea la contraseña
+        $user = User::create($data); // el cast 'hashed' de User hashea la contraseña
+
+        if ($this->option('seed')) {
+            app(GymTrackerSeeder::class)->run($user);
+            $this->info('Ejercicios y rutina inicial cargados.');
+        }
 
         $this->info("Usuario {$data['email']} creado.");
 

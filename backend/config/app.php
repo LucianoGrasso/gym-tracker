@@ -67,7 +67,6 @@ return [
 
     'timezone' => 'UTC',
 
-
     'user_timezone' => env('APP_USER_TIMEZONE', 'America/Santiago'),
 
     /*
