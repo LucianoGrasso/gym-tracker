@@ -1,8 +1,9 @@
-import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, isDevMode, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import { provideHttpClient, withFetch, withInterceptors, withXsrfConfiguration } from '@angular/common/http';
 import localeEsCl from '@angular/common/locales/es-CL';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideServiceWorker } from '@angular/service-worker';
 import { provideEchartsCore } from 'ngx-echarts';
 import { routes } from './app.routes';
 import { csrfRetryInterceptor } from './core/auth/csrf-retry.interceptor';
@@ -22,5 +23,10 @@ export const appConfig: ApplicationConfig = {
     { provide: LOCALE_ID, useValue: 'es-CL' },
     // ECharts se descarga recién al abrir el primer gráfico.
     provideEchartsCore({ echarts: () => import('./shared/charts/echarts-setup').then((m) => m.default) }),
+    // Cachea la app para abrirla sin señal en el gimnasio. Los datos los guarda Dexie, no el SW.
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
   ],
 };
