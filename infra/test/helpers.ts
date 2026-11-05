@@ -5,7 +5,7 @@ import { GymTrackerStack } from '../lib/gymtracker-stack';
 
 export const WARM_UP = { minute: '45', hour: '18', weekDay: 'MON,TUE,THU,FRI' };
 
-export function synth(): Template {
+export function buildStack(): GymTrackerStack {
   const app = new App();
   const stack = new GymTrackerStack(app, 'Test', {
     env: { account: '123456789012', region: 'us-east-2' },
@@ -13,5 +13,9 @@ export function synth(): Template {
     frontendPath: path.join(__dirname, 'fixtures/frontend'),
     warmUp: WARM_UP,
   });
-  return Template.fromStack(stack);
+  return stack;
+}
+
+export function synth(): Template {
+  return Template.fromStack(buildStack());
 }

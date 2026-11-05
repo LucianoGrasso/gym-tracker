@@ -1,9 +1,16 @@
-import { Match } from 'aws-cdk-lib/assertions';
+import { App } from 'aws-cdk-lib';
+import { Annotations, Match } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
-import { synth } from './helpers';
+import { buildStack, synth } from './helpers';
 
 describe('Database', () => {
   const template = synth();
+
+  it('synthesizes without errors or pending AWS lookups (CI has no credentials)', () => {
+    const stack = buildStack();
+    Annotations.fromStack(stack).hasNoError('*', Match.anyValue());
+    expect((stack.node.root as App).synth().manifest.missing ?? []).toEqual([]);
+  });
 
   it('has no NAT gateways and no internet gateway', () => {
     template.resourceCountIs('AWS::EC2::NatGateway', 0);

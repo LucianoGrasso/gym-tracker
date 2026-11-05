@@ -49,6 +49,8 @@ export class Database extends Construct {
       removalPolicy: RemovalPolicy.SNAPSHOT,
     });
 
+    // Aviso esperado al sintetizar (W1011): la contraseña llega como parámetro NoEcho y no como
+    // ssm-secure, porque la Lambda la necesita en su entorno y ahí CloudFormation no admite ssm-secure.
     this.cluster.connections.allowDefaultPortFrom(this.clientSecurityGroup, 'Lambdas a Postgres');
   }
 }
