@@ -1,12 +1,10 @@
 import { CfnParameter, SecretValue, Stack, type StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { Database } from './database';
+import { Backend } from './backend';
+import { DB_NAME, DB_USER, Database } from './database';
+import { WarmUp, type WarmUpSchedule } from './warm-up';
 
-export interface WarmUpSchedule {
-  readonly minute: string;
-  readonly hour: string;
-  readonly weekDay: string;
-}
+export type { WarmUpSchedule } from './warm-up';
 
 export interface GymTrackerStackProps extends StackProps {
   /** Carpeta de Laravel ya instalada con `composer install --no-dev`. */
@@ -35,7 +33,33 @@ export class GymTrackerStack extends Stack {
     });
 
     const database = new Database(this, 'Database', { password: SecretValue.cfnParameter(dbPassword) });
-    void appKey; // se usa en la tarea 4
-    void database; // se usa en la tarea 4
+    const backend = new Backend(this, 'Backend', {
+      codePath: props.backendPath,
+      vpc: database.vpc,
+      securityGroup: database.clientSecurityGroup,
+      environment: {
+        APP_NAME: 'GymTracker',
+        APP_ENV: 'production',
+        APP_DEBUG: 'false',
+        APP_KEY: appKey.valueAsString,
+        APP_LOCALE: 'es',
+        APP_USER_TIMEZONE: 'America/Santiago',
+        LOG_CHANNEL: 'stderr',
+        LOG_LEVEL: 'warning',
+        DB_CONNECTION: 'pgsql',
+        DB_HOST: database.cluster.clusterEndpoint.hostname,
+        DB_PORT: '5432',
+        DB_DATABASE: DB_NAME,
+        DB_USERNAME: DB_USER,
+        DB_PASSWORD: dbPassword.valueAsString,
+        DB_SSLMODE: 'require',
+        SESSION_DRIVER: 'database',
+        SESSION_SECURE_COOKIE: 'true',
+        CACHE_STORE: 'database',
+        QUEUE_CONNECTION: 'sync',
+      },
+    });
+
+    new WarmUp(this, 'WarmUp', { target: backend.artisan, schedule: props.warmUp });
   }
 }
