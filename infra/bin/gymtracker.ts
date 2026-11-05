@@ -1,5 +1,6 @@
 import { App } from 'aws-cdk-lib';
 import * as path from 'node:path';
+import { GithubCiStack } from '../lib/github-ci-stack';
 import { GymTrackerStack, type WarmUpSchedule } from '../lib/gymtracker-stack';
 
 const app = new App();
@@ -11,4 +12,11 @@ new GymTrackerStack(app, 'GymTrackerStack', {
   backendPath: path.join(__dirname, '../../backend'),
   frontendPath: path.join(__dirname, '../../frontend/dist/frontend/browser'),
   warmUp: app.node.getContext('warmUp') as WarmUpSchedule,
+});
+
+new GithubCiStack(app, 'GymTrackerCiStack', {
+  env,
+  description: 'GymTracker: rol OIDC para desplegar desde GitHub Actions',
+  githubRepo: app.node.getContext('githubRepo') as string,
+  oidcProviderArn: app.node.tryGetContext('githubOidcProviderArn') as string | undefined,
 });

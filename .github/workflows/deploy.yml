@@ -1,0 +1,81 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: us-east-2
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+      - name: Backend sin dependencias de desarrollo
+        working-directory: backend
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            infra/package-lock.json
+      - name: Build del frontend
+        working-directory: frontend
+        run: npm ci && npx ng build
+      - name: Dependencias de CDK
+        working-directory: infra
+        run: npm ci
+
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-2
+
+      - name: Leer secretos de SSM
+        run: |
+          for name in app-key db-password; do
+            value="$(aws ssm get-parameter --name "/gymtracker/prod/$name" --with-decryption --query Parameter.Value --output text)"
+            echo "::add-mask::$value"
+            echo "SECRET_$(echo "$name" | tr 'a-z-' 'A-Z_')=$value" >> "$GITHUB_ENV"
+          done
+
+      - name: Desplegar
+        working-directory: infra
+        run: >
+          npx cdk deploy GymTrackerStack --require-approval never
+          --parameters AppKey="$SECRET_APP_KEY"
+          --parameters DbPassword="$SECRET_DB_PASSWORD"
+          --outputs-file outputs.json
+
+      - name: Migrar
+        run: infra/scripts/artisan.sh "migrate --force"
+
+      - name: Probar
+        run: |
+          URL="$(python3 -c "import json; print(json.load(open('infra/outputs.json'))['GymTrackerStack']['Url'])")"
+          curl -fsS --retry 6 --retry-delay 10 --retry-all-errors "$URL/api/health"
+          curl -fsS -o /dev/null "$URL/hoy"
+          echo "### Desplegado en $URL" >> "$GITHUB_STEP_SUMMARY"

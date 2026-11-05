@@ -13,6 +13,9 @@ Spec completa: `docs/superpowers/specs/2026-11-03-gymtracker-design.md`. Planes 
 - Migrar y sembrar: `docker compose exec backend php artisan migrate:fresh --seed`.
 - Tests backend: `cd backend && ./vendor/bin/pest`. Tests frontend: `cd frontend && npx ng test --watch=false`.
 - Crear usuario: `docker compose exec backend php artisan app:create-user <email> <nombre>`.
+- Tests infra: `cd infra && npm test` (CDK + Vitest; sintetiza sin credenciales AWS).
+- Artisan en producción: `infra/scripts/artisan.sh "<comando>"` (requiere `aws login`).
+- Composer: el PHP del host no tiene `ext-curl` (Bref la exige) y `vendor/` tiene archivos de root; `composer require/update` se corren con `docker compose exec backend composer …`.
 
 ## Convenciones
 - Código, tablas y variables en inglés; textos de UI en español (Chile). kg, `dd/mm/aaaa`, `America/Santiago`, decimales con coma.
@@ -22,6 +25,7 @@ Spec completa: `docs/superpowers/specs/2026-11-03-gymtracker-design.md`. Planes 
 - Ejercicios con historial se archivan, no se borran. Editar rutinas nunca modifica el historial (se copian a `workout_exercises`).
 - Validación en Form Requests. Lógica de estadísticas en `app/Services/Stats`, nunca en controladores.
 - Laravel debe seguir siendo apto para Lambda: sesiones y caché en BD, sin escribir archivos en disco.
+- Producción: se despliega solo desde GitHub Actions (push a `main`). Secretos en SSM `/gymtracker/prod/*`, pasados como parámetros NoEcho. Infra en `infra/` (un construct por pieza: database, backend, warm-up, frontend).
 
 ## Cómo trabajar
 - Por fases (spec, sección 11). Terminar una fase con tests en verde y commit antes de pasar a la siguiente.
