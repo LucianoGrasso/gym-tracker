@@ -11,7 +11,8 @@ class BodyMetricFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'date' => fake()->unique()->dateTimeBetween('-1 year')->format('Y-m-d'),
+            // unique() sobre el día (no sobre un DateTime con hora): (user_id, date) es único.
+            'date' => now()->subDays(fake()->unique()->numberBetween(0, 364))->toDateString(),
             'bodyweight_kg' => 80,
         ];
     }
