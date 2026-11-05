@@ -17,6 +17,6 @@ new GymTrackerStack(app, 'GymTrackerStack', {
 new GithubCiStack(app, 'GymTrackerCiStack', {
   env,
   description: 'GymTracker: rol OIDC para desplegar desde GitHub Actions',
-  githubRepo: app.node.getContext('githubRepo') as string,
+  githubSubjectPrefix: app.node.getContext('githubSubjectPrefix') as string,
   oidcProviderArn: app.node.tryGetContext('githubOidcProviderArn') as string | undefined,
 });

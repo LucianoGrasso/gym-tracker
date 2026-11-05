@@ -7,14 +7,14 @@ function synthCi(oidcProviderArn?: string): Template {
   const app = new App();
   const stack = new GithubCiStack(app, 'Ci', {
     env: { account: '123456789012', region: 'us-east-2' },
-    githubRepo: 'LucianoGrasso/gym-tracker',
+    githubSubjectPrefix: 'repo:LucianoGrasso@127354205/gym-tracker@1446923654',
     oidcProviderArn,
   });
   return Template.fromStack(stack);
 }
 
 describe('GithubCiStack', () => {
-  it('lets only the main branch of the repo assume the deploy role', () => {
+  it('lets only the main branch of the repo (immutable subject) assume the deploy role', () => {
     synthCi().hasResourceProperties('AWS::IAM::Role', {
       RoleName: 'gymtracker-github-deploy',
       AssumeRolePolicyDocument: {
@@ -24,7 +24,7 @@ describe('GithubCiStack', () => {
             Condition: {
               StringEquals: {
                 'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
-                'token.actions.githubusercontent.com:sub': 'repo:LucianoGrasso/gym-tracker:ref:refs/heads/main',
+                'token.actions.githubusercontent.com:sub': 'repo:LucianoGrasso@127354205/gym-tracker@1446923654:ref:refs/heads/main',
               },
             },
           }),

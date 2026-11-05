@@ -3,8 +3,12 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 export interface GithubCiStackProps extends StackProps {
-  /** `owner/repo` en GitHub. */
-  readonly githubRepo: string;
+  /**
+   * Prefijo del claim `sub` del token OIDC de GitHub. El repo usa subjects inmutables
+   * (`repo:owner@ownerId/repo@repoId`): sobreviven a renombres y un repo recreado con el mismo nombre no calza.
+   * Se obtiene con `gh api repos/<owner>/<repo>/actions/oidc/customization/sub`.
+   */
+  readonly githubSubjectPrefix: string;
   /** ARN de un proveedor OIDC de GitHub que ya exista en la cuenta (solo puede haber uno). */
   readonly oidcProviderArn?: string;
 }
@@ -27,7 +31,7 @@ export class GithubCiStack extends Stack {
       assumedBy: new iam.WebIdentityPrincipal(providerArn, {
         StringEquals: {
           'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
-          'token.actions.githubusercontent.com:sub': `repo:${props.githubRepo}:ref:refs/heads/main`,
+          'token.actions.githubusercontent.com:sub': `${props.githubSubjectPrefix}:ref:refs/heads/main`,
         },
       }),
     });

@@ -3,7 +3,7 @@
   "context": {
     "account": "000000000000",
     "region": "us-east-2",
-    "githubRepo": "LucianoGrasso/gym-tracker",
+    "githubSubjectPrefix": "repo:LucianoGrasso@127354205/gym-tracker@1446923654",
     "warmUp": { "minute": "45", "hour": "18", "weekDay": "MON,TUE,THU,FRI" }
   }
 }
