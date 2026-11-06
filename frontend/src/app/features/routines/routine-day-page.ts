@@ -40,7 +40,8 @@ import { RoutineExerciseForm } from './routine-exercise-form';
 
       <ul cdkDropList cdkDropListLockAxis="y" (cdkDropListDropped)="drop($event)" class="mb-6 flex flex-col gap-2">
         @for (item of d.exercises; track item.id) {
-          <li cdkDrag class="card p-2">
+          <!-- Sin arrastre mientras se edita: sin manija visible, el CDK haría arrastrable toda la tarjeta y el formulario. -->
+          <li cdkDrag [cdkDragDisabled]="editingId() !== null" class="card p-2">
             @if (editingId() === item.id) {
               <p class="mb-3 px-2 font-medium">{{ item.exercise.name }}</p>
               <app-routine-exercise-form [initial]="item" submitLabel="Guardar"

@@ -98,6 +98,10 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* Sin zoom por doble toque en iOS (molesta al apretar seguido +/−); el zoom con dos dedos sigue funcionando. */
+  html {
+    touch-action: manipulation;
+  }
   body {
     @apply bg-background text-foreground;
   }
