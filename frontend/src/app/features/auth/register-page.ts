@@ -11,16 +11,18 @@ import { SyncService } from '../../core/sync/sync.service';
 
 type State = 'loading' | 'signed-in' | 'invalid' | 'form';
 
+import { AppSkeleton } from '../../shared/ui/app-skeleton';
+
 @Component({
   selector: 'app-register-page',
-  imports: [ReactiveFormsModule, RouterLink, HlmButton, HlmInput, HlmLabel],
+  imports: [ReactiveFormsModule, RouterLink, HlmButton, HlmInput, HlmLabel, AppSkeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <main class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4 py-8">
       <h1 class="mb-6 page-title text-5xl">Gym<span class="text-primary">Tracker</span></h1>
       @switch (state()) {
         @case ('loading') {
-          <p class="text-muted-foreground">Cargando…</p>
+          <app-skeleton variant="list" [rows]="3" />
         }
         @case ('signed-in') {
           <p class="mb-4">Ya tienes una sesión iniciada. Para crear otra cuenta con esta invitación, primero cierra la tuya.</p>

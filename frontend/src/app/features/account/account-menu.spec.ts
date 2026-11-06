@@ -1,11 +1,11 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { InvitationsApi } from '../../core/api/invitations-api';
 import { AuthService } from '../../core/auth/auth.service';
 import type { Invitation } from '../../core/models/invitation';
-import { AccountPage } from './account-page';
+import { AccountMenu } from './account-menu';
 
 @Component({ template: '' })
 class Blank {}
@@ -24,17 +24,18 @@ async function render(pending: Invitation[] = []) {
     create: vi.fn().mockResolvedValue({ ...pendingInvitation(9), token: 'tok123' }),
     revoke: vi.fn().mockResolvedValue(undefined),
   };
+  const auth = {
+    user: signal({ id: 1, name: 'Luciano Grasso', email: 'l@x.cl' }),
+    logout: vi.fn().mockResolvedValue(undefined),
+  };
   TestBed.configureTestingModule({
     providers: [
       provideRouter([{ path: 'login', component: Blank }]),
       { provide: InvitationsApi, useValue: api },
-      {
-        provide: AuthService,
-        useValue: { user: signal({ id: 1, name: 'Luciano', email: 'l@x.cl' }), logout: vi.fn().mockResolvedValue(undefined) },
-      },
+      { provide: AuthService, useValue: auth },
     ],
   });
-  const fixture = TestBed.createComponent(AccountPage);
+  const fixture = TestBed.createComponent(AccountMenu);
   const el = fixture.nativeElement as HTMLElement;
   const settle = async () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -43,16 +44,45 @@ async function render(pending: Invitation[] = []) {
   };
   await settle();
   const button = (label: string) => [...el.querySelectorAll('button')].find((b) => b.textContent?.includes(label))!;
-  return { api, el, settle, button };
+  const open = async () => {
+    button('Mi cuenta').click();
+    await settle();
+  };
+  return { api, auth, el, settle, button, open };
 }
 
-describe('AccountPage', () => {
+describe('AccountMenu', () => {
   afterEach(() => setNavigator({ share: undefined, clipboard: undefined }));
+
+  it('opens from "Mi cuenta" with the user details and closes with Escape', async () => {
+    const { el, settle, button, open } = await render();
+    expect(el.querySelector('[role="menu"]')).toBeNull();
+
+    await open();
+    expect(button('Mi cuenta').getAttribute('aria-expanded')).toBe('true');
+    expect(el.textContent).toContain('Luciano Grasso');
+    expect(el.textContent).toContain('l@x.cl');
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await settle();
+    expect(el.querySelector('[role="menu"]')).toBeNull();
+  });
+
+  it('closes when tapping outside', async () => {
+    const { el, settle, open } = await render();
+    await open();
+
+    document.body.click();
+    await settle();
+
+    expect(el.querySelector('[role="menu"]')).toBeNull();
+  });
 
   it('shares the new invitation link', async () => {
     const share = vi.fn().mockResolvedValue(undefined);
     setNavigator({ share });
-    const { el, settle, button } = await render();
+    const { el, settle, button, open } = await render();
+    await open();
 
     button('Invitar a alguien').click();
     await settle();
@@ -64,7 +94,8 @@ describe('AccountPage', () => {
   it('copies the link when sharing is not available', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     setNavigator({ share: undefined, clipboard: { writeText } });
-    const { el, settle, button } = await render();
+    const { el, settle, button, open } = await render();
+    await open();
 
     button('Invitar a alguien').click();
     await settle();
@@ -74,19 +105,32 @@ describe('AccountPage', () => {
   });
 
   it('stops inviting at five pending invitations', async () => {
-    const { el, button } = await render([1, 2, 3, 4, 5].map(pendingInvitation));
+    const { el, button, open } = await render([1, 2, 3, 4, 5].map(pendingInvitation));
+    await open();
 
     expect(button('Invitar a alguien').disabled).toBe(true);
     expect(el.textContent).toContain('Tienes 5 invitaciones pendientes');
   });
 
   it('revokes a pending invitation', async () => {
-    const { api, el, settle, button } = await render([pendingInvitation(7)]);
+    const { api, el, settle, button, open } = await render([pendingInvitation(7)]);
+    await open();
 
     button('Anular').click();
     await settle();
 
     expect(api.revoke).toHaveBeenCalledWith(7);
     expect(el.textContent).not.toContain('Vence el');
+  });
+
+  it('signs out and goes to the login', async () => {
+    const { auth, settle, button, open } = await render();
+    await open();
+
+    button('Cerrar sesión').click();
+    await settle();
+
+    expect(auth.logout).toHaveBeenCalled();
+    expect(TestBed.inject(Router).url).toBe('/login');
   });
 });

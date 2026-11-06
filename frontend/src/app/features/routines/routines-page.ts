@@ -7,9 +7,11 @@ import { apiErrorMessage } from '../../core/api/api-error';
 import { RoutinesApi } from '../../core/api/routines-api';
 import type { Routine } from '../../core/models/routine';
 
+import { AppSkeleton } from '../../shared/ui/app-skeleton';
+
 @Component({
   selector: 'app-routines-page',
-  imports: [RouterLink, HlmBadge, HlmButton, HlmInput],
+  imports: [RouterLink, HlmBadge, HlmButton, HlmInput, AppSkeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h1 class="mb-4 page-title">Rutinas</h1>
@@ -43,7 +45,7 @@ import type { Routine } from '../../core/models/routine';
         }
       </ul>
     } @else if (routines.isLoading()) {
-      <p class="text-muted-foreground">Cargando…</p>
+      <app-skeleton variant="list" [rows]="4" />
     }
   `,
 })

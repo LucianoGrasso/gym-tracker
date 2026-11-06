@@ -6,9 +6,11 @@ import { RoutineTemplatesApi } from '../../core/api/routine-templates-api';
 import { formatRest, formatTargets } from '../../core/format/training';
 import { SET_TYPE_LABELS, TEMPLATE_GOAL_LABELS, TEMPLATE_LEVEL_LABELS } from '../../core/models/labels';
 
+import { AppSkeleton } from '../../shared/ui/app-skeleton';
+
 @Component({
   selector: 'app-template-detail-page',
-  imports: [RouterLink, HlmBadge, HlmButton],
+  imports: [RouterLink, HlmBadge, HlmButton, AppSkeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a routerLink="/rutinas/plantillas" class="mb-4 inline-block text-sm text-muted-foreground">← Plantillas</a>
@@ -50,7 +52,7 @@ import { SET_TYPE_LABELS, TEMPLATE_GOAL_LABELS, TEMPLATE_LEVEL_LABELS } from '..
         </button>
       </div>
     } @else if (template.isLoading()) {
-      <p class="text-muted-foreground">Cargando…</p>
+      <app-skeleton variant="page" />
     } @else {
       <p class="text-muted-foreground">Esta plantilla no existe.</p>
     }

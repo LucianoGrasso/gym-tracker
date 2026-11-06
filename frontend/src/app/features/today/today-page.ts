@@ -13,7 +13,7 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { TodayApi } from '../../core/api/today-api';
 import { AuthService } from '../../core/auth/auth.service';
 import { formatDate } from '../../core/format/format';
-import { firstName, greeting, initials } from '../../core/format/greeting';
+import { firstName, greeting } from '../../core/format/greeting';
 import { formatBestSet, formatTargets } from '../../core/format/training';
 import { cachedFetch } from '../../core/local-db/cached-fetch';
 import { LOCAL_DB } from '../../core/local-db/local-db';
@@ -22,10 +22,11 @@ import type { Today, TodayExercise } from '../../core/models/routine';
 import { WorkoutSessionService } from '../../core/workout/workout-session.service';
 
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
+import { AccountMenu } from '../account/account-menu';
 
 @Component({
   selector: 'app-today-page',
-  imports: [RouterLink, NgTemplateOutlet, NgIcon, HlmButton, AppSkeleton],
+  imports: [RouterLink, NgTemplateOutlet, NgIcon, HlmButton, AppSkeleton, AccountMenu],
   providers: [
     provideIcons({ lucideChevronRight, lucideHistory, lucideListChecks, lucideMoon, lucidePlay }),
   ],
@@ -35,21 +36,13 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
       <header class="mb-5 flex items-start gap-3">
         <div class="min-w-0 flex-1">
           <p class="eyebrow">{{ weekdayLabels[t.weekday] }} {{ formatDate(t.date) }}</p>
-          <a routerLink="/cuenta" class="block">
-            <h1 class="page-title mt-1 text-4xl">
-              {{ salute() }}@if (name()) {<span>,</span>
-                <span class="block text-primary">{{ name() }}</span>
-              }
-            </h1>
-          </a>
+          <h1 class="page-title mt-1 text-4xl">
+            {{ salute() }}@if (name()) {<span>,</span>
+              <span class="block text-primary">{{ name() }}</span>
+            }
+          </h1>
         </div>
-        <a
-          routerLink="/cuenta"
-          aria-label="Mi cuenta"
-          class="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/15 font-display text-lg font-bold text-primary ring-2 ring-primary/60"
-        >
-          {{ userInitials() }}
-        </a>
+        <app-account-menu />
       </header>
 
       @if (!t.routine) {
@@ -187,7 +180,6 @@ export class TodayPage {
 
   protected readonly salute = signal(greeting());
   protected readonly name = computed(() => firstName(this.auth.user()?.name ?? ''));
-  protected readonly userInitials = computed(() => initials(this.auth.user()?.name ?? ''));
 
   /** Con respaldo local: sin señal muestra el último "Hoy" descargado. */
   protected readonly today = resource({ loader: () => cachedFetch(this.db, 'today', () => this.api.get()) });

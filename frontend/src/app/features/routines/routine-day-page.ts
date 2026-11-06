@@ -16,9 +16,11 @@ import type { RoutineDay, RoutineDayExercise, RoutineDayExerciseInput } from '..
 import { SELECT_CLASS } from '../../shared/ui/form-styles';
 import { RoutineExerciseForm } from './routine-exercise-form';
 
+import { AppSkeleton } from '../../shared/ui/app-skeleton';
+
 @Component({
   selector: 'app-routine-day-page',
-  imports: [ReactiveFormsModule, RouterLink, CdkDropList, CdkDrag, CdkDragHandle, NgIcon, HlmButton, HlmInput, RoutineExerciseForm],
+  imports: [ReactiveFormsModule, RouterLink, CdkDropList, CdkDrag, CdkDragHandle, NgIcon, HlmButton, HlmInput, RoutineExerciseForm, AppSkeleton],
   providers: [provideIcons({ lucideGripVertical, lucidePencil, lucideTrash2 })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -84,7 +86,7 @@ import { RoutineExerciseForm } from './routine-exercise-form';
     } @else if (error()) {
       <p class="text-destructive">{{ error() }}</p>
     } @else {
-      <p class="text-muted-foreground">Cargando…</p>
+      <app-skeleton variant="page" />
     }
   `,
 })

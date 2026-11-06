@@ -10,9 +10,11 @@ import type { MuscleGroup } from '../../core/models/exercise';
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, MUSCLE_GROUPS } from '../../core/models/labels';
 import { filterExercises } from './filter-exercises';
 
+import { AppSkeleton } from '../../shared/ui/app-skeleton';
+
 @Component({
   selector: 'app-exercises-page',
-  imports: [RouterLink, NgIcon, HlmBadge, HlmButton, HlmInput],
+  imports: [RouterLink, NgIcon, HlmBadge, HlmButton, HlmInput, AppSkeleton],
   providers: [provideIcons({ lucidePlus, lucideChevronRight })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -39,7 +41,7 @@ import { filterExercises } from './filter-exercises';
     </label>
 
     @if (exercises.isLoading()) {
-      <p class="text-muted-foreground">Cargando…</p>
+      <app-skeleton variant="list" [rows]="6" />
     } @else if (exercises.error()) {
       <p class="text-destructive">No se pudieron cargar los ejercicios.</p>
     } @else {

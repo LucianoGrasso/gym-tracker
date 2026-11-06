@@ -5,9 +5,11 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { RoutineTemplatesApi } from '../../core/api/routine-templates-api';
 import { TEMPLATE_GOAL_LABELS, TEMPLATE_LEVEL_LABELS } from '../../core/models/labels';
 
+import { AppSkeleton } from '../../shared/ui/app-skeleton';
+
 @Component({
   selector: 'app-templates-page',
-  imports: [RouterLink, HlmBadge, HlmButton],
+  imports: [RouterLink, HlmBadge, HlmButton, AppSkeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a routerLink="/rutinas" class="mb-4 inline-block text-sm text-muted-foreground">← Rutinas</a>
@@ -37,7 +39,7 @@ import { TEMPLATE_GOAL_LABELS, TEMPLATE_LEVEL_LABELS } from '../../core/models/l
         }
       </ul>
     } @else {
-      <p class="text-muted-foreground">Cargando…</p>
+      <app-skeleton variant="list" [rows]="5" />
     }
   `,
 })

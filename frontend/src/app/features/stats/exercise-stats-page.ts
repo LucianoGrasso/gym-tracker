@@ -30,9 +30,11 @@ export function bilboPoints(sessions: ExerciseSessionStats[]): LinePoint[] {
     .map((s) => ({ date: s.date, value: Math.max(...s.bilbo.map((b) => b.reps)) }));
 }
 
+import { AppSkeleton } from '../../shared/ui/app-skeleton';
+
 @Component({
   selector: 'app-exercise-stats-page',
-  imports: [RouterLink, NgIcon, NgxEchartsDirective, ChipGroup],
+  imports: [RouterLink, NgIcon, NgxEchartsDirective, ChipGroup, AppSkeleton],
   providers: [provideIcons({ lucideChevronLeft })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -141,7 +143,7 @@ export function bilboPoints(sessions: ExerciseSessionStats[]): LinePoint[] {
     } @else if (stats.error()) {
       <p class="text-destructive">No se pudieron cargar las estadísticas de este ejercicio.</p>
     } @else {
-      <p class="text-muted-foreground">Cargando…</p>
+      <app-skeleton variant="page" />
     }
   `,
 })

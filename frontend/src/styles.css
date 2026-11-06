@@ -238,6 +238,11 @@ body::before {
   .skeleton {
     @apply rounded-lg bg-muted motion-safe:animate-pulse;
   }
+  /* Menú desplegable: aparece creciendo desde arriba a la derecha. */
+  .menu-pop {
+    transform-origin: top right;
+    animation: menu-pop-in 140ms ease-out;
+  }
   /* Texto que aparece recién a los 3 s: si la BD está despertando, que no parezca colgado. */
   .skeleton-hint {
     opacity: 0;
@@ -266,5 +271,12 @@ body::before {
 @keyframes skeleton-hint-in {
   to {
     opacity: 1;
+  }
+}
+
+@keyframes menu-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
   }
 }

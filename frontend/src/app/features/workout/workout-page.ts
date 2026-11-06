@@ -30,9 +30,11 @@ function isPending(item: SessionExercise): boolean {
   return item.target_sets === null ? item.sets.length === 0 : item.sets.length < item.target_sets;
 }
 
+import { AppSkeleton } from '../../shared/ui/app-skeleton';
+
 @Component({
   selector: 'app-workout-page',
-  imports: [RouterLink, NgIcon, HlmButton, HlmInput, ExerciseCard],
+  imports: [RouterLink, NgIcon, HlmButton, HlmInput, ExerciseCard, AppSkeleton],
   providers: [provideIcons({ lucideChevronLeft })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -127,7 +129,7 @@ function isPending(item: SessionExercise): boolean {
     } @else if (error()) {
       <p class="text-destructive">{{ error() }}</p>
     } @else {
-      <p class="text-muted-foreground">Cargando…</p>
+      <app-skeleton variant="page" />
     }
   `,
 })

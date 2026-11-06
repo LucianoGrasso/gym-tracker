@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { describe, expect, it, vi } from 'vitest';
+import { InvitationsApi } from '../../core/api/invitations-api';
 import { TodayApi } from '../../core/api/today-api';
 import { AuthService } from '../../core/auth/auth.service';
 import { LOCAL_DB, LocalDb } from '../../core/local-db/local-db';
@@ -10,8 +11,14 @@ import type { Today } from '../../core/models/routine';
 import { TodayPage } from './today-page';
 
 const bench = {
-  id: 1, name: 'Press de banca', muscle_group: 'chest' as const, equipment: 'barbell' as const,
-  is_unilateral: false, uses_bodyweight: false, notes: null, archived_at: null,
+  id: 1,
+  name: 'Press de banca',
+  muscle_group: 'chest' as const,
+  equipment: 'barbell' as const,
+  is_unilateral: false,
+  uses_bodyweight: false,
+  notes: null,
+  archived_at: null,
 };
 
 const today: Today = {
@@ -19,16 +26,43 @@ const today: Today = {
   weekday: 1,
   routine: { id: 1, name: 'Rutina 4 días' },
   day: {
-    id: 10, routine_id: 1, name: 'Lunes – Pecho (Bilbo)', weekday: 1, position: 0,
-    exercises: [{
-      id: 100, routine_day_id: 10, exercise: bench, position: 0, target_sets: 1, target_reps_min: null,
-      target_reps_max: null, target_text: '~30 reps explosivas, 40-45 kg', default_set_type: 'bilbo',
-      rest_seconds: 180, notes: null,
-      last_performance: {
-        workout_id: 'w1', date: '2026-10-26',
-        sets: [{ id: 's1', set_number: 1, set_type: 'bilbo', weight_kg: 42.5, reps: 30, side: 'both', rir: null, pain_level: null, notes: null }],
+    id: 10,
+    routine_id: 1,
+    name: 'Lunes – Pecho (Bilbo)',
+    weekday: 1,
+    position: 0,
+    exercises: [
+      {
+        id: 100,
+        routine_day_id: 10,
+        exercise: bench,
+        position: 0,
+        target_sets: 1,
+        target_reps_min: null,
+        target_reps_max: null,
+        target_text: '~30 reps explosivas, 40-45 kg',
+        default_set_type: 'bilbo',
+        rest_seconds: 180,
+        notes: null,
+        last_performance: {
+          workout_id: 'w1',
+          date: '2026-10-26',
+          sets: [
+            {
+              id: 's1',
+              set_number: 1,
+              set_type: 'bilbo',
+              weight_kg: 42.5,
+              reps: 30,
+              side: 'both',
+              rir: null,
+              pain_level: null,
+              notes: null,
+            },
+          ],
+        },
       },
-    }],
+    ],
   },
   days: [{ id: 10, name: 'Lunes – Pecho (Bilbo)', weekday: 1 }],
 };
@@ -47,8 +81,12 @@ async function render(data: Today, activeId: string | null = null) {
       provideRouter([{ path: 'entrenamiento/:id', component: Blank }]),
       { provide: TodayApi, useValue: { get: () => Promise.resolve(data) } },
       { provide: WorkoutSessionService, useValue: sessions },
-      { provide: AuthService, useValue: { user: signal({ id: 1, name: 'Luciano Grasso', email: 'l@x.cl' }) } },
+      {
+        provide: AuthService,
+        useValue: { user: signal({ id: 1, name: 'Luciano Grasso', email: 'l@x.cl' }) },
+      },
       { provide: LOCAL_DB, useValue: new LocalDb(`test-${crypto.randomUUID()}`) },
+      { provide: InvitationsApi, useValue: { list: () => Promise.resolve([]) } },
     ],
   });
   const fixture = TestBed.createComponent(TodayPage);
@@ -92,21 +130,19 @@ describe('TodayPage', () => {
     expect(el.querySelector('a[href="/rutinas/plantillas"]')).not.toBeNull();
   });
 
-  it('links the greeting to the account page', async () => {
+  it('offers a "Mi cuenta" menu next to the greeting, which is not a link', async () => {
     const { el } = await render(today);
-    expect(el.querySelector('a[href="/cuenta"]')?.textContent).toContain('Luciano');
-  });
-
-  it('shows an avatar with the initials that opens the account', async () => {
-    const { el } = await render(today);
-    const avatar = el.querySelector('a[aria-label="Mi cuenta"]');
-    expect(avatar?.getAttribute('href')).toBe('/cuenta');
-    expect(avatar?.textContent?.trim()).toBe('LG');
+    const button = el.querySelector('app-account-menu button');
+    expect(button?.textContent).toContain('Mi cuenta');
+    expect(button?.getAttribute('aria-expanded')).toBe('false');
+    expect(el.querySelector('h1')?.closest('a')).toBeNull();
   });
 
   it('starts a workout from the day', async () => {
     const { el, fixture, sessions } = await render(today);
-    const start = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Empezar entrenamiento'))!;
+    const start = Array.from(el.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Empezar entrenamiento'),
+    )!;
     expect(start.disabled).toBe(false);
 
     start.click();
@@ -118,7 +154,9 @@ describe('TodayPage', () => {
 
   it('offers to continue the active workout', async () => {
     const { el } = await render(today, 'abc');
-    const link = Array.from(el.querySelectorAll('a')).find((a) => a.textContent?.includes('Continuar entrenamiento'))!;
+    const link = Array.from(el.querySelectorAll('a')).find((a) =>
+      a.textContent?.includes('Continuar entrenamiento'),
+    )!;
     expect(link.getAttribute('href')).toBe('/entrenamiento/abc');
   });
 });

@@ -9,9 +9,11 @@ import { formatDate } from '../../core/format/format';
 import type { WorkoutSummary } from '../../core/models/workout';
 
 /** Historial de sesiones sincronizadas, de la más reciente a la más antigua. */
+import { AppSkeleton } from '../../shared/ui/app-skeleton';
+
 @Component({
   selector: 'app-workouts-page',
-  imports: [RouterLink, NgIcon, HlmButton],
+  imports: [RouterLink, NgIcon, HlmButton, AppSkeleton],
   providers: [provideIcons({ lucideChevronLeft, lucideChevronRight })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -54,6 +56,8 @@ import type { WorkoutSummary } from '../../core/models/workout';
       } @empty {
         @if (!loading()) {
           <li class="text-muted-foreground">Todavía no hay entrenamientos sincronizados.</li>
+        } @else {
+          <li><app-skeleton variant="list" [rows]="4" /></li>
         }
       }
     </ul>

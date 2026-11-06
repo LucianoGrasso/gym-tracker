@@ -8,9 +8,11 @@ import { formatDate, formatKg } from '../../core/format/format';
 import type { Exercise, ExerciseSession } from '../../core/models/exercise';
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, SET_TYPE_LABELS } from '../../core/models/labels';
 
+import { AppSkeleton } from '../../shared/ui/app-skeleton';
+
 @Component({
   selector: 'app-exercise-detail-page',
-  imports: [RouterLink, HlmBadge, HlmButton],
+  imports: [RouterLink, HlmBadge, HlmButton, AppSkeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a routerLink="/ejercicios" class="mb-4 inline-block text-sm text-muted-foreground">← Ejercicios</a>
@@ -66,7 +68,7 @@ import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, SET_TYPE_LABELS } from '../../co
     } @else if (exercise.error()) {
       <p class="text-destructive">No se encontró el ejercicio.</p>
     } @else {
-      <p class="text-muted-foreground">Cargando…</p>
+      <app-skeleton variant="page" />
     }
   `,
 })

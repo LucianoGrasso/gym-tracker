@@ -18,9 +18,11 @@ import { consistencyOption, heatmapRange, lineOption, weeklyVolumeOption } from 
 import { ChipGroup } from '../../shared/ui/chip-group';
 import { formatRecentRecord } from './format-record';
 
+import { AppSkeleton } from '../../shared/ui/app-skeleton';
+
 @Component({
   selector: 'app-stats-page',
-  imports: [RouterLink, NgIcon, HlmButton, HlmInput, NgxEchartsDirective, ChipGroup],
+  imports: [RouterLink, NgIcon, HlmButton, HlmInput, NgxEchartsDirective, ChipGroup, AppSkeleton],
   providers: [provideIcons({ lucideChevronRight, lucideTrophy })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -33,7 +35,9 @@ import { formatRecentRecord } from './format-record';
       (valueChange)="period.set($any($event))"
     />
 
-    @if (overview.value(); as o) {
+    @if (overview.error()) {
+      <p class="mb-4 text-destructive">No se pudieron cargar las estadísticas.</p>
+    } @else if (overview.value(); as o) {
       <dl class="mb-6 grid grid-cols-2 gap-3">
         <div class="card p-4">
           <dt class="eyebrow">Sesiones</dt>
@@ -75,8 +79,8 @@ import { formatRecentRecord } from './format-record';
           </ul>
         </section>
       }
-    } @else if (overview.error()) {
-      <p class="mb-4 text-destructive">No se pudieron cargar las estadísticas.</p>
+    } @else {
+      <app-skeleton variant="list" [rows]="2" />
     }
 
     <section class="card mb-6 p-4">
@@ -124,7 +128,7 @@ import { formatRecentRecord } from './format-record';
       }
     </section>
 
-    @if (overview.value()?.exercises?.length) {
+    @if (overview.hasValue() && overview.value()?.exercises?.length) {
       <section>
         <h2 class="section-title mb-3">Por ejercicio</h2>
         <ul class="flex flex-col gap-2">

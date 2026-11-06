@@ -20,7 +20,6 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'hoy' },
       { path: 'hoy', title: 'Hoy · GymTracker', loadComponent: () => import('./features/today/today-page').then((m) => m.TodayPage) },
-      { path: 'cuenta', title: 'Cuenta · GymTracker', loadComponent: () => import('./features/account/account-page').then((m) => m.AccountPage) },
       {
         path: 'rutinas',
         title: 'Rutinas · GymTracker',
