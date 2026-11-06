@@ -39,7 +39,7 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
       @if (error()) { <p class="mb-4 text-sm text-destructive" role="alert">{{ error() }}</p> }
 
       <h2 class="mb-2 section-title">Días</h2>
-      <ul cdkDropList (cdkDropListDropped)="dropDay($event)" class="mb-6 flex flex-col gap-2">
+      <ul cdkDropList cdkDropListLockAxis="y" (cdkDropListDropped)="dropDay($event)" class="mb-6 flex flex-col gap-2">
         @for (day of r.days; track day.id) {
           <li cdkDrag class="flex items-center gap-2 card p-2">
             <button cdkDragHandle type="button" class="flex size-12 shrink-0 cursor-grab items-center justify-center text-muted-foreground" aria-label="Arrastrar para reordenar">

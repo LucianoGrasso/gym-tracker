@@ -201,6 +201,34 @@ body::before {
   z-index: 50;
 }
 
+/* Arrastrar y soltar (Angular CDK): los vecinos se deslizan, el elemento se levanta y se asienta al soltar. */
+.cdk-drag-preview {
+  @apply rounded-2xl shadow-2xl ring-2 ring-primary/60;
+  box-sizing: border-box;
+  transform-origin: center;
+  scale: 1.03;
+  opacity: 0.97;
+  cursor: grabbing;
+}
+.cdk-drag-placeholder {
+  @apply rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5;
+}
+.cdk-drag-placeholder > * {
+  opacity: 0;
+}
+.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+  transition: transform 220ms cubic-bezier(0.2, 0, 0, 1);
+}
+.cdk-drag-animating {
+  transition: transform 260ms cubic-bezier(0.2, 0, 0, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder),
+  .cdk-drag-animating {
+    transition: none;
+  }
+}
+
 @layer components {
   /* Título de pantalla: condensado, en mayúsculas. */
   .page-title {

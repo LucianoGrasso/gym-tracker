@@ -38,7 +38,7 @@ import { RoutineExerciseForm } from './routine-exercise-form';
 
       @if (error()) { <p class="mb-4 text-sm text-destructive" role="alert">{{ error() }}</p> }
 
-      <ul cdkDropList (cdkDropListDropped)="drop($event)" class="mb-6 flex flex-col gap-2">
+      <ul cdkDropList cdkDropListLockAxis="y" (cdkDropListDropped)="drop($event)" class="mb-6 flex flex-col gap-2">
         @for (item of d.exercises; track item.id) {
           <li cdkDrag class="card p-2">
             @if (editingId() === item.id) {
