@@ -1,4 +1,10 @@
-import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
+import {
+  CdkDrag,
+  CdkDragDrop,
+  CdkDragHandle,
+  CdkDropList,
+  moveItemInArray,
+} from '@angular/cdk/drag-drop';
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -14,52 +20,104 @@ import { WEEKDAYS, WEEKDAY_LABELS } from '../../core/models/labels';
 import type { Routine, RoutineDay } from '../../core/models/routine';
 import { SELECT_CLASS } from '../../shared/ui/form-styles';
 
+import { AppSkeleton } from '../../shared/ui/app-skeleton';
+
 @Component({
   selector: 'app-routine-detail-page',
-  imports: [ReactiveFormsModule, RouterLink, CdkDropList, CdkDrag, CdkDragHandle, NgIcon, HlmBadge, HlmButton, HlmInput, HlmLabel],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    CdkDropList,
+    CdkDrag,
+    CdkDragHandle,
+    NgIcon,
+    HlmBadge,
+    HlmButton,
+    HlmInput,
+    HlmLabel,
+    AppSkeleton
+  ],
   providers: [provideIcons({ lucideGripVertical, lucideCopy, lucideTrash2 })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a routerLink="/rutinas" class="mb-4 inline-block text-sm text-muted-foreground">← Rutinas</a>
     @if (agregada()) {
-      <p class="mb-4 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm" role="status">
+      <p
+        class="mb-4 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm"
+        role="status"
+      >
         Rutina agregada. Actívala cuando quieras empezarla.
       </p>
     }
 
     @if (routine(); as r) {
       <form class="mb-2 flex gap-2" (submit)="$event.preventDefault(); rename(r)">
-        <input hlmInput class="h-12 flex-1 text-lg font-semibold" [value]="r.name" #name
-               (change)="draftName.set(name.value)" aria-label="Nombre de la rutina" />
-        <button hlmBtn type="submit" variant="outline" class="h-12" [disabled]="!draftName()">Guardar</button>
+        <input
+          hlmInput
+          class="h-12 flex-1 text-lg font-semibold"
+          [value]="r.name"
+          #name
+          (change)="draftName.set(name.value)"
+          aria-label="Nombre de la rutina"
+        />
+        <button hlmBtn type="submit" variant="outline" class="h-12" [disabled]="!draftName()">
+          Guardar
+        </button>
       </form>
       <div class="mb-6 flex items-center gap-3">
         @if (r.is_active) {
           <span hlmBadge>Activa</span>
         } @else {
-          <button hlmBtn variant="outline" class="h-12" (click)="activate(r)">Marcar como activa</button>
+          <button hlmBtn variant="outline" class="h-12" (click)="activate(r)">
+            Marcar como activa
+          </button>
         }
       </div>
 
-      @if (error()) { <p class="mb-4 text-sm text-destructive" role="alert">{{ error() }}</p> }
+      @if (error()) {
+        <p class="mb-4 text-sm text-destructive" role="alert">{{ error() }}</p>
+      }
 
       <h2 class="mb-2 section-title">Días</h2>
-      <ul cdkDropList cdkDropListLockAxis="y" (cdkDropListDropped)="dropDay($event)" class="mb-6 flex flex-col gap-2">
+      <ul
+        cdkDropList
+        cdkDropListLockAxis="y"
+        (cdkDropListDropped)="dropDay($event)"
+        class="mb-6 flex flex-col gap-2"
+      >
         @for (day of r.days; track day.id) {
           <li cdkDrag class="flex items-center gap-2 card p-2">
-            <button cdkDragHandle type="button" class="flex size-12 shrink-0 cursor-grab items-center justify-center text-muted-foreground" aria-label="Arrastrar para reordenar">
+            <button
+              cdkDragHandle
+              type="button"
+              class="flex size-12 shrink-0 cursor-grab items-center justify-center text-muted-foreground"
+              aria-label="Arrastrar para reordenar"
+            >
               <ng-icon name="lucideGripVertical" size="20" />
             </button>
             <a [routerLink]="['/rutinas', r.id, 'dias', day.id]" class="min-w-0 flex-1 py-2">
               <span class="block truncate font-medium">{{ day.name }}</span>
               <span class="text-sm text-muted-foreground">
-                {{ day.weekday ? weekdayLabels[day.weekday] : 'Sin día fijo' }} · {{ day.exercises?.length ?? 0 }} ejercicios
+                {{ day.weekday ? weekdayLabels[day.weekday] : 'Sin día fijo' }} ·
+                {{ day.exercises?.length ?? 0 }} ejercicios
               </span>
             </a>
-            <button hlmBtn variant="ghost" size="icon-lg" (click)="duplicate(day)" aria-label="Duplicar día">
+            <button
+              hlmBtn
+              variant="ghost"
+              size="icon-lg"
+              (click)="duplicate(day)"
+              aria-label="Duplicar día"
+            >
               <ng-icon name="lucideCopy" />
             </button>
-            <button hlmBtn variant="ghost" size="icon-lg" (click)="removeDay(day)" aria-label="Eliminar día">
+            <button
+              hlmBtn
+              variant="ghost"
+              size="icon-lg"
+              (click)="removeDay(day)"
+              aria-label="Eliminar día"
+            >
               <ng-icon name="lucideTrash2" />
             </button>
           </li>
@@ -69,26 +127,41 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
       </ul>
 
       <h2 class="mb-2 section-title">Agregar día</h2>
-      <form [formGroup]="dayForm" (ngSubmit)="addDay(r)" class="mb-8 flex flex-col gap-3" novalidate>
+      <form
+        [formGroup]="dayForm"
+        (ngSubmit)="addDay(r)"
+        class="mb-8 flex flex-col gap-3"
+        novalidate
+      >
         <div class="flex flex-col gap-2">
           <label hlmLabel for="day_name">Nombre</label>
-          <input hlmInput id="day_name" formControlName="name" placeholder="Ej.: Lunes – Pecho" class="h-12 text-base" />
+          <input
+            hlmInput
+            id="day_name"
+            formControlName="name"
+            placeholder="Ej.: Lunes – Pecho"
+            class="h-12 text-base"
+          />
         </div>
         <div class="flex flex-col gap-2">
           <label hlmLabel for="day_weekday">Día de la semana</label>
           <select id="day_weekday" formControlName="weekday" [class]="selectClass">
             <option [ngValue]="null">Sin día fijo</option>
-            @for (w of weekdays; track w) { <option [ngValue]="w">{{ weekdayLabels[w] }}</option> }
+            @for (w of weekdays; track w) {
+              <option [ngValue]="w">{{ weekdayLabels[w] }}</option>
+            }
           </select>
         </div>
         <button hlmBtn type="submit" class="h-12" [disabled]="dayForm.invalid">Agregar día</button>
       </form>
 
-      <button hlmBtn variant="destructive" class="h-12 w-full" (click)="removeRoutine(r)">Eliminar rutina</button>
+      <button hlmBtn variant="destructive" class="h-12 w-full" (click)="removeRoutine(r)">
+        Eliminar rutina
+      </button>
     } @else if (error()) {
       <p class="text-destructive">{{ error() }}</p>
     } @else {
-      <p class="text-muted-foreground">Cargando…</p>
+      <app-skeleton variant="page" />
     }
   `,
 })
@@ -108,7 +181,10 @@ export class RoutineDetailPage implements OnInit {
   protected readonly draftName = signal('');
 
   protected readonly dayForm = new FormGroup({
-    name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(100)] }),
+    name: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(100)],
+    }),
     weekday: new FormControl<number | null>(null),
   });
 
@@ -135,7 +211,9 @@ export class RoutineDetailPage implements OnInit {
   }
 
   rename(routine: Routine): Promise<void> {
-    return this.run(() => this.api.update(routine.id, { name: this.draftName(), notes: routine.notes }));
+    return this.run(() =>
+      this.api.update(routine.id, { name: this.draftName(), notes: routine.notes }),
+    );
   }
 
   activate(routine: Routine): Promise<void> {
@@ -148,7 +226,12 @@ export class RoutineDetailPage implements OnInit {
     const days = [...routine.days];
     moveItemInArray(days, event.previousIndex, event.currentIndex);
     this.routine.set({ ...routine, days });
-    await this.run(() => this.api.reorderDays(routine.id, days.map((d) => d.id)));
+    await this.run(() =>
+      this.api.reorderDays(
+        routine.id,
+        days.map((d) => d.id),
+      ),
+    );
   }
 
   async addDay(routine: Routine): Promise<void> {
@@ -169,7 +252,10 @@ export class RoutineDetailPage implements OnInit {
   }
 
   async removeRoutine(routine: Routine): Promise<void> {
-    if (!confirm(`¿Eliminar la rutina "${routine.name}"? El historial de entrenamientos se conserva.`)) return;
+    if (
+      !confirm(`¿Eliminar la rutina "${routine.name}"? El historial de entrenamientos se conserva.`)
+    )
+      return;
     try {
       await this.api.remove(routine.id);
       await this.router.navigateByUrl('/rutinas');

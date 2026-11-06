@@ -17,7 +17,10 @@ async function render(guard: () => Promise<boolean>) {
       provideRouter([{ path: 'hoy', component: Screen, canActivate: [guard] }]),
       { provide: HttpClient, useValue: { get: () => of(null) } },
       { provide: SyncService, useValue: { start: vi.fn() } },
-      { provide: WorkoutSessionService, useValue: { restoreActive: vi.fn().mockResolvedValue(null) } },
+      {
+        provide: WorkoutSessionService,
+        useValue: { restoreActive: vi.fn().mockResolvedValue(null) },
+      },
     ],
   });
   const fixture = TestBed.createComponent(App);
