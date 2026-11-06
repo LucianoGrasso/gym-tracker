@@ -185,6 +185,20 @@ select option {
 body {
   @apply antialiased;
   min-height: 100dvh;
+  /* App instalada en iOS (black-translucent + viewport-fit=cover): el contenido empieza bajo la barra de estado.
+     En un navegador normal env() vale 0 y no cambia nada. */
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Tapa fija detrás de la hora y la Dynamic Island para que el contenido no se vea ni se toque al hacer scroll. */
+body::before {
+  @apply bg-background;
+  content: '';
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  height: env(safe-area-inset-top);
+  z-index: 50;
 }
 
 @layer components {

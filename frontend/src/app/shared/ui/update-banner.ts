@@ -22,7 +22,7 @@ export const RELOAD_PAGE = new InjectionToken<() => void>('RELOAD_PAGE', {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (ready()) {
-      <div class="sticky top-0 z-10 bg-background/90 px-4 pt-2 backdrop-blur">
+      <div class="sticky top-[env(safe-area-inset-top)] z-10 bg-background/90 px-4 pt-2 backdrop-blur">
         <div
           class="mx-auto flex max-w-lg items-center gap-3 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm"
           role="status"

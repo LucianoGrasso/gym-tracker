@@ -16,7 +16,7 @@ import { syncLabel } from '../../core/sync/sync-label';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (!ok()) {
-      <div class="sticky top-0 z-10 bg-background/90 px-4 pt-2 backdrop-blur">
+      <div class="sticky top-[env(safe-area-inset-top)] z-10 bg-background/90 px-4 pt-2 backdrop-blur">
         <div
           class="mx-auto flex max-w-lg items-center gap-3 rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-sm text-amber-200"
           role="status"
