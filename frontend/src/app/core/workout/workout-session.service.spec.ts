@@ -102,6 +102,22 @@ describe('WorkoutSessionService', () => {
     expect(enqueue).toHaveBeenLastCalledWith('DELETE', `/api/workout-exercises/${added.id}`);
   });
 
+  it('places added exercises after the last one even when an earlier one was removed', async () => {
+    const service = create();
+    await service.startFree('2026-11-05');
+    const first = await service.addExercise(bench);
+    const second = await service.addExercise(pullUps);
+    await service.addExercise({ ...bench, id: 3, name: 'Remo' });
+
+    await service.removeExercise(second.id);
+    const added = await service.addExercise({ ...bench, id: 4, name: 'Face pull' });
+
+    expect(first.position).toBe(0);
+    expect(added.position).toBe(3);
+    const positions = service.session()!.exercises.map((e) => e.position);
+    expect(new Set(positions).size).toBe(positions.length);
+  });
+
   it('finishes the session and clears the active one', async () => {
     const service = create();
     const session = await service.startFromDay(today);

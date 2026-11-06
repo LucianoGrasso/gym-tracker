@@ -65,7 +65,9 @@ export class WorkoutSessionService {
 
   async addExercise(exercise: Exercise, lastPerformance: ExerciseSession | null = null): Promise<SessionExercise> {
     const session = this.require();
-    const item = sessionExerciseFrom(exercise, newId(), session.exercises.length, lastPerformance);
+    // Máximo + 1 y no length: si se quitó un ejercicio, length chocaría con una posición ocupada.
+    const position = Math.max(-1, ...session.exercises.map((e) => e.position)) + 1;
+    const item = sessionExerciseFrom(exercise, newId(), position, lastPerformance);
     await this.save({ ...session, exercises: [...session.exercises, item] });
     await this.sync.enqueue('PUT', `/api/workout-exercises/${item.id}`, workoutExercisePayload(session.id, item));
     return item;
