@@ -21,6 +21,11 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a routerLink="/rutinas" class="mb-4 inline-block text-sm text-muted-foreground">← Rutinas</a>
+    @if (agregada()) {
+      <p class="mb-4 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm" role="status">
+        Rutina agregada. Actívala cuando quieras empezarla.
+      </p>
+    }
 
     @if (routine(); as r) {
       <form class="mb-2 flex gap-2" (submit)="$event.preventDefault(); rename(r)">
@@ -92,6 +97,8 @@ export class RoutineDetailPage implements OnInit {
   private readonly router = inject(Router);
 
   readonly id = input.required<string>();
+  /** `?agregada=1` al llegar desde una plantilla recién importada. */
+  readonly agregada = input<string>();
 
   protected readonly selectClass = SELECT_CLASS;
   protected readonly weekdays = WEEKDAYS;

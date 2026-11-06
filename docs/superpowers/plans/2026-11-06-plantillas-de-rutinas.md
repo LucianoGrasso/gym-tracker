@@ -1300,7 +1300,10 @@ import { TEMPLATE_GOAL_LABELS, TEMPLATE_LEVEL_LABELS } from '../../core/models/l
     <h1 class="mb-1 page-title">Plantillas</h1>
     <p class="mb-6 text-sm text-muted-foreground">Rutinas de programas y atletas conocidos. Agrégalas a tus rutinas y actívalas cuando quieras.</p>
 
-    @if (templates.value(); as list) {
+    @if (templates.error()) {
+      <p class="mb-3 text-sm text-destructive" role="alert">No se pudo cargar el catálogo. Revisa tu conexión.</p>
+      <button hlmBtn variant="outline" class="h-12 w-full" (click)="templates.reload()">Reintentar</button>
+    } @else if (templates.value(); as list) {
       <ul class="flex flex-col gap-3">
         @for (t of list; track t.slug) {
           <li>
@@ -1319,9 +1322,6 @@ import { TEMPLATE_GOAL_LABELS, TEMPLATE_LEVEL_LABELS } from '../../core/models/l
           </li>
         }
       </ul>
-    } @else if (templates.error()) {
-      <p class="mb-3 text-sm text-destructive" role="alert">No se pudo cargar el catálogo. Revisa tu conexión.</p>
-      <button hlmBtn variant="outline" class="h-12 w-full" (click)="templates.reload()">Reintentar</button>
     } @else {
       <p class="text-muted-foreground">Cargando…</p>
     }
@@ -1354,7 +1354,10 @@ import { SET_TYPE_LABELS, TEMPLATE_GOAL_LABELS, TEMPLATE_LEVEL_LABELS } from '..
   template: `
     <a routerLink="/rutinas/plantillas" class="mb-4 inline-block text-sm text-muted-foreground">← Plantillas</a>
 
-    @if (template.value(); as t) {
+    @if (template.error()) {
+      <p class="mb-3 text-sm text-destructive" role="alert">No se pudo cargar el catálogo. Revisa tu conexión.</p>
+      <button hlmBtn variant="outline" class="h-12 w-full" (click)="template.reload()">Reintentar</button>
+    } @else if (template.value(); as t) {
       <h1 class="mb-1 page-title">{{ t.name }}</h1>
       @if (t.inspired_by) { <p class="text-sm text-muted-foreground">Inspirada en {{ t.inspired_by }}</p> }
       <p class="mt-2 flex flex-wrap gap-2">
@@ -1389,9 +1392,6 @@ import { SET_TYPE_LABELS, TEMPLATE_GOAL_LABELS, TEMPLATE_LEVEL_LABELS } from '..
       </div>
     } @else if (template.isLoading()) {
       <p class="text-muted-foreground">Cargando…</p>
-    } @else if (template.error()) {
-      <p class="mb-3 text-sm text-destructive" role="alert">No se pudo cargar el catálogo. Revisa tu conexión.</p>
-      <button hlmBtn variant="outline" class="h-12 w-full" (click)="template.reload()">Reintentar</button>
     } @else {
       <p class="text-muted-foreground">Esta plantilla no existe.</p>
     }

@@ -14,11 +14,12 @@ import type { Routine } from '../../core/models/routine';
   template: `
     <h1 class="mb-4 page-title">Rutinas</h1>
 
-    <form class="mb-6 flex gap-2" (submit)="$event.preventDefault(); create()">
+    <form class="mb-3 flex gap-2" (submit)="$event.preventDefault(); create()">
       <input hlmInput class="h-12 flex-1 text-base" placeholder="Nombre de la nueva rutina"
              [value]="newName()" (input)="newName.set($any($event.target).value)" aria-label="Nombre de la nueva rutina" />
       <button hlmBtn type="submit" class="h-12 px-4" [disabled]="!newName().trim()">Crear</button>
     </form>
+    <a hlmBtn variant="outline" routerLink="/rutinas/plantillas" class="mb-6 flex h-12 w-full items-center justify-center">Explorar plantillas</a>
 
     @if (error()) { <p class="mb-4 text-sm text-destructive" role="alert">{{ error() }}</p> }
 

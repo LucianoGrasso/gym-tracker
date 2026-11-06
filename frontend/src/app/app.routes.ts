@@ -20,6 +20,8 @@ export const routes: Routes = [
         title: 'Rutinas · GymTracker',
         children: [
           { path: '', loadComponent: () => import('./features/routines/routines-page').then((m) => m.RoutinesPage) },
+          { path: 'plantillas', title: 'Plantillas · GymTracker', loadComponent: () => import('./features/routines/templates-page').then((m) => m.TemplatesPage) },
+          { path: 'plantillas/:slug', title: 'Plantilla · GymTracker', loadComponent: () => import('./features/routines/template-detail-page').then((m) => m.TemplateDetailPage) },
           { path: ':id', loadComponent: () => import('./features/routines/routine-detail-page').then((m) => m.RoutineDetailPage) },
           { path: ':id/dias/:dayId', loadComponent: () => import('./features/routines/routine-day-page').then((m) => m.RoutineDayPage) },
         ],
