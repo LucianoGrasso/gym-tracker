@@ -67,4 +67,20 @@ describe('AuthService', () => {
 
     expect(service.user()).toBeNull();
   });
+
+  it('registers with an invitation and keeps the session', async () => {
+    const input = {
+      token: 'tok', name: 'Pedro', email: 'pedro@example.com', password: 'secret123', password_confirmation: 'secret123',
+    };
+    const result = service.register(input);
+    http.expectOne('/sanctum/csrf-cookie').flush(null);
+    await tick();
+    const req = http.expectOne('/auth/register');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(input);
+    req.flush({ data: user });
+
+    expect(await result).toEqual(user);
+    expect(service.user()).toEqual(user);
+  });
 });

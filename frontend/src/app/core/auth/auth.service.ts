@@ -7,6 +7,14 @@ interface UserResponse {
   data: User;
 }
 
+export interface RegisterInput {
+  token: string;
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
@@ -35,6 +43,13 @@ export class AuthService {
     const { data } = await firstValueFrom(
       this.http.post<UserResponse>('/auth/login', { email, password }),
     );
+    this.currentUser.set(data);
+    return data;
+  }
+
+  async register(input: RegisterInput): Promise<User> {
+    await firstValueFrom(this.http.get('/sanctum/csrf-cookie'));
+    const { data } = await firstValueFrom(this.http.post<UserResponse>('/auth/register', input));
     this.currentUser.set(data);
     return data;
   }
