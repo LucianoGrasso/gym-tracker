@@ -796,7 +796,7 @@ it('never uses another user exercises or routine names', function () {
         ->assertJsonPath('data.name', '5×5 de Reg Park');
 
     expect(Exercise::where('user_id', $this->user->id)->where('name', 'Sentadilla')->count())->toBe(1)
-        ->and(Exercise::where('user_id', $other->id)->count())->toBe(1);
+        ->and(Exercise::withoutGlobalScopes()->where('user_id', $other->id)->count())->toBe(1);
 });
 ```
 
@@ -943,7 +943,7 @@ Agregar `use App\Http\Controllers\RoutineTemplateController;` junto a los demás
 - [ ] **Step 6: Run tests to verify they pass**
 
 Run: `cd backend && ./vendor/bin/pest tests/Feature/Api/RoutineTemplatesTest.php`
-Expected: PASS (11 tests).
+Expected: PASS (10 tests).
 
 Run: `cd backend && ./vendor/bin/pest`
 Expected: la suite completa en verde.

@@ -7,6 +7,7 @@ use App\Http\Controllers\HealthController;
 use App\Http\Controllers\RoutineController;
 use App\Http\Controllers\RoutineDayController;
 use App\Http\Controllers\RoutineDayExerciseController;
+use App\Http\Controllers\RoutineTemplateController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\TodayController;
 use App\Http\Controllers\WorkoutController;
@@ -41,6 +42,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/exercises/{exercise}/history', ExerciseHistoryController::class);
         Route::get('/stats/exercises/{exercise}', [StatsController::class, 'exercise']);
     });
+
+    Route::get('/routine-templates', [RoutineTemplateController::class, 'index']);
+    Route::post('/routine-templates/{slug}/import', [RoutineTemplateController::class, 'import']);
 
     Route::get('/routines', [RoutineController::class, 'index']);
     Route::post('/routines', [RoutineController::class, 'store']);
