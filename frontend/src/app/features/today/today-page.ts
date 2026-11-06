@@ -13,7 +13,7 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { TodayApi } from '../../core/api/today-api';
 import { AuthService } from '../../core/auth/auth.service';
 import { formatDate } from '../../core/format/format';
-import { firstName, greeting } from '../../core/format/greeting';
+import { firstName, greeting, initials } from '../../core/format/greeting';
 import { formatBestSet, formatTargets } from '../../core/format/training';
 import { cachedFetch } from '../../core/local-db/cached-fetch';
 import { LOCAL_DB } from '../../core/local-db/local-db';
@@ -21,23 +21,34 @@ import { SET_TYPE_LABELS, WEEKDAY_LABELS } from '../../core/models/labels';
 import type { Today, TodayExercise } from '../../core/models/routine';
 import { WorkoutSessionService } from '../../core/workout/workout-session.service';
 
+import { AppSkeleton } from '../../shared/ui/app-skeleton';
+
 @Component({
   selector: 'app-today-page',
-  imports: [RouterLink, NgTemplateOutlet, NgIcon, HlmButton],
+  imports: [RouterLink, NgTemplateOutlet, NgIcon, HlmButton, AppSkeleton],
   providers: [
     provideIcons({ lucideChevronRight, lucideHistory, lucideListChecks, lucideMoon, lucidePlay }),
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (today.value(); as t) {
-      <header class="mb-5">
-        <p class="eyebrow">{{ weekdayLabels[t.weekday] }} {{ formatDate(t.date) }}</p>
-        <a routerLink="/cuenta" aria-label="Mi cuenta" class="block">
-          <h1 class="page-title mt-1 text-4xl">
-            {{ salute() }}@if (name()) {<span>,</span>
-              <span class="block text-primary">{{ name() }}</span>
-            }
-          </h1>
+      <header class="mb-5 flex items-start gap-3">
+        <div class="min-w-0 flex-1">
+          <p class="eyebrow">{{ weekdayLabels[t.weekday] }} {{ formatDate(t.date) }}</p>
+          <a routerLink="/cuenta" class="block">
+            <h1 class="page-title mt-1 text-4xl">
+              {{ salute() }}@if (name()) {<span>,</span>
+                <span class="block text-primary">{{ name() }}</span>
+              }
+            </h1>
+          </a>
+        </div>
+        <a
+          routerLink="/cuenta"
+          aria-label="Mi cuenta"
+          class="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/15 font-display text-lg font-bold text-primary ring-2 ring-primary/60"
+        >
+          {{ userInitials() }}
         </a>
       </header>
 
@@ -157,7 +168,7 @@ import { WorkoutSessionService } from '../../core/workout/workout-session.servic
       <p class="text-destructive">No se pudo cargar el día de hoy.</p>
       <button hlmBtn variant="outline" class="mt-3 h-12 w-full" (click)="today.reload()">Reintentar</button>
     } @else {
-      <p class="text-muted-foreground">Cargando…</p>
+      <app-skeleton />
     }
   `,
 })
@@ -176,6 +187,7 @@ export class TodayPage {
 
   protected readonly salute = signal(greeting());
   protected readonly name = computed(() => firstName(this.auth.user()?.name ?? ''));
+  protected readonly userInitials = computed(() => initials(this.auth.user()?.name ?? ''));
 
   /** Con respaldo local: sin señal muestra el último "Hoy" descargado. */
   protected readonly today = resource({ loader: () => cachedFetch(this.db, 'today', () => this.api.get()) });

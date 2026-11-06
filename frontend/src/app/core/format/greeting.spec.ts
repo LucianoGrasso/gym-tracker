@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firstName, greeting } from './greeting';
+import { firstName, greeting, initials } from './greeting';
 
 describe('greeting', () => {
   it('depends on the hour in Santiago', () => {
@@ -15,5 +15,13 @@ describe('firstName', () => {
   it('takes the first word of the name', () => {
     expect(firstName('Luciano Grasso')).toBe('Luciano');
     expect(firstName('  Ana ')).toBe('Ana');
+  });
+});
+
+describe('initials', () => {
+  it('takes the first letter of the first two words', () => {
+    expect(initials('Luciano Grasso Sadi')).toBe('LG');
+    expect(initials(' ana ')).toBe('A');
+    expect(initials('')).toBe('?');
   });
 });

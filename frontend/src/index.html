@@ -15,6 +15,25 @@
   <meta name="apple-mobile-web-app-title" content="GymTracker">
 </head>
 <body>
-  <app-root></app-root>
+  <!-- Copia estática de AppSkeleton (shared/ui/app-skeleton.ts): se ve mientras descarga la app y Angular la reemplaza al arrancar. -->
+  <app-root>
+    <div class="mx-auto max-w-lg px-4 pt-6" role="status" aria-busy="true" style="padding-top: calc(1.5rem + env(safe-area-inset-top))">
+      <span class="sr-only">Cargando…</span>
+      <div class="mb-5 flex items-start gap-3">
+        <div class="flex-1">
+          <div class="skeleton mb-3 h-3 w-28"></div>
+          <div class="skeleton mb-2 h-8 w-48"></div>
+          <div class="skeleton h-8 w-36"></div>
+        </div>
+        <div class="skeleton size-11 rounded-full"></div>
+      </div>
+      <div class="skeleton mb-6 h-48 rounded-3xl"></div>
+      <div class="skeleton mb-3 h-5 w-32"></div>
+      <div class="skeleton mb-3 h-20 rounded-2xl"></div>
+      <div class="skeleton mb-3 h-20 rounded-2xl"></div>
+      <div class="skeleton mb-3 h-20 rounded-2xl"></div>
+      <p class="skeleton-hint mt-4 text-center text-sm text-muted-foreground">Cargando tus datos…</p>
+    </div>
+  </app-root>
 </body>
 </html>

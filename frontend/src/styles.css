@@ -234,6 +234,15 @@ body::before {
 }
 
 @layer components {
+  /* Bloque gris que pulsa mientras carga (skeleton). Sin animación si el usuario pide menos movimiento. */
+  .skeleton {
+    @apply rounded-lg bg-muted motion-safe:animate-pulse;
+  }
+  /* Texto que aparece recién a los 3 s: si la BD está despertando, que no parezca colgado. */
+  .skeleton-hint {
+    opacity: 0;
+    animation: skeleton-hint-in 400ms ease-out 3s forwards;
+  }
   /* Título de pantalla: condensado, en mayúsculas. */
   .page-title {
     @apply font-display text-3xl leading-none font-bold tracking-wide uppercase;
@@ -251,5 +260,11 @@ body::before {
   /* Pesos, reps y tiempos: columnas alineadas. */
   .num {
     @apply font-display tabular-nums;
+  }
+}
+
+@keyframes skeleton-hint-in {
+  to {
+    opacity: 1;
   }
 }

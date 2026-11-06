@@ -97,6 +97,13 @@ describe('TodayPage', () => {
     expect(el.querySelector('a[href="/cuenta"]')?.textContent).toContain('Luciano');
   });
 
+  it('shows an avatar with the initials that opens the account', async () => {
+    const { el } = await render(today);
+    const avatar = el.querySelector('a[aria-label="Mi cuenta"]');
+    expect(avatar?.getAttribute('href')).toBe('/cuenta');
+    expect(avatar?.textContent?.trim()).toBe('LG');
+  });
+
   it('starts a workout from the day', async () => {
     const { el, fixture, sessions } = await render(today);
     const start = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Empezar entrenamiento'))!;

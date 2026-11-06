@@ -12,6 +12,18 @@ export function greeting(now: Date = new Date()): string {
   return 'Buenas noches';
 }
 
+/** "Luciano Grasso Sadi" → "LG" (avatar de la cuenta). */
+export function initials(name: string): string {
+  const letters = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0].toUpperCase())
+    .join('');
+  return letters || '?';
+}
+
 /** "Luciano Grasso" → "Luciano". */
 export function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] ?? '';
