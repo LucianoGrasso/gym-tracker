@@ -37,6 +37,33 @@ describe('RestTimerService', () => {
     expect(navigator.vibrate).toHaveBeenCalled();
   });
 
+  it('announces the end of the rest for a few seconds', () => {
+    const timer = TestBed.inject(RestTimerService);
+    timer.start(10);
+    vi.advanceTimersByTime(7_100);
+    expect(timer.ending()).toBe(true);
+
+    vi.advanceTimersByTime(3_000);
+    expect(timer.running()).toBe(false);
+    expect(timer.finished()).toBe(true);
+
+    vi.advanceTimersByTime(4_000);
+    expect(timer.finished()).toBe(false);
+  });
+
+  it('does not announce the end when the rest is skipped or dismissed', () => {
+    const timer = TestBed.inject(RestTimerService);
+    timer.start(10);
+    timer.stop();
+    expect(timer.finished()).toBe(false);
+
+    timer.start(1);
+    vi.advanceTimersByTime(1_500);
+    expect(timer.finished()).toBe(true);
+    timer.dismiss();
+    expect(timer.finished()).toBe(false);
+  });
+
   it('adds time and stops', () => {
     const timer = TestBed.inject(RestTimerService);
     timer.start(60);

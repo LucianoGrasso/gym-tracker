@@ -8,7 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideTrash2, lucideX } from '@ng-icons/lucide';
+import { lucideCheck, lucideTrash2, lucideX } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { formatDate } from '../../core/format/format';
@@ -34,7 +34,7 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
 @Component({
   selector: 'app-exercise-card',
   imports: [NgIcon, HlmButton, HlmInput],
-  providers: [provideIcons({ lucideTrash2, lucideX })],
+  providers: [provideIcons({ lucideCheck, lucideTrash2, lucideX })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @let ex = item();
@@ -76,6 +76,7 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
           @for (set of ex.sets; track set.id; let i = $index) {
             <li
               class="flex min-h-12 items-center rounded-xl bg-muted pl-3"
+              [class.set-saved]="lastSavedId() === set.id"
               [class.ring-2]="editingSetId() === set.id"
               [class.ring-primary]="editingSetId() === set.id"
             >
@@ -86,6 +87,9 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
               >
                 <span class="w-5 text-base text-muted-foreground">{{ i + 1 }}</span>
                 <span class="text-xl font-semibold">{{ setLine(set) }}</span>
+                @if (lastSavedId() === set.id) {
+                  <ng-icon name="lucideCheck" size="20" class="set-check text-primary" aria-hidden="true" />
+                }
               </button>
               <button
                 hlmBtn
@@ -249,7 +253,7 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
           class="num h-14 flex-1 text-xl font-bold tracking-wide uppercase"
           (click)="save()"
         >
-          {{ editingSetId() ? 'Actualizar' : 'Guardar serie' }}
+          {{ savedFlash() ? '✓ Guardada' : editingSetId() ? 'Actualizar' : 'Guardar serie' }}
         </button>
       </div>
       @if (editingSetId()) {
@@ -285,6 +289,10 @@ export class ExerciseCard {
   protected readonly formatNumber = formatNumber;
 
   protected readonly entry = linkedSignal<WorkoutSetInput>(() => suggestNextSet(this.item()));
+  /** Serie recién guardada: su fila destella y muestra un check. */
+  protected readonly lastSavedId = signal<string | null>(null);
+  protected readonly savedFlash = signal(false);
+  private flashHandle: ReturnType<typeof setTimeout> | undefined;
   protected readonly editingSetId = signal<string | null>(null);
   protected readonly showMore = signal(false);
   protected readonly hint = computed(() => bilboHint(this.item()));
@@ -341,10 +349,20 @@ export class ExerciseCard {
     if (editing) {
       await this.sessions.updateSet(this.item().id, editing, input);
       this.editingSetId.set(null);
+      this.celebrate(editing);
       return;
     }
-    await this.sessions.addSet(this.item().id, input);
+    const saved = await this.sessions.addSet(this.item().id, input);
+    this.celebrate(saved?.id ?? null);
     if (!this.finished()) this.timer.start(this.item().rest_seconds);
+  }
+
+  /** Destello en la fila guardada y "✓ Guardada" en el botón por un momento. */
+  private celebrate(setId: string | null): void {
+    this.lastSavedId.set(setId);
+    this.savedFlash.set(true);
+    clearTimeout(this.flashHandle);
+    this.flashHandle = setTimeout(() => this.savedFlash.set(false), 1200);
   }
 
   protected async removeSet(set: WorkoutSet): Promise<void> {

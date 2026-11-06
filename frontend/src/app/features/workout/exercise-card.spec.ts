@@ -87,6 +87,20 @@ describe('ExerciseCard', () => {
     expect(timer.start).toHaveBeenCalledWith(180);
   });
 
+  it('highlights the saved set and confirms it on the button', async () => {
+    const { el, fixture, sessions } = await render();
+    const saved = { ...item.last_performance!.sets[0], id: 's1' };
+    sessions.addSet.mockResolvedValue(saved);
+
+    button(el, 'Guardar serie').click();
+    await fixture.whenStable();
+    fixture.componentRef.setInput('item', { ...item, sets: [saved] });
+    fixture.detectChanges();
+
+    expect(el.querySelector('ol li')?.classList).toContain('set-saved');
+    expect(el.textContent).toContain('✓ Guardada');
+  });
+
   it('does not start the timer when editing a finished session', async () => {
     const { el, fixture, timer } = await render(true);
     button(el, 'Guardar serie').click();

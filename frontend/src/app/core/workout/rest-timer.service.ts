@@ -21,15 +21,22 @@ export class RestTimerService {
   private readonly endsAt = signal<number | null>(readStored());
   private readonly now = signal(Date.now());
   private handle: ReturnType<typeof setInterval> | null = null;
+  private readonly justFinished = signal(false);
+  private finishedHandle: ReturnType<typeof setTimeout> | null = null;
 
   readonly remaining = computed(() => remainingSeconds(this.endsAt(), this.now()));
   readonly running = computed(() => this.remaining() > 0);
+  /** Últimos 3 segundos: la barra late. */
+  readonly ending = computed(() => this.running() && this.remaining() <= 3);
+  /** El descanso terminó solo (no con "Saltar"): la barra avisa unos segundos. */
+  readonly finished = this.justFinished.asReadonly();
 
   constructor() {
     if (this.endsAt() !== null) this.tick();
   }
 
   start(seconds: number): void {
+    this.dismiss();
     this.setEndsAt(Date.now() + seconds * 1000);
   }
 
@@ -38,7 +45,15 @@ export class RestTimerService {
   }
 
   stop(): void {
+    this.dismiss();
     this.setEndsAt(null);
+  }
+
+  /** Cierra el aviso de "descanso terminado". */
+  dismiss(): void {
+    if (this.finishedHandle !== null) clearTimeout(this.finishedHandle);
+    this.finishedHandle = null;
+    this.justFinished.set(false);
   }
 
   private setEndsAt(value: number | null): void {
@@ -63,6 +78,8 @@ export class RestTimerService {
         if (this.endsAt() !== null) {
           navigator.vibrate?.([300, 150, 300]);
           this.setEndsAt(null);
+          this.justFinished.set(true);
+          this.finishedHandle = setTimeout(() => this.dismiss(), 4000);
         }
       }
     }, 250);
