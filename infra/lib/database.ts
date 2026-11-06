@@ -38,7 +38,8 @@ export class Database extends Construct {
       writer: rds.ClusterInstance.serverlessV2('Writer'),
       serverlessV2MinCapacity: 0,
       serverlessV2MaxCapacity: 2,
-      serverlessV2AutoPauseDuration: Duration.minutes(10),
+      // 5 min es el mínimo de AWS: con más usuarios, menos horas despierta = menos costo.
+      serverlessV2AutoPauseDuration: Duration.minutes(5),
       credentials: rds.Credentials.fromPassword(DB_USER, props.password),
       defaultDatabaseName: DB_NAME,
       vpc: this.vpc,

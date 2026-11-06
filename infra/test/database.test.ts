@@ -26,7 +26,7 @@ describe('Database', () => {
       MasterUserPassword: { Ref: 'DbPassword' },
       StorageEncrypted: true,
       DeletionProtection: true,
-      ServerlessV2ScalingConfiguration: { MinCapacity: 0, MaxCapacity: 2, SecondsUntilAutoPause: 600 },
+      ServerlessV2ScalingConfiguration: { MinCapacity: 0, MaxCapacity: 2, SecondsUntilAutoPause: 300 },
     });
     template.hasResourceProperties('AWS::RDS::DBInstance', { DBInstanceClass: 'db.serverless' });
   });
