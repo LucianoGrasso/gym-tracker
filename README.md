@@ -31,7 +31,7 @@ Abrir http://localhost:4200 e iniciar sesión con `luciano@gymtracker.test` / `p
 
 ## Producción (AWS)
 
-URL: _se completa tras el primer despliegue_.
+URL: https://d2vs4ifr98bzf3.cloudfront.net
 
 ```
 CloudFront ──┬── /*                          → S3 (build de Angular, PWA)
