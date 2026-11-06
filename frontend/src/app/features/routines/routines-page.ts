@@ -25,19 +25,27 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
     @if (error()) { <p class="mb-4 text-sm text-destructive" role="alert">{{ error() }}</p> }
 
-    @if (routines.value(); as list) {
+    @if (routines.hasValue() && routines.value(); as list) {
       <ul class="flex flex-col gap-3">
         @for (routine of list; track routine.id) {
-          <li class="card p-4">
+          <li
+            class="card p-4 transition-colors duration-300"
+            [class.border-primary]="routine.is_active"
+            [class.routine-activated]="justActivated() === routine.id"
+          >
             <a [routerLink]="['/rutinas', routine.id]" class="block">
               <span class="flex items-center gap-2 text-lg font-semibold">
                 {{ routine.name }}
-                @if (routine.is_active) { <span hlmBadge>Activa</span> }
+                @if (routine.is_active) {
+                  <span hlmBadge [class.badge-pop]="justActivated() === routine.id">Activa</span>
+                }
               </span>
               <span class="text-sm text-muted-foreground">{{ routine.days_count }} {{ routine.days_count === 1 ? 'día' : 'días' }}</span>
             </a>
             @if (!routine.is_active) {
-              <button hlmBtn variant="outline" class="mt-3 h-12 w-full" (click)="activate(routine)">Marcar como activa</button>
+              <button hlmBtn variant="outline" class="mt-3 h-12 w-full" [disabled]="activating() !== null" (click)="activate(routine)">
+                {{ activating() === routine.id ? 'Activando…' : 'Marcar como activa' }}
+              </button>
             }
           </li>
         } @empty {
@@ -67,13 +75,25 @@ export class RoutinesPage {
     }
   }
 
+  /** Rutina que se está activando (botón en "Activando…"). */
+  protected readonly activating = signal<number | null>(null);
+  /** Rutina recién activada: su tarjeta destella y la etiqueta "Activa" aparece con un rebote. */
+  protected readonly justActivated = signal<number | null>(null);
+
   async activate(routine: Routine): Promise<void> {
     this.error.set(null);
+    this.activating.set(routine.id);
     try {
       await this.api.activate(routine.id);
-      this.routines.reload();
+      // Se actualiza en el lugar (sin recargar) para que las tarjetas no salten; el orden "activa primero"
+      // se aplica la próxima vez que se abra la lista.
+      this.routines.value.update((list) => list?.map((r) => ({ ...r, is_active: r.id === routine.id })));
+      this.justActivated.set(routine.id);
+      navigator.vibrate?.(15);
     } catch (e) {
       this.error.set(apiErrorMessage(e));
+    } finally {
+      this.activating.set(null);
     }
   }
 }

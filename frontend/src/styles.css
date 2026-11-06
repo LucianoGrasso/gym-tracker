@@ -238,6 +238,14 @@ body::before {
   .skeleton {
     @apply rounded-lg bg-muted motion-safe:animate-pulse;
   }
+  /* Rutina recién activada: un anillo lima se expande y se desvanece. */
+  .routine-activated {
+    animation: routine-activated 900ms ease-out;
+  }
+  /* Etiqueta que aparece con un pequeño rebote. */
+  .badge-pop {
+    animation: badge-pop 450ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
   /* Menú desplegable: aparece creciendo desde arriba a la derecha. */
   .menu-pop {
     transform-origin: top right;
@@ -278,5 +286,34 @@ body::before {
   from {
     opacity: 0;
     transform: scale(0.96) translateY(-4px);
+  }
+}
+
+@keyframes routine-activated {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 70%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+
+@keyframes badge-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .routine-activated,
+  .badge-pop,
+  .menu-pop,
+  .skeleton-hint {
+    animation-duration: 1ms;
   }
 }
