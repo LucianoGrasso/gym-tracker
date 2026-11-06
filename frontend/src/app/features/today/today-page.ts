@@ -37,7 +37,8 @@ import { WorkoutSessionService } from '../../core/workout/workout-session.servic
             {{ salute() }}@if (name()) {<span>,</span>
               <span class="block text-primary">{{ name() }}</span>
             }
-          </h1        </a>
+          </h1>
+        </a>
       </header>
 
       @if (!t.routine) {
