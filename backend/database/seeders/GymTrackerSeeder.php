@@ -2,32 +2,20 @@
 
 namespace Database\Seeders;
 
-use App\Enums\Equipment;
-use App\Enums\MuscleGroup;
 use App\Enums\SetType;
 use App\Models\Exercise;
 use App\Models\User;
+use App\Support\ExerciseCatalog;
 use Illuminate\Database\Seeder;
 
 class GymTrackerSeeder extends Seeder
 {
-    /** name => [muscle_group, equipment, is_unilateral, uses_bodyweight] */
+    /** Los 15 ejercicios iniciales; sus datos vienen de ExerciseCatalog. */
     private const EXERCISES = [
-        'Press de banca' => [MuscleGroup::Chest, Equipment::Barbell, false, false],
-        'Press con mancuernas' => [MuscleGroup::Chest, Equipment::Dumbbell, false, false],
-        'Press inclinado con mancuernas' => [MuscleGroup::Chest, Equipment::Dumbbell, false, false],
-        'Elevaciones laterales' => [MuscleGroup::Shoulders, Equipment::Dumbbell, false, false],
-        'Dominadas' => [MuscleGroup::Back, Equipment::Bodyweight, false, true],
-        'Remo con mancuerna' => [MuscleGroup::Back, Equipment::Dumbbell, true, false],
-        'Jalón al pecho' => [MuscleGroup::Back, Equipment::Cable, false, false],
-        'Curl de bíceps con mancuernas' => [MuscleGroup::Biceps, Equipment::Dumbbell, false, false],
-        'Fondos' => [MuscleGroup::Triceps, Equipment::Bodyweight, false, true],
-        'Press de hombro con mancuernas' => [MuscleGroup::Shoulders, Equipment::Dumbbell, false, false],
-        'Extensión de tríceps en polea' => [MuscleGroup::Triceps, Equipment::Cable, false, false],
-        'Sentadilla' => [MuscleGroup::Legs, Equipment::Barbell, false, false],
-        'Peso muerto rumano' => [MuscleGroup::Legs, Equipment::Barbell, false, false],
-        'Curl femoral' => [MuscleGroup::Legs, Equipment::Machine, false, false],
-        'Gemelos en máquina' => [MuscleGroup::Legs, Equipment::Machine, false, false],
+        'Press de banca', 'Press con mancuernas', 'Press inclinado con mancuernas', 'Elevaciones laterales',
+        'Dominadas', 'Remo con mancuerna', 'Jalón al pecho', 'Curl de bíceps con mancuernas', 'Fondos',
+        'Press de hombro con mancuernas', 'Extensión de tríceps en polea', 'Sentadilla', 'Peso muerto rumano',
+        'Curl femoral', 'Gemelos en máquina',
     ];
 
     /**
@@ -64,15 +52,8 @@ class GymTrackerSeeder extends Seeder
 
     public function run(User $user): void
     {
-        $exercises = collect(self::EXERCISES)->map(
-            fn (array $e, string $name) => Exercise::create([
-                'user_id' => $user->id,
-                'name' => $name,
-                'muscle_group' => $e[0],
-                'equipment' => $e[1],
-                'is_unilateral' => $e[2],
-                'uses_bodyweight' => $e[3],
-            ])
+        $exercises = collect(self::EXERCISES)->mapWithKeys(
+            fn (string $name) => [$name => Exercise::create(['user_id' => $user->id, 'name' => $name] + ExerciseCatalog::get($name))]
         );
 
         $routine = $user->routines()->create(['name' => 'Rutina 4 días', 'is_active' => true]);
