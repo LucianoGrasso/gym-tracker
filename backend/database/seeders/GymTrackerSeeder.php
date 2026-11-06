@@ -7,6 +7,7 @@ use App\Models\Exercise;
 use App\Models\User;
 use App\Support\ExerciseCatalog;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
 
 class GymTrackerSeeder extends Seeder
 {
@@ -52,9 +53,7 @@ class GymTrackerSeeder extends Seeder
 
     public function run(User $user): void
     {
-        $exercises = collect(self::EXERCISES)->mapWithKeys(
-            fn (string $name) => [$name => Exercise::create(['user_id' => $user->id, 'name' => $name] + ExerciseCatalog::get($name))]
-        );
+        $exercises = $this->seedExercises($user);
 
         $routine = $user->routines()->create(['name' => 'Rutina 4 días', 'is_active' => true]);
 
@@ -79,5 +78,17 @@ class GymTrackerSeeder extends Seeder
                 ]);
             }
         }
+    }
+
+    /**
+     * Crea los 15 ejercicios iniciales del usuario (sin rutina). Lo usan run() y el registro por invitación.
+     *
+     * @return Collection<string, Exercise>
+     */
+    public function seedExercises(User $user): Collection
+    {
+        return collect(self::EXERCISES)->mapWithKeys(
+            fn (string $name) => [$name => Exercise::create(['user_id' => $user->id, 'name' => $name] + ExerciseCatalog::get($name))]
+        );
     }
 }

@@ -4,6 +4,7 @@ use App\Http\Controllers\BodyMetricController;
 use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\ExerciseHistoryController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\RoutineController;
 use App\Http\Controllers\RoutineDayController;
 use App\Http\Controllers\RoutineDayExerciseController;
@@ -21,6 +22,10 @@ Route::get('/health', HealthController::class);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn (Request $request) => new UserResource($request->user()));
+
+    Route::get('/invitations', [InvitationController::class, 'index']);
+    Route::post('/invitations', [InvitationController::class, 'store']);
+    Route::delete('/invitations/{invitation}', [InvitationController::class, 'destroy']);
     Route::get('/today', TodayController::class);
 
     Route::get('/body-metrics', [BodyMetricController::class, 'index']);

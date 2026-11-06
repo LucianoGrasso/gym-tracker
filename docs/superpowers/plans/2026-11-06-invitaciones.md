@@ -91,7 +91,7 @@ it('requires authentication', function () {
 });
 
 it('creates a one-week invitation and stores only the token hash', function () {
-    $this->freezeTime();
+    $this->freezeSecond();
 
     $response = $this->actingAs($this->user)->postJson('/api/invitations')
         ->assertCreated()
