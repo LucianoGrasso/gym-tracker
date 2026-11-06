@@ -1,4 +1,5 @@
 import type { Equipment, MuscleGroup, SetType } from './exercise';
+import type { TemplateGoal, TemplateLevel } from './routine-template';
 import type { StatsPeriod } from './stats';
 
 export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {
@@ -53,3 +54,15 @@ export const PERIOD_LABELS: Record<StatsPeriod, string> = {
 };
 
 export const STATS_PERIODS = Object.keys(PERIOD_LABELS) as StatsPeriod[];
+
+export const TEMPLATE_LEVEL_LABELS: Record<TemplateLevel, string> = {
+  beginner: 'Principiante',
+  intermediate: 'Intermedio',
+  advanced: 'Avanzado',
+};
+
+export const TEMPLATE_GOAL_LABELS: Record<TemplateGoal, string> = {
+  strength: 'Fuerza',
+  hypertrophy: 'Hipertrofia',
+  mixed: 'Fuerza e hipertrofia',
+};
