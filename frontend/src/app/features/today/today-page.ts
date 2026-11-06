@@ -32,11 +32,12 @@ import { WorkoutSessionService } from '../../core/workout/workout-session.servic
     @if (today.value(); as t) {
       <header class="mb-5">
         <p class="eyebrow">{{ weekdayLabels[t.weekday] }} {{ formatDate(t.date) }}</p>
-        <h1 class="page-title mt-1 text-4xl">
-          {{ salute() }}@if (name()) {<span>,</span>
-            <span class="block text-primary">{{ name() }}</span>
-          }
-        </h1>
+        <a routerLink="/cuenta" aria-label="Mi cuenta" class="block">
+          <h1 class="page-title mt-1 text-4xl">
+            {{ salute() }}@if (name()) {<span>,</span>
+              <span class="block text-primary">{{ name() }}</span>
+            }
+          </h1        </a>
       </header>
 
       @if (!t.routine) {
@@ -44,9 +45,10 @@ import { WorkoutSessionService } from '../../core/workout/workout-session.servic
           <span class="mb-3 flex size-11 items-center justify-center rounded-xl bg-primary/15 text-primary">
             <ng-icon name="lucideListChecks" size="22" aria-hidden="true" />
           </span>
-          <h2 class="section-title text-2xl">No tienes una rutina activa</h2>
-          <p class="mt-1 mb-4 text-sm text-muted-foreground">Activa una rutina para que "Hoy" te diga qué toca.</p>
-          <a hlmBtn routerLink="/rutinas" class="h-12 w-full">Ir a rutinas</a>
+          <h2 class="section-title text-2xl">Elige una plantilla para empezar</h2>
+          <p class="mt-1 mb-4 text-sm text-muted-foreground">Parte con una rutina de un programa o atleta conocido, o crea la tuya.</p>
+          <a hlmBtn routerLink="/rutinas/plantillas" class="h-12 w-full">Ver plantillas</a>
+          <a routerLink="/rutinas" class="mt-3 block text-center text-sm text-muted-foreground underline">Ir a mis rutinas</a>
           <ng-container *ngTemplateOutlet="freeOrContinue; context: { $implicit: t }" />
         </section>
       } @else if (t.day; as day) {

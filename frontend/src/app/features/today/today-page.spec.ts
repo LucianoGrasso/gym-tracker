@@ -86,9 +86,15 @@ describe('TodayPage', () => {
     expect(text).toContain('Lunes – Pecho (Bilbo)');
   });
 
-  it('invites to activate a routine when there is none', async () => {
-    const { text } = await render({ ...today, routine: null, day: null, days: [] });
-    expect(text).toContain('No tienes una rutina activa');
+  it('suggests a template when there is no active routine', async () => {
+    const { text, el } = await render({ ...today, routine: null, day: null, days: [] });
+    expect(text).toContain('Elige una plantilla para empezar');
+    expect(el.querySelector('a[href="/rutinas/plantillas"]')).not.toBeNull();
+  });
+
+  it('links the greeting to the account page', async () => {
+    const { el } = await render(today);
+    expect(el.querySelector('a[href="/cuenta"]')?.textContent).toContain('Luciano');
   });
 
   it('starts a workout from the day', async () => {
