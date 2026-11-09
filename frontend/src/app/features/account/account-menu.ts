@@ -16,6 +16,7 @@ import { InvitationsApi } from '../../core/api/invitations-api';
 import { AuthService } from '../../core/auth/auth.service';
 import { formatDate } from '../../core/format/format';
 import { MAX_PENDING_INVITATIONS } from '../../core/models/invitation';
+import { PushService } from '../../core/push/push.service';
 
 /** Botón "Mi cuenta" con menú desplegable: datos del usuario, invitaciones y cerrar sesión. */
 @Component({
@@ -96,6 +97,40 @@ import { MAX_PENDING_INVITATIONS } from '../../core/models/invitation';
         }
 
         <div class="my-4 border-t border-border"></div>
+        <div class="flex items-center gap-3">
+          <span id="push-label" class="flex-1 text-sm font-semibold">Avisos de descanso</span>
+          <button
+            type="button"
+            role="switch"
+            aria-labelledby="push-label"
+            [attr.aria-checked]="pushOn()"
+            [disabled]="pushBusy() || pushLocked()"
+            class="relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:opacity-50"
+            [class.bg-primary]="pushOn()"
+            [class.bg-muted]="!pushOn()"
+            (click)="togglePush()"
+          >
+            <span
+              class="absolute top-1 left-1 size-5 rounded-full bg-background transition-transform"
+              [class.translate-x-5]="pushOn()"
+            ></span>
+          </button>
+        </div>
+        <p class="mt-2 text-xs text-muted-foreground">
+          @switch (push.status()) {
+            @case ('unsupported') {
+              Este navegador no permite avisos. En iPhone, instala la app en tu pantalla de inicio.
+            }
+            @case ('blocked') {
+              Bloqueaste las notificaciones. Actívalas en Ajustes del teléfono.
+            }
+            @default {
+              Te llega una notificación cuando termina el descanso, aunque tengas el teléfono bloqueado.
+            }
+          }
+        </p>
+
+        <div class="my-4 border-t border-border"></div>
         <button
           type="button"
           role="menuitem"
@@ -130,6 +165,10 @@ export class AccountMenu {
   protected readonly busy = signal(false);
   protected readonly notice = signal<string | null>(null);
   protected readonly error = signal<string | null>(null);
+  protected readonly push = inject(PushService);
+  protected readonly pushBusy = signal(false);
+  protected readonly pushOn = computed(() => this.push.status() === 'on');
+  protected readonly pushLocked = computed(() => ['unsupported', 'blocked'].includes(this.push.status()));
 
   protected closeIfOutside(event: Event): void {
     if (this.open() && !this.host.nativeElement.contains(event.target as Node)) {
@@ -159,6 +198,16 @@ export class AccountMenu {
       this.invitations.value.update((list) => (list ?? []).filter((i) => i.id !== id));
     } catch {
       this.error.set('No se pudo anular la invitación.');
+    }
+  }
+
+  async togglePush(): Promise<void> {
+    this.pushBusy.set(true);
+    try {
+      if (this.pushOn()) await this.push.disable();
+      else await this.push.enable();
+    } finally {
+      this.pushBusy.set(false);
     }
   }
 

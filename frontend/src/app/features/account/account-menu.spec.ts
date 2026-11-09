@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { InvitationsApi } from '../../core/api/invitations-api';
 import { AuthService } from '../../core/auth/auth.service';
 import type { Invitation } from '../../core/models/invitation';
+import type { PushStatus } from '../../core/models/push';
+import { PushService } from '../../core/push/push.service';
 import { AccountMenu } from './account-menu';
 
 @Component({ template: '' })
@@ -22,7 +24,7 @@ function setNavigator(props: Record<string, unknown>) {
   }
 }
 
-async function render(pending: Invitation[] = []) {
+async function render(pending: Invitation[] = [], pushStatus: PushStatus = 'unsupported') {
   const api = {
     list: vi.fn().mockResolvedValue(pending),
     create: vi.fn().mockResolvedValue({ ...pendingInvitation(9), token: 'tok123' }),
@@ -32,11 +34,17 @@ async function render(pending: Invitation[] = []) {
     user: signal({ id: 1, name: 'Luciano Grasso', email: 'l@x.cl' }),
     logout: vi.fn().mockResolvedValue(undefined),
   };
+  const push = {
+    status: signal<PushStatus>(pushStatus),
+    enable: vi.fn().mockResolvedValue(true),
+    disable: vi.fn().mockResolvedValue(undefined),
+  };
   TestBed.configureTestingModule({
     providers: [
       provideRouter([{ path: 'login', component: Blank }]),
       { provide: InvitationsApi, useValue: api },
       { provide: AuthService, useValue: auth },
+      { provide: PushService, useValue: push },
     ],
   });
   const fixture = TestBed.createComponent(AccountMenu);
@@ -53,7 +61,7 @@ async function render(pending: Invitation[] = []) {
     button('Mi cuenta').click();
     await settle();
   };
-  return { api, auth, el, settle, button, open };
+  return { api, auth, el, settle, button, open, push };
 }
 
 describe('AccountMenu', () => {
@@ -139,5 +147,43 @@ describe('AccountMenu', () => {
 
     expect(auth.logout).toHaveBeenCalled();
     expect(TestBed.inject(Router).url).toBe('/login');
+  });
+
+  describe('rest notifications', () => {
+    const toggle = (el: HTMLElement) => el.querySelector<HTMLButtonElement>('[role="switch"]')!;
+
+    it('turns them on from the switch', async () => {
+      const { el, open, settle, push } = await render([], 'declined');
+      await open();
+      expect(toggle(el).getAttribute('aria-checked')).toBe('false');
+
+      toggle(el).click();
+      await settle();
+      expect(push.enable).toHaveBeenCalled();
+    });
+
+    it('turns them off from the switch', async () => {
+      const { el, open, settle, push } = await render([], 'on');
+      await open();
+      expect(toggle(el).getAttribute('aria-checked')).toBe('true');
+
+      toggle(el).click();
+      await settle();
+      expect(push.disable).toHaveBeenCalled();
+    });
+
+    it('explains how to get them on an iPhone without the installed app', async () => {
+      const { el, open } = await render([], 'unsupported');
+      await open();
+      expect(toggle(el).disabled).toBe(true);
+      expect(el.textContent).toContain('instala la app en tu pantalla de inicio');
+    });
+
+    it('explains how to unblock them', async () => {
+      const { el, open } = await render([], 'blocked');
+      await open();
+      expect(toggle(el).disabled).toBe(true);
+      expect(el.textContent).toContain('Actívalas en Ajustes del teléfono');
+    });
   });
 });
