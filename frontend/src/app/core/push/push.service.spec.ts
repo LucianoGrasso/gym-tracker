@@ -23,7 +23,7 @@ function setup(opts: { stored?: unknown; supported?: boolean; liveSubscription?:
   const api = {
     publicKey: vi.fn().mockResolvedValue('BPublicKey'),
     token: vi.fn().mockResolvedValue('sig'),
-    schedule: vi.fn().mockResolvedValue(undefined),
+    schedule: vi.fn().mockResolvedValue('exec-1'),
     cancel: vi.fn().mockResolvedValue(undefined),
   };
   TestBed.resetTestingModule();
@@ -95,7 +95,7 @@ describe('PushService', () => {
     expect(setup({ stored: ON, liveSubscription: false }).push.status()).toBe('unasked');
   });
 
-  it('schedules and cancels with the stored subscription and signature', async () => {
+  it('schedules and cancels with the stored subscription, signature and execution', async () => {
     const { push, api } = setup({ stored: ON });
 
     await push.schedule(90.4, 'Press de banca · serie 2 de 4', '/entrenamiento/w1');
@@ -109,7 +109,39 @@ describe('PushService', () => {
     });
 
     await push.cancel();
-    expect(api.cancel).toHaveBeenCalledWith({ endpoint: SUB.endpoint, signature: 'sig' });
+    expect(api.cancel).toHaveBeenCalledWith({ endpoint: SUB.endpoint, signature: 'sig', execution: 'exec-1' });
+
+    await push.cancel();
+    expect(api.cancel).toHaveBeenCalledTimes(1);
+  });
+
+  it('replaces the previous rest, even after a reload', async () => {
+    const first = setup({ stored: ON });
+    await first.push.schedule(90, 'x', '/');
+
+    const reloaded = setup({ stored: ON });
+    localStorage.setItem('gymtracker.pushExecution', 'exec-1');
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: SwPush, useValue: reloaded.sw },
+        { provide: PushApi, useValue: reloaded.api },
+      ],
+    });
+    const push = TestBed.inject(PushService);
+    reloaded.api.schedule.mockResolvedValue('exec-2');
+
+    await push.schedule(120, 'x', '/');
+    expect(reloaded.api.schedule).toHaveBeenCalledWith(expect.objectContaining({ seconds: 120, replace: 'exec-1' }));
+
+    await push.cancel();
+    expect(reloaded.api.cancel).toHaveBeenCalledWith(expect.objectContaining({ execution: 'exec-2' }));
+  });
+
+  it('does not cancel when nothing was scheduled', async () => {
+    const { push, api } = setup({ stored: ON });
+    await push.cancel();
+    expect(api.cancel).not.toHaveBeenCalled();
   });
 
   it('clamps the seconds to what the Lambda accepts', async () => {
@@ -127,6 +159,7 @@ describe('PushService', () => {
     expect(off.api.cancel).not.toHaveBeenCalled();
 
     const on = setup({ stored: ON });
+    await on.push.schedule(90, 'x', '/');
     on.api.schedule.mockRejectedValue(new Error('offline'));
     on.api.cancel.mockRejectedValue(new Error('offline'));
     await expect(on.push.schedule(90, 'x', '/')).resolves.toBeUndefined();

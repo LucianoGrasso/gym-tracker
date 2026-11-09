@@ -19,9 +19,9 @@ export class PushApi {
     return res.data.signature;
   }
 
-  /** Lambda de push (fuera de Laravel). */
-  async schedule(request: RestPushRequest): Promise<void> {
-    await firstValueFrom(this.http.post('/push/rest', request));
+  /** Lambda de push (fuera de Laravel). Devuelve el ID de la ejecución del temporizador. */
+  async schedule(request: RestPushRequest): Promise<string> {
+    return (await firstValueFrom(this.http.post<{ execution: string }>('/push/rest', request))).execution;
   }
 
   async cancel(request: CancelPushRequest): Promise<void> {

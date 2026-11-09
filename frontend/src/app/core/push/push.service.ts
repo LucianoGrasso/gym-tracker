@@ -7,6 +7,8 @@ import type { PushStatus, PushSubscriptionJson } from '../models/push';
 export const REST_PUSH_TITLE = '¡Descanso terminado!';
 
 const STORAGE_KEY = 'gymtracker.push';
+/** Última ejecución del temporizador: se guarda para reemplazarla o cancelarla aunque la app se recargue. */
+const EXECUTION_KEY = 'gymtracker.pushExecution';
 const MAX_SECONDS = 3600;
 
 interface Stored {
@@ -24,6 +26,14 @@ function readStored(): Stored | null {
   }
 }
 
+function readExecution(): string | null {
+  try {
+    return localStorage.getItem(EXECUTION_KEY);
+  } catch {
+    return null;
+  }
+}
+
 function notificationPermission(): NotificationPermission | null {
   return typeof Notification === 'undefined' ? null : Notification.permission;
 }
@@ -36,6 +46,7 @@ export class PushService {
   private readonly injector = inject(Injector);
   private readonly stored = signal<Stored | null>(readStored());
   private readonly denied = signal(notificationPermission() === 'denied');
+  private execution: string | null = readExecution();
 
   private readonly supported = !!this.sw?.isEnabled && typeof window !== 'undefined' && 'PushManager' in window;
 
@@ -88,14 +99,16 @@ export class PushService {
     const active = this.active();
     if (!active) return;
     try {
-      await this.api.schedule({
+      const execution = await this.api.schedule({
         subscription: active.subscription,
         signature: active.signature,
         seconds: Math.min(MAX_SECONDS, Math.max(1, Math.round(seconds))),
         title: REST_PUSH_TITLE,
         body,
         url,
+        ...(this.execution ? { replace: this.execution } : {}),
       });
+      this.setExecution(execution);
     } catch {
       // Sin señal: la barra y la vibración siguen avisando con la app abierta.
     }
@@ -103,9 +116,11 @@ export class PushService {
 
   async cancel(): Promise<void> {
     const active = this.active();
-    if (!active) return;
+    const execution = this.execution;
+    if (!active || !execution) return;
+    this.setExecution(null);
     try {
-      await this.api.cancel({ endpoint: active.subscription.endpoint, signature: active.signature });
+      await this.api.cancel({ endpoint: active.subscription.endpoint, signature: active.signature, execution });
     } catch {
       // Peor caso: llega un aviso de más.
     }
@@ -119,6 +134,16 @@ export class PushService {
   private active(): Required<Stored> | null {
     const s = this.stored();
     return s?.status === 'on' && s.subscription && s.signature ? (s as Required<Stored>) : null;
+  }
+
+  private setExecution(value: string | null): void {
+    this.execution = value;
+    try {
+      if (value) localStorage.setItem(EXECUTION_KEY, value);
+      else localStorage.removeItem(EXECUTION_KEY);
+    } catch {
+      // Sin almacenamiento: queda solo en memoria.
+    }
   }
 
   private save(value: Stored | null): void {
