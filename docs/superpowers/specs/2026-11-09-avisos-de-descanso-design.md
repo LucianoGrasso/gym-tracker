@@ -26,18 +26,19 @@ Laravel firma la suscripción; la Lambda verifica la firma. Sin tablas nuevas.
 
 - `App\Services\Push\PushSigner::sign(string $endpoint): string`. Lee `config('services.push.signing_key')`; sin clave lanza excepción.
 - `PushTokenRequest`: `endpoint` requerido, URL, `starts_with:https://`, máx. 1000 caracteres.
-- `PushTokenController` (invocable) en `routes/api.php` dentro de `auth:sanctum`: `POST /api/push/token`.
-- `config/services.php`: `'push' => ['signing_key' => env('PUSH_SIGNING_KEY')]`. `.env.example` y `phpunit.xml` incluyen una clave de desarrollo.
+- `PushController` (`config` y `token`) en `routes/api.php` dentro de `auth:sanctum`.
+- `GET /api/push/config` (con sesión) devuelve `{ data: { public_key } }`: la clave pública VAPID vive en SSM igual que la privada, así no hay que editar el repo al generarla.
+- `config/services.php`: `push.signing_key` (`PUSH_SIGNING_KEY`) y `push.vapid_public_key` (`PUSH_VAPID_PUBLIC_KEY`). `.env.example` y `phpunit.xml` incluyen una clave de desarrollo.
 
 ## Lambda `gymtracker-push` (infra)
 
 Código en `infra/lambda/push/`, Node 22, empaquetado con `NodejsFunction` (esbuild). Fuera de la VPC. Una función, dos orígenes de evento:
 
-**HTTP (API Gateway v2, rutas `POST /push/rest` y `DELETE /push/rest`):**
+**HTTP (API Gateway v2, rutas `POST /push/rest` y `POST /push/cancel`; se evita DELETE con cuerpo porque CloudFront no lo garantiza):**
 - `POST` body: `{ subscription: { endpoint, keys: { p256dh, auth } }, signature, seconds, title, body, url }`.
-  Validación: endpoint https; `seconds` entero 1–900; `title`/`body` 1–120 caracteres; `url` empieza con `/` y máx. 200. Error → 422; firma inválida → 403.
+  Validación: endpoint https; `seconds` entero 1–3600; `title`/`body` 1–120 caracteres; `url` empieza con `/` (no `//`) y máx. 200. Error → 422; firma inválida → 403.
   Acción: crea el horario `rest-<sha256(endpoint) primeros 32 hex>` en el grupo `gymtracker-rest`, expresión `at(<ahora + seconds, UTC, yyyy-mm-ddThh:mm:ss>)`, `FlexibleTimeWindow: OFF`, `ActionAfterCompletion: DELETE`, target = esta misma Lambda con input `{ kind: 'send', subscription, title, body, url }`. Si ya existe (`ConflictException`) lo actualiza. Responde 204.
-- `DELETE` body: `{ endpoint, signature }`. Borra el horario (ignora `ResourceNotFoundException`). Responde 204.
+- `POST /push/cancel` body: `{ endpoint, signature }`. Borra el horario (ignora `ResourceNotFoundException`). Responde 204.
 
 **Scheduler (input `{ kind: 'send', … }`):** envía con `web-push` (VAPID) el payload que entiende el service worker de Angular:
 
@@ -55,20 +56,19 @@ Variables de entorno: `PUSH_SIGNING_KEY`, `VAPID_PRIVATE_KEY` (parámetros NoEch
 - Rol para Scheduler que solo puede `lambda:InvokeFunction` sobre `gymtracker-push`.
 - Rol de la Lambda: `scheduler:CreateSchedule|UpdateSchedule|DeleteSchedule` solo en `schedule/gymtracker-rest/*`, `iam:PassRole` solo sobre el rol de Scheduler.
 - Ruta `ANY /push/{proxy+}` en la HTTP API existente → Lambda de push. CloudFront agrega el behavior `/push/*` igual a `/api/*`.
-- Parámetros nuevos del stack: `PushSigningKey` y `VapidPrivateKey` (NoEcho). `PushSigningKey` también va al entorno de las Lambdas de Laravel. La clave pública VAPID va en `cdk.json` (contexto `vapidPublicKey`) y en el frontend.
-- `infra/scripts/init-secrets.sh` crea `/gymtracker/prod/push-signing-key` y `/gymtracker/prod/vapid-private-key` (generando el par VAPID e imprimiendo la clave pública). `deploy.yml` los lee y los pasa como parámetros.
+- Parámetros nuevos del stack: `PushSigningKey` y `VapidPrivateKey` (NoEcho) y `VapidPublicKey`. Laravel recibe `PUSH_SIGNING_KEY` y `PUSH_VAPID_PUBLIC_KEY`.
+- `infra/scripts/init-secrets.sh` crea `/gymtracker/prod/push-signing-key`, `vapid-public-key` y `vapid-private-key` (el par VAPID se genera junto). `deploy.yml` los lee y los pasa como parámetros.
 
 ## Frontend (Angular)
 
 **`PushService` (`core/push/push.service.ts`):**
 - Estado por dispositivo en `localStorage` (`gymtracker.push`): `{ status: 'on' | 'declined', subscription?, signature? }`; ausencia = "sin preguntar". Señal `status: 'unsupported' | 'unasked' | 'on' | 'declined' | 'blocked'`.
 - `unsupported` si `SwPush.isEnabled` es falso o no existe `PushManager`; `blocked` si `Notification.permission === 'denied'`.
-- `enable()`: `SwPush.requestSubscription({ serverPublicKey: VAPID_PUBLIC_KEY })` → `POST /api/push/token` → guarda `on`. Si el usuario niega el permiso → `blocked`. Devuelve si quedó activo.
+- `enable()`: pide la clave pública a `/api/push/config` → `SwPush.requestSubscription({ serverPublicKey })` → `POST /api/push/token` → guarda `on`. Si el usuario niega el permiso → `blocked`. Devuelve si quedó activo.
 - `disable()`: `SwPush.unsubscribe()` (ignora errores) y guarda `declined`.
 - `decline()`: guarda `declined` ("Ahora no").
-- `schedule(seconds, title, body, url)` y `cancel()`: solo si `on`; llaman a `/push/rest`; los errores se ignoran.
+- `schedule(seconds, body, url)` (título fijo "¡Descanso terminado!") y `cancel()`: solo si `on`; llaman a `/push/rest` y `/push/cancel`; los errores se ignoran.
 - Al iniciar: si está `on` pero `SwPush.subscription` emite `null`, vuelve a "sin preguntar".
-- `VAPID_PUBLIC_KEY` vive en `core/push/push.config.ts`.
 
 **`RestTimerService`:** `start(seconds, notice?: RestNotice)` donde `RestNotice = { body: string; url: string }`. Programa el push al iniciar; `add()` reprograma con el mismo aviso y los segundos restantes; `stop()` cancela. Si el descanso termina solo no se hace nada.
 
@@ -98,9 +98,8 @@ Variables de entorno: `PUSH_SIGNING_KEY`, `VAPID_PRIVATE_KEY` (parámetros NoEch
 
 ## Despliegue y verificación
 
-1. Con OK de Luciano: `infra/scripts/init-secrets.sh` crea las claves en SSM y muestra la clave pública VAPID.
-2. La clave pública se pone en `cdk.json` y `push.config.ts`; commit.
-3. Push a `main` → GitHub Actions despliega.
-4. Prueba en iPhone: activar avisos, bloquear el teléfono, descanso de 30 s, medir el retraso.
+1. Con OK de Luciano: `infra/scripts/init-secrets.sh` crea las claves en SSM.
+2. Push a `main` → GitHub Actions despliega.
+3. Prueba en iPhone: activar avisos, bloquear el teléfono, descanso de 30 s, medir el retraso.
 
 En local los avisos no funcionan (no hay Scheduler); la app sigue con barra y vibración.
