@@ -38,7 +38,13 @@ import { MAX_PENDING_INVITATIONS } from '../../core/models/invitation';
     >
       <ng-icon name="lucideUserRound" size="18" aria-hidden="true" />
       Mi cuenta
-      <ng-icon name="lucideChevronDown" size="16" aria-hidden="true" class="transition-transform" [class.rotate-180]="open()" />
+      <ng-icon
+        name="lucideChevronDown"
+        size="16"
+        aria-hidden="true"
+        class="transition-transform"
+        [class.rotate-180]="open()"
+      />
     </button>
 
     @if (open()) {
@@ -51,7 +57,13 @@ import { MAX_PENDING_INVITATIONS } from '../../core/models/invitation';
           <p class="mb-4 truncate text-sm text-muted-foreground">{{ u.email }}</p>
         }
 
-        <button hlmBtn role="menuitem" class="h-11 w-full gap-2" [disabled]="busy() || atLimit()" (click)="invite()">
+        <button
+          hlmBtn
+          role="menuitem"
+          class="h-11 w-full gap-2"
+          [disabled]="busy() || atLimit()"
+          (click)="invite()"
+        >
           <ng-icon name="lucideUserPlus" size="18" aria-hidden="true" />
           Invitar a alguien
         </button>
@@ -62,8 +74,12 @@ import { MAX_PENDING_INVITATIONS } from '../../core/models/invitation';
             El link sirve para una sola cuenta y vence en 7 días.
           }
         </p>
-        @if (notice()) { <p class="mt-2 text-sm text-primary" role="status">{{ notice() }}</p> }
-        @if (error()) { <p class="mt-2 text-sm text-destructive" role="alert">{{ error() }}</p> }
+        @if (notice()) {
+          <p class="mt-2 text-sm text-primary" role="status">{{ notice() }}</p>
+        }
+        @if (error()) {
+          <p class="mt-2 text-sm text-destructive" role="alert">{{ error() }}</p>
+        }
 
         @if (pending().length) {
           <p class="mt-4 mb-2 eyebrow">Invitaciones pendientes</p>
@@ -71,7 +87,9 @@ import { MAX_PENDING_INVITATIONS } from '../../core/models/invitation';
             @for (inv of pending(); track inv.id) {
               <li class="flex items-center gap-2">
                 <span class="flex-1 text-sm">Vence el {{ formatDate(inv.expires_on) }}</span>
-                <button hlmBtn variant="outline" class="h-9 px-3" (click)="revoke(inv.id)">Anular</button>
+                <button hlmBtn variant="outline" class="h-9 px-3" (click)="revoke(inv.id)">
+                  Anular
+                </button>
               </li>
             }
           </ul>
@@ -105,7 +123,9 @@ export class AccountMenu {
     params: () => (this.open() ? true : undefined),
     loader: () => this.api.list(),
   });
-  protected readonly pending = computed(() => (this.invitations.hasValue() ? this.invitations.value() : []));
+  protected readonly pending = computed(() =>
+    this.invitations.hasValue() ? this.invitations.value() : [],
+  );
   protected readonly atLimit = computed(() => this.pending().length >= MAX_PENDING_INVITATIONS);
   protected readonly busy = signal(false);
   protected readonly notice = signal<string | null>(null);

@@ -12,7 +12,9 @@ const routines: Routine[] = [
 
 async function render(activate: () => Promise<unknown> = () => Promise.resolve(routines[1])) {
   const api = { list: vi.fn().mockResolvedValue(routines), activate: vi.fn(activate) };
-  TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: RoutinesApi, useValue: api }] });
+  TestBed.configureTestingModule({
+    providers: [provideRouter([]), { provide: RoutinesApi, useValue: api }],
+  });
   const fixture = TestBed.createComponent(RoutinesPage);
   const el = fixture.nativeElement as HTMLElement;
   const settle = async () => {
@@ -21,7 +23,8 @@ async function render(activate: () => Promise<unknown> = () => Promise.resolve(r
     fixture.detectChanges();
   };
   await settle();
-  const card = (name: string) => [...el.querySelectorAll('li')].find((li) => li.textContent?.includes(name))!;
+  const card = (name: string) =>
+    [...el.querySelectorAll('li')].find((li) => li.textContent?.includes(name))!;
   return { api, el, settle, card };
 }
 
@@ -38,7 +41,9 @@ describe('RoutinesPage', () => {
     expect(card('PHUL').textContent).toContain('Activa');
     expect(card('PHUL').querySelector('button')).toBeNull();
     expect(card('Rutina 4 días').textContent).not.toContain('Activa');
-    expect(card('Rutina 4 días').querySelector('button')?.textContent).toContain('Marcar como activa');
+    expect(card('Rutina 4 días').querySelector('button')?.textContent).toContain(
+      'Marcar como activa',
+    );
   });
 
   it('keeps the list as it was when activation fails', async () => {

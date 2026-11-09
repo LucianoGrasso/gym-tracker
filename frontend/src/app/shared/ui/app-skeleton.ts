@@ -43,7 +43,9 @@ export type SkeletonVariant = 'today' | 'list' | 'page';
       @for (i of rowList(); track i) {
         <div class="skeleton mb-3 h-20 rounded-2xl"></div>
       }
-      <p class="skeleton-hint mt-4 text-center text-sm text-muted-foreground">Cargando tus datos…</p>
+      <p class="skeleton-hint mt-4 text-center text-sm text-muted-foreground">
+        Cargando tus datos…
+      </p>
     </div>
     @if (withNav()) {
       <div

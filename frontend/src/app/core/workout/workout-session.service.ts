@@ -52,7 +52,11 @@ export class WorkoutSessionService {
     const session = sessionFromDay(today, newId, new Date().toISOString());
     await this.begin(session);
     for (const item of session.exercises) {
-      await this.sync.enqueue('PUT', `/api/workout-exercises/${item.id}`, workoutExercisePayload(session.id, item));
+      await this.sync.enqueue(
+        'PUT',
+        `/api/workout-exercises/${item.id}`,
+        workoutExercisePayload(session.id, item),
+      );
     }
     return session;
   }
@@ -63,19 +67,29 @@ export class WorkoutSessionService {
     return session;
   }
 
-  async addExercise(exercise: Exercise, lastPerformance: ExerciseSession | null = null): Promise<SessionExercise> {
+  async addExercise(
+    exercise: Exercise,
+    lastPerformance: ExerciseSession | null = null,
+  ): Promise<SessionExercise> {
     const session = this.require();
     // Máximo + 1 y no length: si se quitó un ejercicio, length chocaría con una posición ocupada.
     const position = Math.max(-1, ...session.exercises.map((e) => e.position)) + 1;
     const item = sessionExerciseFrom(exercise, newId(), position, lastPerformance);
     await this.save({ ...session, exercises: [...session.exercises, item] });
-    await this.sync.enqueue('PUT', `/api/workout-exercises/${item.id}`, workoutExercisePayload(session.id, item));
+    await this.sync.enqueue(
+      'PUT',
+      `/api/workout-exercises/${item.id}`,
+      workoutExercisePayload(session.id, item),
+    );
     return item;
   }
 
   async removeExercise(workoutExerciseId: string): Promise<void> {
     const session = this.require();
-    await this.save({ ...session, exercises: session.exercises.filter((e) => e.id !== workoutExerciseId) });
+    await this.save({
+      ...session,
+      exercises: session.exercises.filter((e) => e.id !== workoutExerciseId),
+    });
     await this.sync.enqueue('DELETE', `/api/workout-exercises/${workoutExerciseId}`);
   }
 
@@ -107,7 +121,11 @@ export class WorkoutSessionService {
 
   async finish(bodyweightKg: number | null): Promise<void> {
     const session = this.require();
-    const finished = { ...session, finished_at: new Date().toISOString(), bodyweight_kg: bodyweightKg };
+    const finished = {
+      ...session,
+      finished_at: new Date().toISOString(),
+      bodyweight_kg: bodyweightKg,
+    };
     await this.save(finished);
     await this.sync.enqueue('PUT', `/api/workouts/${session.id}`, workoutPayload(finished));
     await this.clearActive(session.id);
@@ -149,7 +167,10 @@ export class WorkoutSessionService {
 
   private replaceExercise(item: SessionExercise): Promise<void> {
     const session = this.require();
-    return this.save({ ...session, exercises: session.exercises.map((e) => (e.id === item.id ? item : e)) });
+    return this.save({
+      ...session,
+      exercises: session.exercises.map((e) => (e.id === item.id ? item : e)),
+    });
   }
 
   private async save(session: Session): Promise<void> {

@@ -7,25 +7,56 @@ import { SyncService } from '../sync/sync.service';
 import { WorkoutSessionService } from './workout-session.service';
 
 const bench = {
-  id: 1, name: 'Press de banca', muscle_group: 'chest' as const, equipment: 'barbell' as const,
-  is_unilateral: false, uses_bodyweight: false, notes: null, archived_at: null,
+  id: 1,
+  name: 'Press de banca',
+  muscle_group: 'chest' as const,
+  equipment: 'barbell' as const,
+  is_unilateral: false,
+  uses_bodyweight: false,
+  notes: null,
+  archived_at: null,
 };
 const pullUps = { ...bench, id: 2, name: 'Dominadas', uses_bodyweight: true };
 
 const today: Today = {
-  date: '2026-11-02', weekday: 1, routine: { id: 1, name: 'Rutina' },
+  date: '2026-11-02',
+  weekday: 1,
+  routine: { id: 1, name: 'Rutina' },
   day: {
-    id: 10, routine_id: 1, name: 'Lunes', weekday: 1, position: 0,
-    exercises: [{
-      id: 100, routine_day_id: 10, exercise: bench, position: 0, target_sets: 3, target_reps_min: 8,
-      target_reps_max: 12, target_text: null, default_set_type: 'normal', rest_seconds: 120, notes: null,
-      last_performance: null,
-    }],
+    id: 10,
+    routine_id: 1,
+    name: 'Lunes',
+    weekday: 1,
+    position: 0,
+    exercises: [
+      {
+        id: 100,
+        routine_day_id: 10,
+        exercise: bench,
+        position: 0,
+        target_sets: 3,
+        target_reps_min: 8,
+        target_reps_max: 12,
+        target_text: null,
+        default_set_type: 'normal',
+        rest_seconds: 120,
+        notes: null,
+        last_performance: null,
+      },
+    ],
   },
   days: [],
 };
 
-const setInput = { weight_kg: 30, reps: 10, set_type: 'normal' as const, side: 'both' as const, rir: null, pain_level: null, notes: null };
+const setInput = {
+  weight_kg: 30,
+  reps: 10,
+  set_type: 'normal' as const,
+  side: 'both' as const,
+  rir: null,
+  pain_level: null,
+  notes: null,
+};
 
 describe('WorkoutSessionService', () => {
   let db: LocalDb;
@@ -34,7 +65,11 @@ describe('WorkoutSessionService', () => {
   function create(): WorkoutSessionService {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), { provide: LOCAL_DB, useValue: db }, { provide: SyncService, useValue: { enqueue } }],
+      providers: [
+        provideHttpClient(),
+        { provide: LOCAL_DB, useValue: db },
+        { provide: SyncService, useValue: { enqueue } },
+      ],
     });
     return TestBed.inject(WorkoutSessionService);
   }
@@ -64,9 +99,15 @@ describe('WorkoutSessionService', () => {
     const first = await service.addSet(exerciseId, setInput);
     const second = await service.addSet(exerciseId, { ...setInput, reps: 8 });
     expect([first.set_number, second.set_number]).toEqual([1, 2]);
-    expect(enqueue).toHaveBeenLastCalledWith('PUT', `/api/workout-sets/${second.id}`, expect.objectContaining({
-      workout_exercise_id: exerciseId, set_number: 2, reps: 8,
-    }));
+    expect(enqueue).toHaveBeenLastCalledWith(
+      'PUT',
+      `/api/workout-sets/${second.id}`,
+      expect.objectContaining({
+        workout_exercise_id: exerciseId,
+        set_number: 2,
+        reps: 8,
+      }),
+    );
 
     const reloaded = create();
     const restored = await reloaded.restoreActive();
@@ -80,7 +121,11 @@ describe('WorkoutSessionService', () => {
     const set = await service.addSet(exerciseId, setInput);
 
     await service.updateSet(exerciseId, set.id, { ...setInput, reps: 12 });
-    expect(service.session()!.exercises[0].sets[0]).toMatchObject({ id: set.id, set_number: 1, reps: 12 });
+    expect(service.session()!.exercises[0].sets[0]).toMatchObject({
+      id: set.id,
+      set_number: 1,
+      reps: 12,
+    });
 
     await service.deleteSet(exerciseId, set.id);
     expect(service.session()!.exercises[0].sets).toEqual([]);
@@ -93,9 +138,14 @@ describe('WorkoutSessionService', () => {
 
     const added = await service.addExercise(pullUps);
     expect(added.position).toBe(0);
-    expect(enqueue).toHaveBeenLastCalledWith('PUT', `/api/workout-exercises/${added.id}`, expect.objectContaining({
-      workout_id: session.id, exercise_id: 2,
-    }));
+    expect(enqueue).toHaveBeenLastCalledWith(
+      'PUT',
+      `/api/workout-exercises/${added.id}`,
+      expect.objectContaining({
+        workout_id: session.id,
+        exercise_id: 2,
+      }),
+    );
 
     await service.removeExercise(added.id);
     expect(service.session()!.exercises).toEqual([]);
@@ -125,9 +175,14 @@ describe('WorkoutSessionService', () => {
     await service.finish(78.5);
 
     expect(service.activeId()).toBeNull();
-    expect(enqueue).toHaveBeenLastCalledWith('PUT', `/api/workouts/${session.id}`, expect.objectContaining({
-      bodyweight_kg: 78.5, finished_at: expect.any(String),
-    }));
+    expect(enqueue).toHaveBeenLastCalledWith(
+      'PUT',
+      `/api/workouts/${session.id}`,
+      expect.objectContaining({
+        bodyweight_kg: 78.5,
+        finished_at: expect.any(String),
+      }),
+    );
     expect(await create().restoreActive()).toBeNull();
   });
 

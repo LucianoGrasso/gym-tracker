@@ -10,7 +10,11 @@ import { AccountMenu } from './account-menu';
 @Component({ template: '' })
 class Blank {}
 
-const pendingInvitation = (id: number): Invitation => ({ id, expires_at: 'x', expires_on: '2026-11-13' });
+const pendingInvitation = (id: number): Invitation => ({
+  id,
+  expires_at: 'x',
+  expires_on: '2026-11-13',
+});
 
 function setNavigator(props: Record<string, unknown>) {
   for (const [key, value] of Object.entries(props)) {
@@ -43,7 +47,8 @@ async function render(pending: Invitation[] = []) {
     fixture.detectChanges();
   };
   await settle();
-  const button = (label: string) => [...el.querySelectorAll('button')].find((b) => b.textContent?.includes(label))!;
+  const button = (label: string) =>
+    [...el.querySelectorAll('button')].find((b) => b.textContent?.includes(label))!;
   const open = async () => {
     button('Mi cuenta').click();
     await settle();
@@ -87,7 +92,9 @@ describe('AccountMenu', () => {
     button('Invitar a alguien').click();
     await settle();
 
-    expect(share).toHaveBeenCalledWith(expect.objectContaining({ url: expect.stringContaining('/registro/tok123') }));
+    expect(share).toHaveBeenCalledWith(
+      expect.objectContaining({ url: expect.stringContaining('/registro/tok123') }),
+    );
     expect(el.textContent).toContain('Vence el 13/11/2026');
   });
 
