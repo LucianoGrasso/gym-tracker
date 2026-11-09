@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'push' => [
+        'signing_key' => env('PUSH_SIGNING_KEY'),
+        'vapid_public_key' => env('PUSH_VAPID_PUBLIC_KEY'),
+    ],
+
 ];

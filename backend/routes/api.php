@@ -5,6 +5,7 @@ use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\ExerciseHistoryController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\PushController;
 use App\Http\Controllers\RoutineController;
 use App\Http\Controllers\RoutineDayController;
 use App\Http\Controllers\RoutineDayExerciseController;
@@ -26,6 +27,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/invitations', [InvitationController::class, 'index']);
     Route::post('/invitations', [InvitationController::class, 'store']);
     Route::delete('/invitations/{invitation}', [InvitationController::class, 'destroy']);
+    Route::get('/push/config', [PushController::class, 'config']);
+    Route::post('/push/token', [PushController::class, 'token']);
     Route::get('/today', TodayController::class);
 
     Route::get('/body-metrics', [BodyMetricController::class, 'index']);
