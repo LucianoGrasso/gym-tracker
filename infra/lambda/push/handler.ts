@@ -1,31 +1,25 @@
 import {
-  atExpression,
+  executionName,
+  executionPrefix,
   notificationPayload,
+  ownsExecution,
   parseCancel,
   parseRest,
-  scheduleName,
+  deviceKey,
   verify,
   type PushSubscriptionJson,
   type SendEvent,
 } from './core';
 
-export interface ScheduleInput {
-  name: string;
-  group: string;
-  expression: string;
-  roleArn: string;
-  targetArn: string;
-  input: string;
-}
-
 export interface Deps {
-  scheduler: {
-    upsert(schedule: ScheduleInput): Promise<void>;
-    remove(name: string, group: string): Promise<void>;
+  /** Máquina de estados de Step Functions: espera N segundos y vuelve a invocar esta Lambda. */
+  timer: {
+    start(name: string, input: string): Promise<string>;
+    stop(executionArn: string): Promise<void>;
   };
   sendPush(subscription: PushSubscriptionJson, payload: string): Promise<'sent' | 'gone'>;
   now(): Date;
-  config: { signingKey: string; group: string; roleArn: string; targetArn: string };
+  config: { signingKey: string; stateMachineArn: string };
 }
 
 /** Lo que usamos del evento de API Gateway HTTP API (payload 2.0). */
@@ -38,6 +32,8 @@ export interface HttpEvent {
 
 export interface HttpResult {
   statusCode: number;
+  headers?: Record<string, string>;
+  body?: string;
 }
 
 const status = (statusCode: number): HttpResult => ({ statusCode });
@@ -51,46 +47,54 @@ function readJson(event: HttpEvent): unknown {
   }
 }
 
-/** Una sola Lambda: la llama la app (HTTP) para programar/cancelar, y Scheduler para enviar. */
+/** Una sola Lambda: la llama la app (HTTP) para programar/cancelar, y la máquina de estados para enviar. */
 export function createHandler(deps: Deps) {
   const { config } = deps;
+  const prefix = executionPrefix(config.stateMachineArn);
+
+  /** Si la ejecución ya terminó (el aviso ya salió), detenerla falla: da igual. */
+  async function stopQuietly(executionArn: string): Promise<void> {
+    try {
+      await deps.timer.stop(executionArn);
+    } catch (e) {
+      console.warn(`No se pudo detener ${executionArn}: ${(e as Error).message}`);
+    }
+  }
 
   async function rest(body: unknown): Promise<HttpResult> {
     const request = parseRest(body);
     if (!request) return status(422);
-    if (!verify(request.subscription.endpoint, request.signature, config.signingKey)) return status(403);
+    const { endpoint } = request.subscription;
+    if (!verify(endpoint, request.signature, config.signingKey)) return status(403);
+    if (request.replace !== undefined && !ownsExecution(request.replace, endpoint, prefix)) return status(422);
 
-    const at = new Date(deps.now().getTime() + request.seconds * 1000);
-    const input: SendEvent = {
-      kind: 'send',
-      subscription: request.subscription,
-      title: request.title,
-      body: request.body,
-      url: request.url,
-    };
-    await deps.scheduler.upsert({
-      name: scheduleName(request.subscription.endpoint),
-      group: config.group,
-      expression: atExpression(at),
-      roleArn: config.roleArn,
-      targetArn: config.targetArn,
-      input: JSON.stringify(input),
-    });
-    return status(204);
+    if (request.replace !== undefined) await stopQuietly(request.replace);
+    const execution = await deps.timer.start(
+      executionName(endpoint, deps.now()),
+      JSON.stringify({
+        seconds: request.seconds,
+        subscription: request.subscription,
+        title: request.title,
+        body: request.body,
+        url: request.url,
+      }),
+    );
+    return { statusCode: 200, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ execution }) };
   }
 
   async function cancel(body: unknown): Promise<HttpResult> {
     const request = parseCancel(body);
     if (!request) return status(422);
     if (!verify(request.endpoint, request.signature, config.signingKey)) return status(403);
+    if (!ownsExecution(request.execution, request.endpoint, prefix)) return status(422);
 
-    await deps.scheduler.remove(scheduleName(request.endpoint), config.group);
+    await stopQuietly(request.execution);
     return status(204);
   }
 
   async function send(event: SendEvent): Promise<void> {
     const outcome = await deps.sendPush(event.subscription, notificationPayload(event));
-    if (outcome === 'gone') console.warn(`Suscripción vencida: ${scheduleName(event.subscription.endpoint)}`);
+    if (outcome === 'gone') console.warn(`Suscripción vencida: ${deviceKey(event.subscription.endpoint)}`);
   }
 
   return async (event: HttpEvent | SendEvent): Promise<HttpResult | void> => {

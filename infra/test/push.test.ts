@@ -23,10 +23,8 @@ describe('Push', () => {
           PUSH_SIGNING_KEY: { Ref: 'PushSigningKey' },
           VAPID_PRIVATE_KEY: { Ref: 'VapidPrivateKey' },
           VAPID_PUBLIC_KEY: { Ref: 'VapidPublicKey' },
-          SCHEDULE_GROUP: 'gymtracker-rest',
+          STATE_MACHINE_ARN: Match.anyValue(),
           VAPID_SUBJECT: Match.anyValue(),
-          SCHEDULER_ROLE_ARN: Match.anyValue(),
-          TARGET_ARN: Match.anyValue(),
         }),
       },
     });
@@ -50,22 +48,26 @@ describe('Push', () => {
     });
   });
 
-  it('creates the schedule group and can only manage schedules inside it', () => {
-    template.hasResourceProperties('AWS::Scheduler::ScheduleGroup', { Name: 'gymtracker-rest' });
+  it('times the rest with a Standard state machine: wait N seconds, then invoke the push function', () => {
+    template.resourceCountIs('AWS::Scheduler::ScheduleGroup', 0);
+    const machines = template.findResources('AWS::StepFunctions::StateMachine', {
+      Properties: { StateMachineName: 'gymtracker-rest', StateMachineType: 'STANDARD' },
+    });
+    expect(Object.keys(machines)).toHaveLength(1);
 
-    const manage = statementWith('scheduler:CreateSchedule');
-    expect(manage?.Action).toEqual([
-      'scheduler:CreateSchedule',
-      'scheduler:UpdateSchedule',
-      'scheduler:DeleteSchedule',
-    ]);
-    expect(JSON.stringify(manage?.Resource)).toContain(':schedule/gymtracker-rest/*');
-    expect(statementWith('iam:PassRole')).toBeDefined();
+    const definition = JSON.stringify(Object.values(machines)[0]);
+    expect(definition).toContain('\\"SecondsPath\\":\\"$.seconds\\"');
+    expect(definition).toContain('\\"kind\\":\\"send\\"');
+    expect(definition).toMatch(/PushFunction[0-9A-F]+/);
   });
 
-  it('lets Scheduler invoke only the push function', () => {
-    const invoke = statements().filter((s) => s.Action === 'lambda:InvokeFunction');
-    expect(invoke.some((s) => JSON.stringify(s.Resource).includes('function:gymtracker-push'))).toBe(true);
+  it('can only start the rest machine and stop its executions', () => {
+    const startExecution = statementWith('states:StartExecution');
+    expect(JSON.stringify(startExecution?.Resource)).toContain(':stateMachine:gymtracker-rest');
+    const stopExecution = statementWith('states:StopExecution');
+    expect(JSON.stringify(stopExecution?.Resource)).toContain(':execution:gymtracker-rest:*');
+    expect(statementWith('scheduler:CreateSchedule')).toBeUndefined();
+    expect(statementWith('iam:PassRole')).toBeUndefined();
   });
 
   it('exposes POST /push/* on the HTTP API', () => {

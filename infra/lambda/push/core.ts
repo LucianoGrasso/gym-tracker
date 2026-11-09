@@ -12,14 +12,17 @@ export interface RestRequest {
   title: string;
   body: string;
   url: string;
+  /** Ejecución anterior de este dispositivo, a detener antes de iniciar la nueva. */
+  replace?: unknown;
 }
 
 export interface CancelRequest {
   endpoint: string;
   signature: string;
+  execution: unknown;
 }
 
-/** Lo que Scheduler le devuelve a la Lambda cuando se cumple la hora. */
+/** Lo que la máquina de estados le pasa a la Lambda cuando termina la espera. */
 export interface SendEvent {
   kind: 'send';
   subscription: PushSubscriptionJson;
@@ -49,13 +52,25 @@ export function verify(endpoint: string, signature: string, key: string): boolea
   return given.length === expected.length && timingSafeEqual(given, expected);
 }
 
-/** Un horario por dispositivo: un descanso nuevo reemplaza al anterior. */
-export function scheduleName(endpoint: string): string {
+/** Identifica al dispositivo sin exponer su endpoint: prefijo de los nombres de sus ejecuciones. */
+export function deviceKey(endpoint: string): string {
   return `rest-${createHash('sha256').update(endpoint).digest('hex').slice(0, 32)}`;
 }
 
-export function atExpression(date: Date): string {
-  return `at(${date.toISOString().slice(0, 19)})`;
+export function executionName(endpoint: string, now: Date): string {
+  return `${deviceKey(endpoint)}-${now.getTime()}`;
+}
+
+/** `arn:…:stateMachine:nombre` → `arn:…:execution:nombre:` */
+export function executionPrefix(stateMachineArn: string): string {
+  return `${stateMachineArn.replace(':stateMachine:', ':execution:')}:`;
+}
+
+/** Un dispositivo solo puede detener sus propias ejecuciones. */
+export function ownsExecution(arn: unknown, endpoint: string, prefix: string): arn is string {
+  if (typeof arn !== 'string' || arn.length > 300) return false;
+  const own = `${prefix}${deviceKey(endpoint)}-`;
+  return arn.startsWith(own) && /^\d{13}$/.test(arn.slice(own.length));
 }
 
 export function parseRest(input: unknown): RestRequest | null {
@@ -71,13 +86,13 @@ export function parseRest(input: unknown): RestRequest | null {
   if (typeof seconds !== 'number' || !Number.isInteger(seconds) || seconds < 1 || seconds > MAX_SECONDS) return null;
   if (!isText(title, 120) || !isText(body, 120) || !isAppPath(url)) return null;
 
-  return { subscription: { endpoint, keys: { p256dh, auth } }, signature, seconds, title, body, url };
+  return { subscription: { endpoint, keys: { p256dh, auth } }, signature, seconds, title, body, url, replace: b['replace'] };
 }
 
 export function parseCancel(input: unknown): CancelRequest | null {
   if (typeof input !== 'object' || input === null) return null;
-  const { endpoint, signature } = input as Record<string, unknown>;
-  return isHttps(endpoint) && isText(signature, 128) ? { endpoint, signature } : null;
+  const { endpoint, signature, execution } = input as Record<string, unknown>;
+  return isHttps(endpoint) && isText(signature, 128) ? { endpoint, signature, execution } : null;
 }
 
 /** Formato que entiende el service worker de Angular (ngsw): muestra la notificación y abre `url` al tocarla. */

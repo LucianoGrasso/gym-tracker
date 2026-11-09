@@ -5,12 +5,13 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as logs from 'aws-cdk-lib/aws-logs';
-import * as scheduler from 'aws-cdk-lib/aws-scheduler';
+import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
+import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Construct } from 'constructs';
 import * as path from 'node:path';
 
 export const PUSH_FUNCTION_NAME = 'gymtracker-push';
-export const REST_SCHEDULE_GROUP = 'gymtracker-rest';
+export const REST_STATE_MACHINE_NAME = 'gymtracker-rest';
 
 export interface PushProps {
   readonly api: apigwv2.HttpApi;
@@ -20,8 +21,9 @@ export interface PushProps {
 }
 
 /**
- * Avisos de fin de descanso. Fuera de la VPC (necesita internet para Scheduler y los servicios
- * de push, y no usa Aurora): así no hace falta NAT ni VPC endpoints.
+ * Avisos de fin de descanso. La Lambda va fuera de la VPC (necesita internet para los servicios
+ * de push y no usa Aurora). El temporizador es una máquina de estados Standard: su `Wait` es
+ * preciso al segundo (EventBridge Scheduler tiene precisión de 60 s) y dura más de 5 min (Express no).
  */
 export class Push extends Construct {
   readonly fn: NodejsFunction;
@@ -30,20 +32,19 @@ export class Push extends Construct {
     super(scope, id);
     const stack = Stack.of(this);
 
-    new scheduler.CfnScheduleGroup(this, 'Group', { name: REST_SCHEDULE_GROUP });
-
-    // ARN armado con el nombre fijo: referenciar fn.functionArn en su propio entorno sería circular.
-    const targetArn = stack.formatArn({
-      service: 'lambda',
-      resource: 'function',
-      resourceName: PUSH_FUNCTION_NAME,
+    // ARN armado con el nombre fijo: la máquina invoca a la Lambda, así que la Lambda no puede depender de ella.
+    const stateMachineArn = stack.formatArn({
+      service: 'states',
+      resource: 'stateMachine',
+      resourceName: REST_STATE_MACHINE_NAME,
       arnFormat: ArnFormat.COLON_RESOURCE_NAME,
     });
-    const schedulerRole = new iam.Role(this, 'SchedulerRole', {
-      assumedBy: new iam.ServicePrincipal('scheduler.amazonaws.com'),
-      description: 'Scheduler invoca la Lambda de push al terminar un descanso',
+    const executions = stack.formatArn({
+      service: 'states',
+      resource: 'execution',
+      resourceName: `${REST_STATE_MACHINE_NAME}:*`,
+      arnFormat: ArnFormat.COLON_RESOURCE_NAME,
     });
-    schedulerRole.addToPolicy(new iam.PolicyStatement({ actions: ['lambda:InvokeFunction'], resources: [targetArn] }));
 
     this.fn = new NodejsFunction(this, 'Function', {
       functionName: PUSH_FUNCTION_NAME,
@@ -61,21 +62,32 @@ export class Push extends Construct {
         PUSH_SIGNING_KEY: props.signingKey,
         VAPID_PUBLIC_KEY: props.vapidPublicKey,
         VAPID_PRIVATE_KEY: props.vapidPrivateKey,
-        SCHEDULE_GROUP: REST_SCHEDULE_GROUP,
-        SCHEDULER_ROLE_ARN: schedulerRole.roleArn,
-        TARGET_ARN: targetArn,
+        STATE_MACHINE_ARN: stateMachineArn,
       },
     });
+    this.fn.addToRolePolicy(new iam.PolicyStatement({ actions: ['states:StartExecution'], resources: [stateMachineArn] }));
+    this.fn.addToRolePolicy(new iam.PolicyStatement({ actions: ['states:StopExecution'], resources: [executions] }));
 
-    this.fn.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: ['scheduler:CreateSchedule', 'scheduler:UpdateSchedule', 'scheduler:DeleteSchedule'],
-        resources: [
-          stack.formatArn({ service: 'scheduler', resource: 'schedule', resourceName: `${REST_SCHEDULE_GROUP}/*` }),
-        ],
+    const send = new tasks.LambdaInvoke(this, 'Send', {
+      lambdaFunction: this.fn,
+      payload: sfn.TaskInput.fromObject({
+        kind: 'send',
+        subscription: sfn.JsonPath.objectAt('$.subscription'),
+        title: sfn.JsonPath.stringAt('$.title'),
+        body: sfn.JsonPath.stringAt('$.body'),
+        url: sfn.JsonPath.stringAt('$.url'),
       }),
-    );
-    this.fn.addToRolePolicy(new iam.PolicyStatement({ actions: ['iam:PassRole'], resources: [schedulerRole.roleArn] }));
+      // Un aviso atrasado no sirve: sin reintentos.
+      retryOnServiceExceptions: false,
+    });
+    new sfn.StateMachine(this, 'RestTimer', {
+      stateMachineName: REST_STATE_MACHINE_NAME,
+      stateMachineType: sfn.StateMachineType.STANDARD,
+      comment: 'Espera el descanso y manda el aviso push',
+      definitionBody: sfn.DefinitionBody.fromChainable(
+        new sfn.Wait(this, 'Wait', { time: sfn.WaitTime.secondsPath('$.seconds') }).next(send),
+      ),
+    });
 
     props.api.addRoutes({
       path: '/push/{proxy+}',

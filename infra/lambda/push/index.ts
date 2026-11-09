@@ -1,12 +1,6 @@
-import {
-  CreateScheduleCommand,
-  DeleteScheduleCommand,
-  SchedulerClient,
-  UpdateScheduleCommand,
-  type CreateScheduleCommandInput,
-} from '@aws-sdk/client-scheduler';
+import { SFNClient, StartExecutionCommand, StopExecutionCommand } from '@aws-sdk/client-sfn';
 import { sendNotification, setVapidDetails } from 'web-push';
-import { createHandler, type ScheduleInput } from './handler';
+import { createHandler } from './handler';
 
 function env(name: string): string {
   const value = process.env[name];
@@ -14,40 +8,19 @@ function env(name: string): string {
   return value;
 }
 
-const client = new SchedulerClient({});
+const client = new SFNClient({});
+const stateMachineArn = env('STATE_MACHINE_ARN');
 setVapidDetails(env('VAPID_SUBJECT'), env('VAPID_PUBLIC_KEY'), env('VAPID_PRIVATE_KEY'));
 
-function toCommand(s: ScheduleInput): CreateScheduleCommandInput {
-  return {
-    Name: s.name,
-    GroupName: s.group,
-    ScheduleExpression: s.expression,
-    ScheduleExpressionTimezone: 'UTC',
-    FlexibleTimeWindow: { Mode: 'OFF' },
-    ActionAfterCompletion: 'DELETE',
-    // Un aviso atrasado no sirve: sin reintentos.
-    Target: { Arn: s.targetArn, RoleArn: s.roleArn, Input: s.input, RetryPolicy: { MaximumRetryAttempts: 0 } },
-  };
-}
-
-const errorName = (e: unknown) => (e as { name?: string }).name;
-
 export const handler = createHandler({
-  scheduler: {
-    async upsert(schedule) {
-      try {
-        await client.send(new CreateScheduleCommand(toCommand(schedule)));
-      } catch (e) {
-        if (errorName(e) !== 'ConflictException') throw e;
-        await client.send(new UpdateScheduleCommand(toCommand(schedule)));
-      }
+  timer: {
+    async start(name, input) {
+      const out = await client.send(new StartExecutionCommand({ stateMachineArn, name, input }));
+      if (!out.executionArn) throw new Error('Step Functions no devolvió el ARN de la ejecución');
+      return out.executionArn;
     },
-    async remove(name, group) {
-      try {
-        await client.send(new DeleteScheduleCommand({ Name: name, GroupName: group }));
-      } catch (e) {
-        if (errorName(e) !== 'ResourceNotFoundException') throw e;
-      }
+    async stop(executionArn) {
+      await client.send(new StopExecutionCommand({ executionArn, cause: 'Descanso reemplazado o saltado' }));
     },
   },
   async sendPush(subscription, payload) {
@@ -62,10 +35,5 @@ export const handler = createHandler({
     }
   },
   now: () => new Date(),
-  config: {
-    signingKey: env('PUSH_SIGNING_KEY'),
-    group: env('SCHEDULE_GROUP'),
-    roleArn: env('SCHEDULER_ROLE_ARN'),
-    targetArn: env('TARGET_ARN'),
-  },
+  config: { signingKey: env('PUSH_SIGNING_KEY'), stateMachineArn },
 });
