@@ -103,3 +103,21 @@ Variables de entorno: `PUSH_SIGNING_KEY`, `VAPID_PRIVATE_KEY` (parámetros NoEch
 3. Prueba en iPhone: activar avisos, bloquear el teléfono, descanso de 30 s, medir el retraso.
 
 En local los avisos no funcionan (no hay Scheduler); la app sigue con barra y vibración.
+
+## Anexo (2026-11-09): Step Functions en vez de EventBridge Scheduler
+
+**Motivo:** EventBridge Scheduler tiene precisión de 60 s (documentado por AWS). En producción el aviso llegó una vez ~60 s tarde y otra ~5 s tarde: el retraso es variable y no sirve para un temporizador.
+
+**Cambio:** el temporizador pasa a ser una máquina de estados **Standard** `gymtracker-rest` (Express no sirve: máx. 5 min y los descansos reales duran 4-8 min):
+
+```
+Wait (SecondsPath: $.seconds) → Task lambda:invoke gymtracker-push { kind: 'send', subscription, title, body, url }
+```
+
+- `POST /push/rest` inicia una ejecución llamada `<deviceKey>-<epoch ms>` (`deviceKey = rest-<32 hex de sha256(endpoint)>`) con input `{ seconds, subscription, title, body, url }` y responde **200 `{ execution }`** (ARN de la ejecución). Acepta `replace` opcional: ARN de la ejecución anterior de ese dispositivo, que se detiene antes de iniciar la nueva (descanso nuevo o "+30 s").
+- `POST /push/cancel` recibe `{ endpoint, signature, execution }` y detiene esa ejecución (204).
+- Un dispositivo solo puede detener sus propias ejecuciones: el ARN debe ser `<prefijo de ejecuciones>:<deviceKey de su endpoint firmado>-<13 dígitos>`; si no, 422. Errores al detener (p. ej. ya terminó) se registran y se ignoran.
+- La app guarda el ARN de la última ejecución en `localStorage` (`gymtracker.pushExecution`) para poder reemplazarla o cancelarla aunque la app se recargue.
+- IAM: la Lambda solo puede `states:StartExecution` sobre `gymtracker-rest` y `states:StopExecution` sobre sus ejecuciones; la máquina de estados solo puede invocar `gymtracker-push`. El ARN de la máquina se arma con su nombre fijo (evita dependencia circular).
+- Se eliminan el grupo de Scheduler y su rol. Costo: ~4 transiciones por descanso (4.000 gratis/mes) → a lo más ~USD 0,10/mes.
+- Precisión esperada: ~1 s más el envío de Apple.
