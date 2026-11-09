@@ -39,6 +39,7 @@ const item: SessionExercise = {
 async function render(finished = false) {
   const sessions = {
     addSet: vi.fn().mockResolvedValue(undefined),
+    session: () => ({ id: 'w1' }),
     updateSet: vi.fn(),
     deleteSet: vi.fn(),
     removeExercise: vi.fn(),
@@ -84,7 +85,10 @@ describe('ExerciseCard', () => {
       pain_level: null,
       notes: null,
     });
-    expect(timer.start).toHaveBeenCalledWith(180);
+    expect(timer.start).toHaveBeenCalledWith(180, {
+      body: 'Press de banca · serie 2',
+      url: '/entrenamiento/w1',
+    });
   });
 
   it('highlights the saved set and confirms it on the button', async () => {

@@ -16,7 +16,7 @@ import { formatBestSet, formatRest, formatTargets } from '../../core/format/trai
 import type { WorkoutSet } from '../../core/models/exercise';
 import { SET_TYPES, SET_TYPE_LABELS } from '../../core/models/labels';
 import type { SessionExercise, WorkoutSetInput } from '../../core/models/workout';
-import { RestTimerService } from '../../core/workout/rest-timer.service';
+import { RestTimerService, restNoticeBody } from '../../core/workout/rest-timer.service';
 import {
   bilboHint,
   formatNumber,
@@ -354,7 +354,17 @@ export class ExerciseCard {
     }
     const saved = await this.sessions.addSet(this.item().id, input);
     this.celebrate(saved?.id ?? null);
-    if (!this.finished()) this.timer.start(this.item().rest_seconds);
+    if (!this.finished()) {
+      const ex = this.item();
+      const done = saved?.set_number ?? ex.sets.length + 1;
+      const sessionId = this.sessions.session()?.id;
+      this.timer.start(
+        ex.rest_seconds,
+        sessionId
+          ? { body: restNoticeBody(ex.exercise.name, done + 1, ex.target_sets), url: `/entrenamiento/${sessionId}` }
+          : undefined,
+      );
+    }
   }
 
   /** Destello en la fila guardada y "✓ Guardada" en el botón por un momento. */
