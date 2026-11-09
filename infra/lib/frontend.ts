@@ -63,7 +63,7 @@ export class Frontend extends Construct {
         responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.SECURITY_HEADERS,
         functionAssociations: [{ function: spaRewrite, eventType: cloudfront.FunctionEventType.VIEWER_REQUEST }],
       },
-      additionalBehaviors: { '/api/*': api, '/auth/*': api, '/sanctum/*': api },
+      additionalBehaviors: { '/api/*': api, '/auth/*': api, '/sanctum/*': api, '/push/*': api },
     });
 
     // Primero los assets con hash (inmutables; los íconos también: si cambian, se renombran),

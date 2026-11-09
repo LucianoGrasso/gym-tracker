@@ -18,13 +18,13 @@ describe('Frontend', () => {
     template.resourceCountIs('AWS::CloudFront::OriginAccessControl', 1);
   });
 
-  it('routes /api, /auth and /sanctum to the HTTP API without caching', () => {
+  it('routes /api, /auth, /sanctum and /push to the HTTP API without caching', () => {
     const distribution = Object.values(template.findResources('AWS::CloudFront::Distribution'))[0] as {
       Properties: { DistributionConfig: { CacheBehaviors: { PathPattern: string; AllowedMethods: string[] }[] } };
     };
     const behaviors = distribution.Properties.DistributionConfig.CacheBehaviors;
 
-    expect(behaviors.map((b) => b.PathPattern).sort()).toEqual(['/api/*', '/auth/*', '/sanctum/*']);
+    expect(behaviors.map((b) => b.PathPattern).sort()).toEqual(['/api/*', '/auth/*', '/push/*', '/sanctum/*']);
     behaviors.forEach((b) => expect(b.AllowedMethods).toContain('POST'));
   });
 

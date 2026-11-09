@@ -56,7 +56,7 @@ jobs:
 
       - name: Leer secretos de SSM
         run: |
-          for name in app-key db-password; do
+          for name in app-key db-password push-signing-key vapid-private-key vapid-public-key; do
             value="$(aws ssm get-parameter --name "/gymtracker/prod/$name" --with-decryption --query Parameter.Value --output text)"
             echo "::add-mask::$value"
             echo "SECRET_$(echo "$name" | tr 'a-z-' 'A-Z_')=$value" >> "$GITHUB_ENV"
@@ -68,6 +68,9 @@ jobs:
           npx cdk deploy GymTrackerStack --require-approval never
           --parameters AppKey="$SECRET_APP_KEY"
           --parameters DbPassword="$SECRET_DB_PASSWORD"
+          --parameters PushSigningKey="$SECRET_PUSH_SIGNING_KEY"
+          --parameters VapidPrivateKey="$SECRET_VAPID_PRIVATE_KEY"
+          --parameters VapidPublicKey="$SECRET_VAPID_PUBLIC_KEY"
           --outputs-file outputs.json
 
       - name: Migrar

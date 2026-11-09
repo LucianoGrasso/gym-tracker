@@ -15,3 +15,16 @@ put() { # nombre valor
 put /gymtracker/prod/app-key "base64:$(openssl rand -base64 32)"
 # Hex: Aurora no acepta / @ " ni espacios en la contraseña.
 put /gymtracker/prod/db-password "$(openssl rand -hex 24)"
+put /gymtracker/prod/push-signing-key "$(openssl rand -hex 32)"
+
+# Par VAPID: las dos mitades deben calzar, así que se crean juntas y solo si falta la privada.
+if aws ssm get-parameter --region "$REGION" --name /gymtracker/prod/vapid-private-key >/dev/null 2>&1; then
+  echo "/gymtracker/prod/vapid-private-key ya existe (no se toca)"
+else
+  keys="$("$(dirname "$0")/../node_modules/.bin/web-push" generate-vapid-keys --json)"
+  aws ssm put-parameter --region "$REGION" --name /gymtracker/prod/vapid-public-key --type SecureString --overwrite \
+    --value "$(node -pe 'JSON.parse(process.argv[1]).publicKey' "$keys")" >/dev/null
+  aws ssm put-parameter --region "$REGION" --name /gymtracker/prod/vapid-private-key --type SecureString \
+    --value "$(node -pe 'JSON.parse(process.argv[1]).privateKey' "$keys")" >/dev/null
+  echo "/gymtracker/prod/vapid-public-key y vapid-private-key creados"
+fi
