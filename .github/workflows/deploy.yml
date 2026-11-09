@@ -73,6 +73,10 @@ jobs:
           --parameters VapidPublicKey="$SECRET_VAPID_PUBLIC_KEY"
           --outputs-file outputs.json
 
+      # Aurora se auto-pausa: despertarla antes, o la migración se queda sin conexión.
+      - name: Despertar Aurora
+        run: infra/scripts/artisan.sh "app:wake-db"
+
       - name: Migrar
         run: infra/scripts/artisan.sh "migrate --force"
 
