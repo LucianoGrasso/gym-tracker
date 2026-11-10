@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input, model, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, model, signal } from '@angular/core';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideCheck } from '@ng-icons/lucide';
 import { HlmInput } from '@spartan-ng/helm/input';
 import type { Exercise } from '../../core/models/exercise';
 import { MUSCLE_GROUP_LABELS } from '../../core/models/labels';
@@ -16,9 +18,22 @@ const normalize = (text: string): string =>
  */
 @Component({
   selector: 'app-exercise-picker',
-  imports: [HlmInput],
+  imports: [HlmInput, NgIcon],
+  providers: [provideIcons({ lucideCheck })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    @if (chosen(); as picked) {
+      <div class="picked set-saved flex min-h-14 items-center gap-3 rounded-md border-2 border-primary bg-primary/10 px-3 py-2">
+        <ng-icon name="lucideCheck" size="22" class="shrink-0 text-primary" aria-hidden="true" />
+        <div class="min-w-0 flex-1">
+          <p class="text-base font-semibold leading-tight">{{ picked.exercise.name }}</p>
+          <p class="text-xs uppercase tracking-wide text-muted-foreground">{{ picked.group }}</p>
+        </div>
+        <button type="button" class="h-12 shrink-0 px-2 text-sm font-semibold text-primary underline" (click)="reopen()">
+          Cambiar
+        </button>
+      </div>
+    } @else {
     <div class="flex flex-col gap-2">
       <input
         hlmInput
@@ -44,7 +59,7 @@ const normalize = (text: string): string =>
             [attr.aria-selected]="item.exercise.id === value()"
             [class.bg-primary]="item.exercise.id === value()"
             [class.text-primary-foreground]="item.exercise.id === value()"
-            (click)="value.set(item.exercise.id)"
+            (click)="pick(item.exercise.id)"
           >
             <span class="name text-base">{{ item.exercise.name }}</span>
             <span
@@ -60,6 +75,7 @@ const normalize = (text: string): string =>
         }
       </div>
     </div>
+    }
   `,
 })
 export class ExercisePicker {
@@ -68,6 +84,8 @@ export class ExercisePicker {
   readonly label = input('Ejercicio');
 
   protected readonly query = signal('');
+  /** Buscando: sin elección, o tras tocar "Cambiar". Al elegir se cierra y queda el ejercicio a la vista. */
+  private readonly searching = linkedSignal(() => this.value() === null);
 
   private readonly indexed = computed(() =>
     this.exercises().map((exercise) => {
@@ -75,6 +93,20 @@ export class ExercisePicker {
       return { exercise, group, haystack: normalize(`${exercise.name} ${group}`) };
     }),
   );
+
+  protected readonly chosen = computed(() =>
+    this.searching() ? null : (this.indexed().find((item) => item.exercise.id === this.value()) ?? null),
+  );
+
+  protected pick(id: number): void {
+    this.value.set(id);
+    this.searching.set(false);
+  }
+
+  protected reopen(): void {
+    this.query.set('');
+    this.searching.set(true);
+  }
 
   /** Cada palabra escrita debe aparecer en el nombre o el grupo muscular. */
   protected readonly matches = computed(() => {

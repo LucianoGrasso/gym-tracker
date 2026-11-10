@@ -73,16 +73,34 @@ describe('ExercisePicker', () => {
     expect(el.textContent).toContain('Sin resultados para «remo»');
   });
 
-  it('marks the chosen exercise and emits it on tap', async () => {
-    const { fixture, el } = await setup(3);
-    const options = () => Array.from(el.querySelectorAll<HTMLButtonElement>('[role=option]'));
-    expect(options()[2].getAttribute('aria-selected')).toBe('true');
-
-    options()[0].click();
+  it('collapses to the chosen exercise after a tap, so it is clear what was picked', async () => {
+    const { fixture, el, search } = await setup();
+    await search('press');
+    el.querySelector<HTMLButtonElement>('[role=option]')?.click();
     await fixture.whenStable();
 
     expect(fixture.componentInstance.value()).toBe(1);
-    expect(options()[0].getAttribute('aria-selected')).toBe('true');
-    expect(options()[2].getAttribute('aria-selected')).toBe('false');
+    expect(el.querySelector('[role=listbox]')).toBeNull();
+    expect(el.querySelector('input')).toBeNull();
+    const picked = el.querySelector('.picked');
+    expect(picked?.textContent).toContain('Press de banca');
+    expect(picked?.textContent).toContain('Pecho');
+    expect(picked?.classList).toContain('set-saved');
+  });
+
+  it('reopens the search with Cambiar, marking the current choice', async () => {
+    const { fixture, el, names } = await setup(3);
+    expect(el.querySelector('.picked')?.textContent).toContain('Sentadilla');
+
+    const change = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Cambiar'));
+    change?.click();
+    await fixture.whenStable();
+
+    expect(names()).toHaveLength(4);
+    expect(el.querySelector('[aria-selected=true] .name')?.textContent?.trim()).toBe('Sentadilla');
+    expect(el.querySelector('input')?.value).toBe('');
+    el.querySelector<HTMLButtonElement>('[aria-selected=true]')?.click();
+    await fixture.whenStable();
+    expect(el.querySelector('[role=listbox]')).toBeNull();
   });
 });
