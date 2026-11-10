@@ -17,7 +17,7 @@ describe('BootSplash', () => {
     expect(el.querySelectorAll('svg .boot-right')).toHaveLength(2);
     // Igual al ícono de la app: la mancuerna dentro de la baldosa redondeada.
     expect(el.querySelector('.boot-tile svg')).not.toBeNull();
-    expect(el.textContent).toContain('GymTracker');
+    expect(el.textContent).toContain('Gym Tracker');
     expect(el.querySelector('.skeleton-hint')?.textContent).toContain('Despertando el servidor…');
   });
 });

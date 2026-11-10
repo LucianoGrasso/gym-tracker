@@ -306,17 +306,14 @@ body::before {
   color: #c8f135;
   padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
 }
-/* Baldosa como el ícono en la pantalla de inicio de iOS: esquinas ~22 %, apenas más clara que el fondo. */
+/* Sin baldosa: la mancuerna sola sobre el fondo. Recorta los discos fuera de la zona y los
+   desvanece en los bordes, para que entren suave. */
 .boot-tile {
   width: 8rem;
   height: 8rem;
-  border-radius: 22.5%;
   overflow: hidden;
-  background: linear-gradient(180deg, #232420 0%, #151612 100%);
-  box-shadow:
-    0 12px 32px rgb(0 0 0 / 0.55),
-    inset 0 1px 0 rgb(255 255 255 / 0.07),
-    inset 0 0 0 1px rgb(255 255 255 / 0.04);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
 }
 .boot-logo {
   display: block;
@@ -342,11 +339,11 @@ body::before {
   animation-name: boot-plate-outer;
 }
 .boot-name {
-  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-family: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #f2f3ee;
 }
 .boot-hint {
   position: absolute;

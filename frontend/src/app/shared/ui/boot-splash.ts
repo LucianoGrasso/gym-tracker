@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 /**
- * Pantalla de arranque: el ícono de la app (mancuerna lima en baldosa redondeada) cargándose como en
+ * Pantalla de arranque: la mancuerna del ícono cargándose como en
  * el gimnasio, en bucle: los discos grandes entran desde los bordes hacia el centro, rebotan contra el
  * tope, y luego los chicos.
  * Se ve mientras la app espera la sesión (Aurora puede tardar ~15 s en despertar).
@@ -22,7 +22,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
           <rect class="boot-plate-outer boot-right" x="376" y="176" width="40" height="160" rx="12" />
         </svg>
       </div>
-      <p class="boot-name">GymTracker</p>
+      <p class="boot-name">Gym Tracker</p>
       <p class="skeleton-hint boot-hint">Despertando el servidor…</p>
     </div>
   `,
