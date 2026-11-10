@@ -24,14 +24,18 @@ function setNavigator(props: Record<string, unknown>) {
   }
 }
 
-async function render(pending: Invitation[] = [], pushStatus: PushStatus = 'unsupported') {
+async function render(
+  pending: Invitation[] = [],
+  pushStatus: PushStatus = 'unsupported',
+  demoExpiresAt: string | null = null,
+) {
   const api = {
     list: vi.fn().mockResolvedValue(pending),
     create: vi.fn().mockResolvedValue({ ...pendingInvitation(9), token: 'tok123' }),
     revoke: vi.fn().mockResolvedValue(undefined),
   };
   const auth = {
-    user: signal({ id: 1, name: 'Luciano Grasso', email: 'l@x.cl' }),
+    user: signal({ id: 1, name: 'Luciano Grasso', email: 'l@x.cl', demo_expires_at: demoExpiresAt }),
     logout: vi.fn().mockResolvedValue(undefined),
   };
   const push = {
@@ -185,5 +189,12 @@ describe('AccountMenu', () => {
       expect(toggle(el).disabled).toBe(true);
       expect(el.textContent).toContain('Actívalas en Ajustes del teléfono');
     });
+  });
+
+  it('hides invitations for a demo account', async () => {
+    const { el, open, api } = await render([], 'unsupported', '2026-11-10T22:00:00Z');
+    await open();
+    expect(el.textContent).not.toContain('Invitar a alguien');
+    expect(api.list).not.toHaveBeenCalled();
   });
 });

@@ -33,6 +33,19 @@ import { SyncService } from '../../core/sync/sync.service';
           {{ loading() ? 'Entrando…' : 'Entrar' }}
         </button>
       </form>
+
+      <div class="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+        <span class="h-px flex-1 bg-border"></span>¿Solo quieres mirar?<span class="h-px flex-1 bg-border"></span>
+      </div>
+      <button hlmBtn type="button" variant="outline" class="h-12 text-base" [disabled]="loading()" (click)="demo()">
+        Probar demo (sin registro)
+      </button>
+      <p class="mt-2 text-center text-xs text-muted-foreground">
+        Una cuenta de prueba con datos de ejemplo. Se borra en 2 horas.
+      </p>
+      @if (demoError()) {
+        <p class="mt-2 text-sm text-destructive" role="alert">{{ demoError() }}</p>
+      }
     </main>
   `,
 })
@@ -43,6 +56,7 @@ export class LoginPage {
 
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly demoError = signal<string | null>(null);
   protected readonly form = new FormGroup({
     email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
     password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -66,6 +80,25 @@ export class LoginPage {
         e instanceof HttpErrorResponse && e.status === 422
           ? 'Correo o contraseña incorrectos.'
           : 'No se pudo conectar. Intenta de nuevo.',
+      );
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async demo(): Promise<void> {
+    this.loading.set(true);
+    this.demoError.set(null);
+    try {
+      await this.auth.startDemo();
+      await this.router.navigateByUrl('/hoy');
+    } catch (e) {
+      this.demoError.set(
+        e instanceof HttpErrorResponse && e.status === 429
+          ? 'Ya creaste varias demos. Intenta en un rato.'
+          : e instanceof HttpErrorResponse && e.status === 503
+            ? (e.error?.message ?? 'La demo está llena. Intenta en un rato.')
+            : 'No se pudo conectar. Intenta de nuevo.',
       );
     } finally {
       this.loading.set(false);

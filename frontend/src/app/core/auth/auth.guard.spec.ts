@@ -18,7 +18,7 @@ function setup(current: User | null | undefined, loaded: User | null = null) {
   return { auth, run };
 }
 
-const user = { id: 1, name: 'Luciano', email: 'luciano@gymtracker.test' };
+const user = { id: 1, name: 'Luciano', email: 'luciano@gymtracker.test', demo_expires_at: null };
 
 describe('authGuard', () => {
   it('allows navigation when the user is known', async () => {

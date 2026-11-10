@@ -54,8 +54,20 @@ export class AuthService {
     return data;
   }
 
+  /** Cuenta temporal de "Probar demo" (2 h, con datos de ejemplo). */
+  async startDemo(): Promise<User> {
+    await firstValueFrom(this.http.get('/sanctum/csrf-cookie'));
+    const { data } = await firstValueFrom(this.http.post<UserResponse>('/auth/demo', {}));
+    this.currentUser.set(data);
+    return data;
+  }
+
   async logout(): Promise<void> {
-    await firstValueFrom(this.http.post('/auth/logout', {}));
-    this.currentUser.set(null);
+    try {
+      await firstValueFrom(this.http.post('/auth/logout', {}));
+    } finally {
+      // Aunque falle (p. ej. demo ya vencida: 401), localmente ya no hay sesión.
+      this.currentUser.set(null);
+    }
   }
 }

@@ -58,42 +58,44 @@ import { PushService } from '../../core/push/push.service';
           <p class="mb-4 truncate text-sm text-muted-foreground">{{ u.email }}</p>
         }
 
-        <button
-          hlmBtn
-          role="menuitem"
-          class="h-11 w-full gap-2"
-          [disabled]="busy() || atLimit()"
-          (click)="invite()"
-        >
-          <ng-icon name="lucideUserPlus" size="18" aria-hidden="true" />
-          Invitar a alguien
-        </button>
-        <p class="mt-2 text-xs text-muted-foreground">
-          @if (atLimit()) {
-            Tienes 5 invitaciones pendientes. Anula una para crear otra.
-          } @else {
-            El link sirve para una sola cuenta y vence en 7 días.
-          }
-        </p>
-        @if (notice()) {
-          <p class="mt-2 text-sm text-primary" role="status">{{ notice() }}</p>
-        }
-        @if (error()) {
-          <p class="mt-2 text-sm text-destructive" role="alert">{{ error() }}</p>
-        }
-
-        @if (pending().length) {
-          <p class="mt-4 mb-2 eyebrow">Invitaciones pendientes</p>
-          <ul class="flex flex-col gap-2">
-            @for (inv of pending(); track inv.id) {
-              <li class="flex items-center gap-2">
-                <span class="flex-1 text-sm">Vence el {{ formatDate(inv.expires_on) }}</span>
-                <button hlmBtn variant="outline" class="h-9 px-3" (click)="revoke(inv.id)">
-                  Anular
-                </button>
-              </li>
+        @if (!isDemo()) {
+          <button
+            hlmBtn
+            role="menuitem"
+            class="h-11 w-full gap-2"
+            [disabled]="busy() || atLimit()"
+            (click)="invite()"
+          >
+            <ng-icon name="lucideUserPlus" size="18" aria-hidden="true" />
+            Invitar a alguien
+          </button>
+          <p class="mt-2 text-xs text-muted-foreground">
+            @if (atLimit()) {
+              Tienes 5 invitaciones pendientes. Anula una para crear otra.
+            } @else {
+              El link sirve para una sola cuenta y vence en 7 días.
             }
-          </ul>
+          </p>
+          @if (notice()) {
+            <p class="mt-2 text-sm text-primary" role="status">{{ notice() }}</p>
+          }
+          @if (error()) {
+            <p class="mt-2 text-sm text-destructive" role="alert">{{ error() }}</p>
+          }
+
+          @if (pending().length) {
+            <p class="mt-4 mb-2 eyebrow">Invitaciones pendientes</p>
+            <ul class="flex flex-col gap-2">
+              @for (inv of pending(); track inv.id) {
+                <li class="flex items-center gap-2">
+                  <span class="flex-1 text-sm">Vence el {{ formatDate(inv.expires_on) }}</span>
+                  <button hlmBtn variant="outline" class="h-9 px-3" (click)="revoke(inv.id)">
+                    Anular
+                  </button>
+                </li>
+              }
+            </ul>
+          }
         }
 
         <div class="my-4 border-t border-border"></div>
@@ -153,9 +155,11 @@ export class AccountMenu {
 
   protected readonly formatDate = formatDate;
   protected readonly open = signal(false);
+  /** La demo no puede invitar (el backend responde 403). */
+  protected readonly isDemo = computed(() => !!this.auth.user()?.demo_expires_at);
   /** Las invitaciones se piden recién al abrir el menú. */
   protected readonly invitations = resource({
-    params: () => (this.open() ? true : undefined),
+    params: () => (this.open() && !this.isDemo() ? true : undefined),
     loader: () => this.api.list(),
   });
   protected readonly pending = computed(() =>

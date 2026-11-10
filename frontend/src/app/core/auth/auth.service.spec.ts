@@ -4,7 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AuthService } from './auth.service';
 
-const user = { id: 1, name: 'Luciano', email: 'luciano@gymtracker.test' };
+const user = { id: 1, name: 'Luciano', email: 'luciano@gymtracker.test', demo_expires_at: null };
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('AuthService', () => {
@@ -82,5 +82,17 @@ describe('AuthService', () => {
 
     expect(await result).toEqual(user);
     expect(service.user()).toEqual(user);
+  });
+
+  it('starts a demo with a fresh CSRF cookie', async () => {
+    const demo = { ...user, name: 'Invitado', demo_expires_at: '2026-11-10T22:00:00-03:00' };
+    const result = service.startDemo();
+    http.expectOne('/sanctum/csrf-cookie').flush(null);
+    await tick();
+    const req = http.expectOne('/auth/demo');
+    expect(req.request.method).toBe('POST');
+    req.flush({ data: demo });
+    expect(await result).toEqual(demo);
+    expect(service.user()).toEqual(demo);
   });
 });
