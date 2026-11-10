@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 /**
- * Pantalla de arranque: la mancuerna del ícono cargándose como en
+ * Pantalla de arranque: el ícono de la app (mancuerna lima en baldosa redondeada) cargándose como en
  * el gimnasio, en bucle: los discos grandes entran desde los bordes hacia el centro, rebotan contra el
  * tope, y luego los chicos.
  * Se ve mientras la app espera la sesión (Aurora puede tardar ~15 s en despertar).
