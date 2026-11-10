@@ -27,7 +27,8 @@ async function setup(value: number | null = null) {
   fixture.componentRef.setInput('value', value);
   await fixture.whenStable();
   const el = fixture.nativeElement as HTMLElement;
-  const names = () => Array.from(el.querySelectorAll('[role=option] .name')).map((n) => n.textContent?.trim());
+  const names = () =>
+    Array.from(el.querySelectorAll('[role=option] .name')).map((n) => n.textContent?.trim());
   const search = async (text: string) => {
     const input = el.querySelector('input') as HTMLInputElement;
     input.value = text;
@@ -40,7 +41,12 @@ async function setup(value: number | null = null) {
 describe('ExercisePicker', () => {
   it('lists every exercise with its muscle group', async () => {
     const { el, names } = await setup();
-    expect(names()).toEqual(['Press de banca', 'Extensión de tríceps en polea', 'Sentadilla', 'Press militar']);
+    expect(names()).toEqual([
+      'Press de banca',
+      'Extensión de tríceps en polea',
+      'Sentadilla',
+      'Press militar',
+    ]);
     expect(el.textContent).toContain('Pecho');
   });
 
