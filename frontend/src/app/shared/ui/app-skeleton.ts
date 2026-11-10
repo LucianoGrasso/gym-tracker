@@ -4,7 +4,7 @@ export type SkeletonVariant = 'today' | 'list' | 'page';
 
 /**
  * Bloques que pulsan mientras algo carga, con la forma de lo que viene:
- * - `today`: la pantalla "Hoy" (también en el arranque de la app; ver la copia estática en index.html);
+ * - `today`: la pantalla "Hoy";
  * - `list`: filas de tarjetas, para listas bajo un título ya visible;
  * - `page`: título más contenido, para pantallas de detalle.
  * A los 3 s aparece "Cargando tus datos…": la BD puede tardar ~15 s en despertar.

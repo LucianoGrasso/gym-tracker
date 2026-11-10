@@ -15,24 +15,18 @@
   <meta name="apple-mobile-web-app-title" content="GymTracker">
 </head>
 <body>
-  <!-- Copia estática de AppSkeleton (shared/ui/app-skeleton.ts): se ve mientras descarga la app y Angular la reemplaza al arrancar. -->
+  <!-- Copia estática de BootSplash (shared/ui/boot-splash.ts): se anima mientras descarga la app; Angular la reemplaza al arrancar. -->
   <app-root>
-    <div class="mx-auto max-w-lg px-4 pt-6" role="status" aria-busy="true" style="padding-top: calc(1.5rem + env(safe-area-inset-top))">
-      <span class="sr-only">Cargando…</span>
-      <div class="mb-5 flex items-start gap-3">
-        <div class="flex-1">
-          <div class="skeleton mb-3 h-3 w-28"></div>
-          <div class="skeleton mb-2 h-8 w-48"></div>
-          <div class="skeleton h-8 w-36"></div>
-        </div>
-        <div class="skeleton h-11 w-32 rounded-full"></div>
-      </div>
-      <div class="skeleton mb-6 h-48 rounded-3xl"></div>
-      <div class="skeleton mb-3 h-5 w-32"></div>
-      <div class="skeleton mb-3 h-20 rounded-2xl"></div>
-      <div class="skeleton mb-3 h-20 rounded-2xl"></div>
-      <div class="skeleton mb-3 h-20 rounded-2xl"></div>
-      <p class="skeleton-hint mt-4 text-center text-sm text-muted-foreground">Cargando tus datos…</p>
+    <div class="boot-splash" role="status" aria-busy="true">
+      <svg class="boot-logo" viewBox="96 144 320 224" aria-hidden="true">
+        <rect class="boot-plate-outer" x="96" y="176" width="40" height="160" rx="12" />
+        <rect class="boot-plate-inner" x="144" y="144" width="48" height="224" rx="14" />
+        <rect x="192" y="236" width="128" height="40" rx="8" />
+        <rect class="boot-plate-inner" x="320" y="144" width="48" height="224" rx="14" />
+        <rect class="boot-plate-outer" x="376" y="176" width="40" height="160" rx="12" />
+      </svg>
+      <p class="boot-name">GymTracker</p>
+      <p class="skeleton-hint boot-hint">Despertando el servidor…</p>
     </div>
   </app-root>
 </body>

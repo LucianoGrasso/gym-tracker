@@ -293,6 +293,90 @@ body::before {
   }
 }
 
+/* Pantalla de arranque (shared/ui/boot-splash.ts y su copia en index.html): CSS puro, se anima antes del JS. */
+.boot-splash {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  background: #0e0f0c;
+  color: #c8f135;
+  padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
+}
+.boot-logo {
+  width: 7.5rem;
+  height: auto;
+  fill: #c8f135;
+}
+.boot-plate-inner,
+.boot-plate-outer {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: 1.6s ease-out infinite;
+}
+.boot-plate-inner {
+  animation-name: boot-plate-inner;
+}
+.boot-plate-outer {
+  animation-name: boot-plate-outer;
+}
+.boot-name {
+  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.boot-hint {
+  position: absolute;
+  bottom: calc(2.5rem + env(safe-area-inset-bottom));
+  font-size: 0.875rem;
+  color: #a3a69c;
+}
+
+/* Discos grandes primero, luego los chicos; se sostienen y se descargan para repetir. */
+@keyframes boot-plate-inner {
+  0% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  18%,
+  78% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  95%,
+  100% {
+    transform: scaleY(1);
+    opacity: 0;
+  }
+}
+@keyframes boot-plate-outer {
+  0%,
+  22% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  40%,
+  78% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  95%,
+  100% {
+    transform: scaleY(1);
+    opacity: 0;
+  }
+}
+@keyframes boot-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
 @keyframes skeleton-hint-in {
   to {
     opacity: 1;
@@ -376,5 +460,13 @@ body::before {
   .menu-pop,
   .skeleton-hint {
     animation-duration: 1ms;
+  }
+  /* Sin discos animados: la mancuerna completa con un pulso suave. */
+  .boot-plate-inner,
+  .boot-plate-outer {
+    animation: none;
+  }
+  .boot-logo {
+    animation: boot-pulse 2s ease-in-out infinite;
   }
 }

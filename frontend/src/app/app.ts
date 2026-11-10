@@ -5,16 +5,16 @@ import { NavigationCancel, NavigationEnd, NavigationError, Router, RouterOutlet 
 import { filter, map, take } from 'rxjs';
 import { SyncService } from './core/sync/sync.service';
 import { WorkoutSessionService } from './core/workout/workout-session.service';
-import { AppSkeleton } from './shared/ui/app-skeleton';
+import { BootSplash } from './shared/ui/boot-splash';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, AppSkeleton],
+  imports: [RouterOutlet, BootSplash],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app.html',
 })
 export class App {
-  /** Hasta que termina la primera navegación (el guard espera la sesión) se muestra el skeleton, no una pantalla negra. */
+  /** Hasta que termina la primera navegación (el guard espera la sesión) se ve el logo animado; luego cada pantalla muestra su skeleton. */
   protected readonly booting = toSignal(
     inject(Router).events.pipe(
       filter((e) => e instanceof NavigationEnd || e instanceof NavigationCancel || e instanceof NavigationError),

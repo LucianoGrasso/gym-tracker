@@ -31,15 +31,15 @@ async function render(guard: () => Promise<boolean>) {
 }
 
 describe('App', () => {
-  it('shows a loading skeleton while the first screen is not ready', async () => {
+  it('shows the animated logo while the first screen is not ready (the DB may be waking up)', async () => {
     const fixture = await render(() => new Promise<boolean>(() => undefined));
     const el = fixture.nativeElement as HTMLElement;
 
-    expect(el.querySelector('[aria-busy="true"]')).not.toBeNull();
-    expect(el.textContent).toContain('Cargando tus datos');
+    expect(el.querySelector('app-boot-splash [aria-busy="true"]')).not.toBeNull();
+    expect(el.textContent).toContain('Despertando el servidor');
   });
 
-  it('removes the skeleton once the first screen is shown', async () => {
+  it('removes the splash once the first screen is shown', async () => {
     const fixture = await render(() => Promise.resolve(true));
     await fixture.whenStable();
     fixture.detectChanges();
