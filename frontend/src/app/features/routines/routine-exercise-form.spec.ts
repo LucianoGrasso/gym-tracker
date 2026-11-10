@@ -20,8 +20,9 @@ describe('RoutineExerciseForm', () => {
     let emitted: RoutineDayExerciseInput | undefined;
     fixture.componentInstance.saved.subscribe((value) => (emitted = value));
 
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('[role=option]')?.click();
     const form = fixture.componentInstance['form'];
-    form.patchValue({ exercise_id: 4, target_sets: 6, target_reps_min: 5, target_reps_max: 6, rest_seconds: 150 });
+    form.patchValue({ target_sets: 6, target_reps_min: 5, target_reps_max: 6, rest_seconds: 150 });
     fixture.componentInstance['submit']();
 
     expect(emitted).toEqual({

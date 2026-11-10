@@ -22,7 +22,7 @@ import type { SessionExercise } from '../../core/models/workout';
 import { RestTimerService } from '../../core/workout/rest-timer.service';
 import { parseDecimal } from '../../core/workout/set-suggestions';
 import { WorkoutSessionService } from '../../core/workout/workout-session.service';
-import { SELECT_CLASS } from '../../shared/ui/form-styles';
+import { ExercisePicker } from '../../shared/ui/exercise-picker';
 import { ExerciseCard } from './exercise-card';
 
 /** Ejercicio pendiente: aún no completa sus series objetivo (o, sin objetivo, no tiene ninguna). */
@@ -34,7 +34,7 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
 @Component({
   selector: 'app-workout-page',
-  imports: [RouterLink, NgIcon, HlmButton, HlmInput, ExerciseCard, AppSkeleton],
+  imports: [RouterLink, NgIcon, HlmButton, HlmInput, ExerciseCard, AppSkeleton, ExercisePicker],
   providers: [provideIcons({ lucideChevronLeft })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -73,14 +73,10 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
       <section class="mt-4">
         @if (picking()) {
-          <div class="flex gap-2">
-            <select [class]="selectClass" #pick aria-label="Ejercicio a agregar">
-              @for (exercise of available(); track exercise.id) {
-                <option [value]="exercise.id">{{ exercise.name }}</option>
-              }
-            </select>
-            <button hlmBtn class="h-12" (click)="addExercise(+pick.value)">Agregar</button>
-          </div>
+          <app-exercise-picker [exercises]="available()" [(value)]="picked" label="Ejercicio a agregar" />
+          <button hlmBtn class="mt-2 h-12 w-full" [disabled]="picked() === null" (click)="addExercise(picked())">
+            Agregar
+          </button>
           <button
             type="button"
             class="mt-2 text-sm text-muted-foreground underline"
@@ -142,7 +138,6 @@ export class WorkoutPage implements OnInit {
 
   readonly id = input.required<string>();
 
-  protected readonly selectClass = SELECT_CLASS;
   protected readonly formatDate = formatDate;
   protected readonly session = this.sessions.session;
   protected readonly isActive = computed(() => this.session()?.id === this.sessions.activeId());
@@ -152,6 +147,7 @@ export class WorkoutPage implements OnInit {
   );
   protected readonly error = signal<string | null>(null);
   protected readonly picking = signal(false);
+  protected readonly picked = signal<number | null>(null);
   private readonly exercises = signal<Exercise[]>([]);
   protected readonly available = computed(() => {
     const used = new Set(this.session()?.exercises.map((e) => e.exercise.id));
@@ -169,13 +165,14 @@ export class WorkoutPage implements OnInit {
   protected async startPicking(): Promise<void> {
     try {
       this.exercises.set(await cachedFetch(this.db, 'exercises', () => this.exercisesApi.list()));
+      this.picked.set(null);
       this.picking.set(true);
     } catch (e) {
       this.error.set(apiErrorMessage(e));
     }
   }
 
-  protected async addExercise(id: number): Promise<void> {
+  protected async addExercise(id: number | null): Promise<void> {
     const exercise = this.exercises().find((e) => e.id === id);
     if (!exercise) return;
     await this.sessions.addExercise(exercise);

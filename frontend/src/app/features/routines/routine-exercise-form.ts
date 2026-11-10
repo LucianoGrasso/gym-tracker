@@ -6,21 +6,23 @@ import { HlmLabel } from '@spartan-ng/helm/label';
 import type { Exercise, SetType } from '../../core/models/exercise';
 import { SET_TYPES, SET_TYPE_LABELS } from '../../core/models/labels';
 import type { RoutineDayExercise, RoutineDayExerciseInput } from '../../core/models/routine';
+import { ExercisePicker } from '../../shared/ui/exercise-picker';
 import { SELECT_CLASS } from '../../shared/ui/form-styles';
 
 @Component({
   selector: 'app-routine-exercise-form',
-  imports: [ReactiveFormsModule, HlmButton, HlmInput, HlmLabel],
+  imports: [ReactiveFormsModule, HlmButton, HlmInput, HlmLabel, ExercisePicker],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4" novalidate>
       @if (exercises(); as list) {
         <div class="flex flex-col gap-2">
-          <label hlmLabel for="exercise_id">Ejercicio</label>
-          <select id="exercise_id" formControlName="exercise_id" [class]="selectClass">
-            <option [ngValue]="null" disabled>Elige un ejercicio</option>
-            @for (exercise of list; track exercise.id) { <option [ngValue]="exercise.id">{{ exercise.name }}</option> }
-          </select>
+          <span hlmLabel>Ejercicio</span>
+          <app-exercise-picker
+            [exercises]="list"
+            [value]="form.controls.exercise_id.value"
+            (valueChange)="form.controls.exercise_id.setValue($event)"
+          />
         </div>
       }
       <div class="grid grid-cols-3 gap-3">
