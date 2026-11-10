@@ -24,6 +24,8 @@ export interface PushProps {
  * Avisos de fin de descanso. La Lambda va fuera de la VPC (necesita internet para los servicios
  * de push y no usa Aurora). El temporizador es una máquina de estados Standard: su `Wait` es
  * preciso al segundo (EventBridge Scheduler tiene precisión de 60 s) y dura más de 5 min (Express no).
+ * Espera hasta una hora absoluta (el arranque en frío del POST no atrasa el aviso) y despierta la
+ * Lambda 3 s antes de enviar, para que el envío no pague su arranque en frío.
  */
 export class Push extends Construct {
   readonly fn: NodejsFunction;
@@ -80,12 +82,25 @@ export class Push extends Construct {
       // Un aviso atrasado no sirve: sin reintentos.
       retryOnServiceExceptions: false,
     });
+    // Un calentamiento fallido no debe impedir el aviso: se ignora y se sigue esperando.
+    const warm = new tasks.LambdaInvoke(this, 'Warm', {
+      lambdaFunction: this.fn,
+      payload: sfn.TaskInput.fromObject({ kind: 'warm' }),
+      resultPath: sfn.JsonPath.DISCARD,
+      retryOnServiceExceptions: false,
+    });
+    const waitSend = new sfn.Wait(this, 'WaitSend', { time: sfn.WaitTime.timestampPath('$.sendAt') });
+    warm.addCatch(waitSend, { resultPath: sfn.JsonPath.DISCARD });
+
     new sfn.StateMachine(this, 'RestTimer', {
       stateMachineName: REST_STATE_MACHINE_NAME,
       stateMachineType: sfn.StateMachineType.STANDARD,
       comment: 'Espera el descanso y manda el aviso push',
       definitionBody: sfn.DefinitionBody.fromChainable(
-        new sfn.Wait(this, 'Wait', { time: sfn.WaitTime.secondsPath('$.seconds') }).next(send),
+        new sfn.Wait(this, 'WaitWarm', { time: sfn.WaitTime.timestampPath('$.warmAt') })
+          .next(warm)
+          .next(waitSend)
+          .next(send),
       ),
     });
 

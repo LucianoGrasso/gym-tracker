@@ -48,7 +48,7 @@ describe('Push', () => {
     });
   });
 
-  it('times the rest with a Standard state machine: wait N seconds, then invoke the push function', () => {
+  it('times the rest with a Standard state machine: wait, warm the push function, wait, send', () => {
     template.resourceCountIs('AWS::Scheduler::ScheduleGroup', 0);
     const machines = template.findResources('AWS::StepFunctions::StateMachine', {
       Properties: { StateMachineName: 'gymtracker-rest', StateMachineType: 'STANDARD' },
@@ -56,7 +56,11 @@ describe('Push', () => {
     expect(Object.keys(machines)).toHaveLength(1);
 
     const definition = JSON.stringify(Object.values(machines)[0]);
-    expect(definition).toContain('\\"SecondsPath\\":\\"$.seconds\\"');
+    expect(definition).toContain('\\"TimestampPath\\":\\"$.warmAt\\"');
+    expect(definition).toContain('\\"TimestampPath\\":\\"$.sendAt\\"');
+    expect(definition).toContain('\\"kind\\":\\"warm\\"');
+    // Si el calentamiento falla, igual se espera y se envía.
+    expect(definition).toMatch(/\\"Catch\\":\[\{\\"ErrorEquals\\":\[\\"States.ALL\\"\],\\"ResultPath\\":null,\\"Next\\":\\"WaitSend\\"/);
     expect(definition).toContain('\\"kind\\":\\"send\\"');
     expect(definition).toMatch(/PushFunction[0-9A-F]+/);
   });

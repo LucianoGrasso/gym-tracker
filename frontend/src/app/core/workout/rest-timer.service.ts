@@ -72,8 +72,9 @@ export class RestTimerService {
 
   /** Programa (o reprograma) el push para lo que queda del descanso en curso. */
   scheduleCurrent(): void {
-    if (this.notice && this.running()) {
-      void this.push.schedule(this.remaining(), this.notice.body, this.notice.url);
+    const endsAt = this.endsAt();
+    if (this.notice && this.running() && endsAt !== null) {
+      void this.push.schedule(endsAt, this.notice.body, this.notice.url);
     }
   }
 

@@ -7,12 +7,15 @@ import {
   parseRest,
   deviceKey,
   verify,
+  waitTimestamp,
+  WARM_LEAD_MS,
   type PushSubscriptionJson,
   type SendEvent,
+  type WarmEvent,
 } from './core';
 
 export interface Deps {
-  /** Máquina de estados de Step Functions: espera N segundos y vuelve a invocar esta Lambda. */
+  /** Máquina de estados de Step Functions: espera, despierta esta Lambda, espera y la invoca para enviar. */
   timer: {
     start(name: string, input: string): Promise<string>;
     stop(executionArn: string): Promise<void>;
@@ -62,7 +65,7 @@ export function createHandler(deps: Deps) {
   }
 
   async function rest(body: unknown): Promise<HttpResult> {
-    const request = parseRest(body);
+    const request = parseRest(body, deps.now());
     if (!request) return status(422);
     const { endpoint } = request.subscription;
     if (!verify(endpoint, request.signature, config.signingKey)) return status(403);
@@ -72,7 +75,8 @@ export function createHandler(deps: Deps) {
     const execution = await deps.timer.start(
       executionName(endpoint, deps.now()),
       JSON.stringify({
-        seconds: request.seconds,
+        warmAt: waitTimestamp(request.endsAt - WARM_LEAD_MS),
+        sendAt: waitTimestamp(request.endsAt),
         subscription: request.subscription,
         title: request.title,
         body: request.body,
@@ -97,7 +101,9 @@ export function createHandler(deps: Deps) {
     if (outcome === 'gone') console.warn(`Suscripción vencida: ${deviceKey(event.subscription.endpoint)}`);
   }
 
-  return async (event: HttpEvent | SendEvent): Promise<HttpResult | void> => {
+  return async (event: HttpEvent | SendEvent | WarmEvent): Promise<HttpResult | void> => {
+    // Solo despierta el contenedor: el envío llega segundos después y ya no paga el arranque en frío.
+    if ('kind' in event && event.kind === 'warm') return;
     if ('kind' in event && event.kind === 'send') return send(event);
 
     const http = event as HttpEvent;

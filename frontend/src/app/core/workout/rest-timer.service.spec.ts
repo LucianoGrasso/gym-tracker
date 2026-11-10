@@ -105,12 +105,13 @@ describe('RestTimerService push notices', () => {
   it('schedules the push, reschedules it on +30 s and cancels it on skip', () => {
     const timer = TestBed.inject(RestTimerService);
 
+    const start = Date.now();
     timer.start(90, NOTICE);
-    expect(push.schedule).toHaveBeenLastCalledWith(90, NOTICE.body, NOTICE.url);
+    expect(push.schedule).toHaveBeenLastCalledWith(start + 90_000, NOTICE.body, NOTICE.url);
 
     vi.advanceTimersByTime(10_000);
     timer.add(30);
-    expect(push.schedule).toHaveBeenLastCalledWith(110, NOTICE.body, NOTICE.url);
+    expect(push.schedule).toHaveBeenLastCalledWith(start + 120_000, NOTICE.body, NOTICE.url);
 
     timer.stop();
     expect(push.cancel).toHaveBeenCalledTimes(1);
@@ -135,11 +136,12 @@ describe('RestTimerService push notices', () => {
 
   it('schedules the running rest on demand (after enabling notifications)', () => {
     const timer = TestBed.inject(RestTimerService);
+    const start = Date.now();
     timer.start(90, NOTICE);
     push.schedule.mockClear();
     vi.advanceTimersByTime(20_000);
 
     timer.scheduleCurrent();
-    expect(push.schedule).toHaveBeenCalledWith(70, NOTICE.body, NOTICE.url);
+    expect(push.schedule).toHaveBeenCalledWith(start + 90_000, NOTICE.body, NOTICE.url);
   });
 });

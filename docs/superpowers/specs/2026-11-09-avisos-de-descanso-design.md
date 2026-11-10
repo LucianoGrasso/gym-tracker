@@ -121,3 +121,9 @@ Wait (SecondsPath: $.seconds) → Task lambda:invoke gymtracker-push { kind: 'se
 - IAM: la Lambda solo puede `states:StartExecution` sobre `gymtracker-rest` y `states:StopExecution` sobre sus ejecuciones; la máquina de estados solo puede invocar `gymtracker-push`. El ARN de la máquina se arma con su nombre fijo (evita dependencia circular).
 - Se eliminan el grupo de Scheduler y su rol. Costo: ~4 transiciones por descanso (4.000 gratis/mes) → a lo más ~USD 0,10/mes.
 - Precisión esperada: ~1 s más el envío de Apple.
+
+## Addendum 2026-11-10: ~2 s menos de latencia
+
+- La app manda `endsAt` (epoch ms, hora absoluta de término) en vez de `seconds`: el arranque en frío del `POST /push/rest` ya no atrasa el aviso. La Lambda sigue aceptando `seconds` para PWA en caché con la versión anterior. `endsAt` se acepta entre −60 s (desfase de relojes) y +1 h 1 min.
+- La máquina de estados queda `WaitWarm` (`TimestampPath $.warmAt` = fin − 3 s) → `Warm` (invoca la Lambda con `{kind:'warm'}`, que retorna de inmediato; si falla se ignora) → `WaitSend` (`TimestampPath $.sendAt`) → `Send`. El envío encuentra el contenedor caliente.
+- Los timestamps van redondeados al segundo y sin milisegundos (el `Wait` tiene granularidad de 1 s).

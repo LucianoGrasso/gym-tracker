@@ -9,7 +9,8 @@ export const REST_PUSH_TITLE = '¡Descanso terminado!';
 const STORAGE_KEY = 'gymtracker.push';
 /** Última ejecución del temporizador: se guarda para reemplazarla o cancelarla aunque la app se recargue. */
 const EXECUTION_KEY = 'gymtracker.pushExecution';
-const MAX_SECONDS = 3600;
+/** La Lambda no acepta descansos de más de una hora. */
+const MAX_AHEAD_MS = 3_600_000;
 
 interface Stored {
   status: 'on' | 'declined';
@@ -95,14 +96,15 @@ export class PushService {
     this.save({ status: 'declined' });
   }
 
-  async schedule(seconds: number, body: string, url: string): Promise<void> {
+  /** `endsAt` es la hora absoluta de término: si el POST se demora, el aviso no se atrasa. */
+  async schedule(endsAt: number, body: string, url: string): Promise<void> {
     const active = this.active();
     if (!active) return;
     try {
       const execution = await this.api.schedule({
         subscription: active.subscription,
         signature: active.signature,
-        seconds: Math.min(MAX_SECONDS, Math.max(1, Math.round(seconds))),
+        endsAt: Math.round(Math.min(endsAt, Date.now() + MAX_AHEAD_MS)),
         title: REST_PUSH_TITLE,
         body,
         url,

@@ -13,7 +13,7 @@ const subscription = { endpoint: ENDPOINT, keys: { p256dh: 'p256', auth: 'auth' 
 const rest = {
   subscription,
   signature: SIGNATURE,
-  seconds: 90,
+  endsAt: NOW.getTime() + 90_000,
   title: '¡Descanso terminado!',
   body: 'Press de banca · serie 3 de 4',
   url: '/entrenamiento/01JABC',
@@ -92,13 +92,32 @@ describe('push handler', () => {
 
     expect(start).toHaveBeenCalledWith(`${deviceKey(ENDPOINT)}-${NOW.getTime()}`, expect.any(String));
     expect(JSON.parse(start.mock.calls[0][1])).toEqual({
-      seconds: 90,
+      warmAt: '2026-11-09T22:01:27Z',
+      sendAt: '2026-11-09T22:01:30Z',
       subscription,
       title: rest.title,
       body: rest.body,
       url: rest.url,
     });
     expect(stop).not.toHaveBeenCalled();
+  });
+
+  it('rounds the end to the nearest second (the Wait state has 1 s granularity)', async () => {
+    await handler(post('/push/rest', { ...rest, endsAt: NOW.getTime() + 90_600 }));
+    expect(JSON.parse(start.mock.calls[0][1])).toMatchObject({
+      warmAt: '2026-11-09T22:01:28Z',
+      sendAt: '2026-11-09T22:01:31Z',
+    });
+  });
+
+  it('still accepts seconds from app versions cached before endsAt', async () => {
+    const { endsAt: _endsAt, ...legacy } = rest;
+    await handler(post('/push/rest', { ...legacy, seconds: 90 }));
+    expect(JSON.parse(start.mock.calls[0][1])).toMatchObject({ sendAt: '2026-11-09T22:01:30Z' });
+  });
+
+  it('accepts an end slightly in the past (clock skew): the push goes out right away', async () => {
+    expect((await handler(post('/push/rest', { ...rest, endsAt: NOW.getTime() - 5_000 })))?.statusCode).toBe(200);
   });
 
   it('stops the previous execution of the device before starting the new one', async () => {
@@ -131,9 +150,13 @@ describe('push handler', () => {
 
   it.each([
     ['broken json', '{'],
-    ['zero seconds', { ...rest, seconds: 0 }],
-    ['too many seconds', { ...rest, seconds: 3601 }],
-    ['fractional seconds', { ...rest, seconds: 1.5 }],
+    ['no end', { ...rest, endsAt: undefined }],
+    ['end long ago', { ...rest, endsAt: NOW.getTime() - 61_000 }],
+    ['end too far', { ...rest, endsAt: NOW.getTime() + 3_661_000 }],
+    ['end as text', { ...rest, endsAt: '2026-11-09T22:01:30Z' }],
+    ['zero seconds', { ...rest, endsAt: undefined, seconds: 0 }],
+    ['too many seconds', { ...rest, endsAt: undefined, seconds: 3601 }],
+    ['fractional seconds', { ...rest, endsAt: undefined, seconds: 1.5 }],
     ['http endpoint', { ...rest, subscription: { ...subscription, endpoint: 'http://push.example.com' } }],
     ['missing keys', { ...rest, subscription: { endpoint: ENDPOINT } }],
     ['empty body', { ...rest, body: '' }],
@@ -189,6 +212,11 @@ describe('push handler', () => {
     await handler({ kind: 'send', subscription, title: rest.title, body: rest.body, url: rest.url });
 
     expect(sendPush).toHaveBeenCalledWith(subscription, notificationPayload(rest));
+  });
+
+  it('a warm-up call just wakes the function, so the real send skips the cold start', async () => {
+    await expect(handler({ kind: 'warm' })).resolves.toBeUndefined();
+    expect(sendPush).not.toHaveBeenCalled();
   });
 
   it('does not fail when the subscription expired', async () => {

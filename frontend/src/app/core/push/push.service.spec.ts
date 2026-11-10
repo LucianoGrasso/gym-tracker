@@ -98,11 +98,12 @@ describe('PushService', () => {
   it('schedules and cancels with the stored subscription, signature and execution', async () => {
     const { push, api } = setup({ stored: ON });
 
-    await push.schedule(90.4, 'Press de banca · serie 2 de 4', '/entrenamiento/w1');
+    const endsAt = Date.now() + 90_000.4;
+    await push.schedule(endsAt, 'Press de banca · serie 2 de 4', '/entrenamiento/w1');
     expect(api.schedule).toHaveBeenCalledWith({
       subscription: SUB,
       signature: 'sig',
-      seconds: 90,
+      endsAt: Math.round(endsAt),
       title: REST_PUSH_TITLE,
       body: 'Press de banca · serie 2 de 4',
       url: '/entrenamiento/w1',
@@ -131,8 +132,8 @@ describe('PushService', () => {
     const push = TestBed.inject(PushService);
     reloaded.api.schedule.mockResolvedValue('exec-2');
 
-    await push.schedule(120, 'x', '/');
-    expect(reloaded.api.schedule).toHaveBeenCalledWith(expect.objectContaining({ seconds: 120, replace: 'exec-1' }));
+    await push.schedule(1_000, 'x', '/');
+    expect(reloaded.api.schedule).toHaveBeenCalledWith(expect.objectContaining({ endsAt: 1_000, replace: 'exec-1' }));
 
     await push.cancel();
     expect(reloaded.api.cancel).toHaveBeenCalledWith(expect.objectContaining({ execution: 'exec-2' }));
@@ -144,11 +145,13 @@ describe('PushService', () => {
     expect(api.cancel).not.toHaveBeenCalled();
   });
 
-  it('clamps the seconds to what the Lambda accepts', async () => {
+  it('caps the end to the hour the Lambda accepts', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-10T22:00:00Z'));
     const { push, api } = setup({ stored: ON });
-    await push.schedule(0.2, 'x', '/');
-    await push.schedule(5000, 'x', '/');
-    expect(api.schedule.mock.calls.map((c) => c[0].seconds)).toEqual([1, 3600]);
+    await push.schedule(Date.now() + 5_000_000, 'x', '/');
+    expect(api.schedule.mock.calls[0][0].endsAt).toBe(Date.now() + 3_600_000);
+    vi.useRealTimers();
   });
 
   it('does nothing when it is not on, and ignores network errors', async () => {

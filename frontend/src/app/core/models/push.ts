@@ -6,7 +6,8 @@ export interface PushSubscriptionJson {
 export interface RestPushRequest {
   subscription: PushSubscriptionJson;
   signature: string;
-  seconds: number;
+  /** Fin del descanso, epoch en ms. */
+  endsAt: number;
   title: string;
   body: string;
   url: string;
