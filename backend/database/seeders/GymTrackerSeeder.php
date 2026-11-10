@@ -51,14 +51,25 @@ class GymTrackerSeeder extends Seeder
         ]],
     ];
 
-    public function run(User $user): void
+    private const WEEKDAY_NAMES = [1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 7 => 'Domingo'];
+
+    /**
+     * @param  int|null  $firstWeekday  corre los días (misma separación) para que el primero caiga ese día ISO;
+     *                                  la demo lo usa para que hoy siempre haya entreno.
+     */
+    public function run(User $user, ?int $firstWeekday = null): void
     {
         $exercises = $this->seedExercises($user);
 
         $routine = $user->routines()->create(['name' => 'Rutina 4 días', 'is_active' => true]);
 
+        $first = array_key_first(self::DAYS);
         $position = 0;
         foreach (self::DAYS as $weekday => [$dayName, $items]) {
+            if ($firstWeekday !== null) {
+                $weekday = (($firstWeekday - 1 + $weekday - $first) % 7) + 1;
+                $dayName = self::WEEKDAY_NAMES[$weekday].' – '.explode(' – ', $dayName, 2)[1];
+            }
             $day = $routine->days()->create([
                 'name' => $dayName,
                 'weekday' => $weekday,
