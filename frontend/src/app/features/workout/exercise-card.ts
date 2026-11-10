@@ -21,11 +21,15 @@ import {
   bilboHint,
   formatNumber,
   formatSetLine,
+  isWarmup,
   parseDecimal,
+  restAfter,
+  setNumberLabels,
   stepReps,
   stepWeight,
   suggestNextSet,
   toSetInput,
+  workingSets,
 } from '../../core/workout/set-suggestions';
 import { WorkoutSessionService } from '../../core/workout/workout-session.service';
 import { SELECT_CLASS } from '../../shared/ui/form-styles';
@@ -76,6 +80,7 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
           @for (set of ex.sets; track set.id; let i = $index) {
             <li
               class="flex min-h-12 items-center rounded-xl bg-muted pl-3"
+              [class.opacity-60]="isWarmup(set)"
               [class.set-saved]="lastSavedId() === set.id"
               [class.ring-2]="editingSetId() === set.id"
               [class.ring-primary]="editingSetId() === set.id"
@@ -85,7 +90,9 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
                 class="num flex flex-1 items-center gap-3 py-2 text-left"
                 (click)="edit(set)"
               >
-                <span class="w-5 text-base text-muted-foreground">{{ i + 1 }}</span>
+                <span class="set-number w-5 text-base text-muted-foreground">{{
+                  numberLabels()[i]
+                }}</span>
                 <span class="text-xl font-semibold">{{ setLine(set) }}</span>
                 @if (lastSavedId() === set.id) {
                   <ng-icon name="lucideCheck" size="20" class="set-check text-primary" aria-hidden="true" />
@@ -235,6 +242,20 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
         </div>
       }
 
+      <button
+        type="button"
+        class="mt-3 h-12 rounded-full border px-4 text-base font-semibold tracking-wide uppercase"
+        [attr.aria-pressed]="warmup()"
+        [class.bg-primary]="warmup()"
+        [class.border-primary]="warmup()"
+        [class.text-primary-foreground]="warmup()"
+        [class.border-border]="!warmup()"
+        [class.text-muted-foreground]="!warmup()"
+        (click)="toggleWarmup()"
+      >
+        Calentamiento
+      </button>
+
       <div class="mt-3 flex gap-2">
         <button hlmBtn variant="ghost" class="h-14" (click)="showMore.set(!showMore())">
           {{ showMore() ? 'Menos' : 'Más' }}
@@ -296,6 +317,9 @@ export class ExerciseCard {
   protected readonly editingSetId = signal<string | null>(null);
   protected readonly showMore = signal(false);
   protected readonly hint = computed(() => bilboHint(this.item()));
+  protected readonly isWarmup = isWarmup;
+  protected readonly numberLabels = computed(() => setNumberLabels(this.item().sets));
+  protected readonly warmup = computed(() => isWarmup(this.entry()));
 
   protected readonly targetLine = computed(() => {
     const ex = this.item();
@@ -322,6 +346,10 @@ export class ExerciseCard {
 
   protected patch(changes: Partial<WorkoutSetInput>): void {
     this.entry.update((current) => ({ ...current, ...changes }));
+  }
+
+  protected toggleWarmup(): void {
+    this.patch({ set_type: this.warmup() ? this.item().default_set_type : 'warmup' });
   }
 
   protected toNullableInt(value: string): number | null {
@@ -352,16 +380,18 @@ export class ExerciseCard {
       this.celebrate(editing);
       return;
     }
+    const workingBefore = workingSets(this.item().sets).length;
     const saved = await this.sessions.addSet(this.item().id, input);
     this.celebrate(saved?.id ?? null);
     if (!this.finished()) {
       const ex = this.item();
-      const done = saved?.set_number ?? ex.sets.length + 1;
+      // La próxima efectiva: tras un calentamiento sigue siendo la misma.
+      const next = workingBefore + (isWarmup(input) ? 0 : 1) + 1;
       const sessionId = this.sessions.session()?.id;
       this.timer.start(
-        ex.rest_seconds,
+        restAfter(input, ex.rest_seconds),
         sessionId
-          ? { body: restNoticeBody(ex.exercise.name, done + 1, ex.target_sets), url: `/entrenamiento/${sessionId}` }
+          ? { body: restNoticeBody(ex.exercise.name, next, ex.target_sets), url: `/entrenamiento/${sessionId}` }
           : undefined,
       );
     }

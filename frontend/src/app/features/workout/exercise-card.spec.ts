@@ -62,6 +62,55 @@ const button = (el: HTMLElement, text: string) =>
   Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.trim() === text)!;
 
 describe('ExerciseCard', () => {
+  it('saves a warm-up with the chip and rests at most a minute, announcing the first working set', async () => {
+    const { el, fixture, sessions, timer } = await render();
+    const chip = button(el, 'Calentamiento');
+    expect(chip.getAttribute('aria-pressed')).toBe('false');
+
+    chip.click();
+    await fixture.whenStable();
+    expect(chip.getAttribute('aria-pressed')).toBe('true');
+
+    button(el, 'Guardar serie').click();
+    await fixture.whenStable();
+
+    expect(sessions.addSet).toHaveBeenCalledWith('we1', expect.objectContaining({ set_type: 'warmup' }));
+    expect(timer.start).toHaveBeenCalledWith(60, {
+      body: 'Press de banca · serie 1 de 1',
+      url: '/entrenamiento/w1',
+    });
+  });
+
+  it('turning the chip off goes back to the routine set type', async () => {
+    const { el, fixture, sessions } = await render();
+    button(el, 'Calentamiento').click();
+    await fixture.whenStable();
+    button(el, 'Calentamiento').click();
+    await fixture.whenStable();
+    button(el, 'Guardar serie').click();
+    await fixture.whenStable();
+
+    expect(sessions.addSet).toHaveBeenCalledWith('we1', expect.objectContaining({ set_type: 'bilbo' }));
+  });
+
+  it('labels warm-ups with C and numbers only the working sets', async () => {
+    const warm = { ...item.last_performance!.sets[0], id: 'a', set_type: 'warmup' as const, weight_kg: 20 };
+    const work = { ...item.last_performance!.sets[0], id: 'b', set_number: 2 };
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: WorkoutSessionService, useValue: { session: () => ({ id: 'w1' }) } },
+        { provide: RestTimerService, useValue: { start: vi.fn() } },
+      ],
+    });
+    const fixture = TestBed.createComponent(ExerciseCard);
+    fixture.componentRef.setInput('item', { ...item, sets: [warm, work] });
+    await fixture.whenStable();
+
+    const rows = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('ol li'));
+    expect(rows.map((r) => r.querySelector('.set-number')?.textContent?.trim())).toEqual(['C', '1']);
+    expect(rows[0].classList).toContain('opacity-60');
+  });
+
   it('shows last time and the bilbo target', async () => {
     const { el } = await render();
     expect(el.textContent).toContain('Última vez: 42,5 kg × 31 · 26/10/2026');

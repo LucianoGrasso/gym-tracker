@@ -18,17 +18,12 @@ import { formatDate } from '../../core/format/format';
 import { cachedFetch } from '../../core/local-db/cached-fetch';
 import { LOCAL_DB } from '../../core/local-db/local-db';
 import type { Exercise } from '../../core/models/exercise';
-import type { SessionExercise } from '../../core/models/workout';
 import { RestTimerService } from '../../core/workout/rest-timer.service';
-import { parseDecimal } from '../../core/workout/set-suggestions';
+import { isPending, parseDecimal } from '../../core/workout/set-suggestions';
 import { WorkoutSessionService } from '../../core/workout/workout-session.service';
 import { ExercisePicker } from '../../shared/ui/exercise-picker';
 import { ExerciseCard } from './exercise-card';
 
-/** Ejercicio pendiente: aún no completa sus series objetivo (o, sin objetivo, no tiene ninguna). */
-function isPending(item: SessionExercise): boolean {
-  return item.target_sets === null ? item.sets.length === 0 : item.sets.length < item.target_sets;
-}
 
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
