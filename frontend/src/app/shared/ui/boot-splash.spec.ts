@@ -15,7 +15,8 @@ describe('BootSplash', () => {
     // Como en el gimnasio: cada disco entra desde su extremo de la barra hacia el centro.
     expect(el.querySelectorAll('svg .boot-left')).toHaveLength(2);
     expect(el.querySelectorAll('svg .boot-right')).toHaveLength(2);
-    expect(el.querySelectorAll('svg .boot-sleeve')).toHaveLength(2);
+    // Igual al ícono de la app: la mancuerna dentro de la baldosa redondeada.
+    expect(el.querySelector('.boot-tile svg')).not.toBeNull();
     expect(el.textContent).toContain('GymTracker');
     expect(el.querySelector('.skeleton-hint')?.textContent).toContain('Despertando el servidor…');
   });

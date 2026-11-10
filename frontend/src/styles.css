@@ -306,24 +306,34 @@ body::before {
   color: #c8f135;
   padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
 }
-.boot-logo {
-  width: 9.5rem;
-  height: auto;
-  fill: #c8f135;
-  overflow: visible;
+/* Baldosa como el ícono en la pantalla de inicio de iOS: esquinas ~22 %, apenas más clara que el fondo. */
+.boot-tile {
+  width: 8rem;
+  height: 8rem;
+  border-radius: 22.5%;
+  overflow: hidden;
+  background: linear-gradient(180deg, #232420 0%, #151612 100%);
+  box-shadow:
+    0 12px 32px rgb(0 0 0 / 0.55),
+    inset 0 1px 0 rgb(255 255 255 / 0.07),
+    inset 0 0 0 1px rgb(255 255 255 / 0.04);
 }
-.boot-sleeve {
-  fill: #6b7a2c;
+.boot-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: #c8f135;
 }
 .boot-plate-inner,
 .boot-plate-outer {
-  animation: 2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation: 2.2s ease-in infinite;
 }
+/* Desde fuera de la baldosa (que los recorta); el rebote vuelve un 5 % de ese tramo hacia afuera. */
 .boot-left {
-  --boot-from: -260px;
+  --boot-from: -300px;
 }
 .boot-right {
-  --boot-from: 260px;
+  --boot-from: 300px;
 }
 .boot-plate-inner {
   animation-name: boot-plate-inner;
@@ -345,18 +355,23 @@ body::before {
   color: #a3a69c;
 }
 
-/* Como en el gimnasio: los discos entran por el extremo de la barra y se deslizan hacia el centro
-   (grandes primero, luego los chicos); se sostienen y se descargan para repetir. */
+/* Como en el gimnasio: el disco se desliza desde el extremo hacia el centro, golpea el tope, rebota
+   un poco hacia afuera y se asienta (grandes primero, luego los chicos); al final se descarga todo. */
 @keyframes boot-plate-inner {
   0% {
     transform: translateX(var(--boot-from));
-    opacity: 0;
+    animation-timing-function: ease-in;
   }
-  6% {
-    opacity: 1;
+  18% {
+    transform: translateX(0);
+    animation-timing-function: ease-out;
+  }
+  22% {
+    transform: translateX(calc(var(--boot-from) * 0.05));
+    animation-timing-function: ease-in;
   }
   26%,
-  80% {
+  82% {
     transform: translateX(0);
     opacity: 1;
   }
@@ -368,15 +383,20 @@ body::before {
 }
 @keyframes boot-plate-outer {
   0%,
-  24% {
+  28% {
     transform: translateX(var(--boot-from));
-    opacity: 0;
+    animation-timing-function: ease-in;
   }
-  30% {
-    opacity: 1;
+  44% {
+    transform: translateX(0);
+    animation-timing-function: ease-out;
   }
-  48%,
-  80% {
+  48% {
+    transform: translateX(calc(var(--boot-from) * 0.05));
+    animation-timing-function: ease-in;
+  }
+  52%,
+  82% {
     transform: translateX(0);
     opacity: 1;
   }
@@ -481,7 +501,7 @@ body::before {
   .boot-plate-outer {
     animation: none;
   }
-  .boot-logo {
+  .boot-tile {
     animation: boot-pulse 2s ease-in-out infinite;
   }
 }
