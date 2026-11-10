@@ -4,7 +4,9 @@ import { GithubCiStack } from '../lib/github-ci-stack';
 import { GymTrackerStack, type WarmUpSchedule } from '../lib/gymtracker-stack';
 
 const app = new App();
-const env = { account: app.node.getContext('account') as string, region: app.node.getContext('region') as string };
+// La cuenta sale de las credenciales al desplegar (la CLI define CDK_DEFAULT_ACCOUNT; en CI, el rol OIDC):
+// así el ID de la cuenta no queda en el repo público.
+const env = { account: process.env.CDK_DEFAULT_ACCOUNT, region: app.node.getContext('region') as string };
 
 new GymTrackerStack(app, 'GymTrackerStack', {
   env,
