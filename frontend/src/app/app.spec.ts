@@ -5,18 +5,20 @@ import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { App } from './app';
+import { FONTS_READY } from './core/fonts';
 import { SyncService } from './core/sync/sync.service';
 import { WorkoutSessionService } from './core/workout/workout-session.service';
 
 @Component({ template: '<p>pantalla</p>' })
 class Screen {}
 
-async function render(guard: () => Promise<boolean>) {
+async function render(guard: () => Promise<boolean>, fonts: Promise<void> = Promise.resolve()) {
   TestBed.configureTestingModule({
     providers: [
       provideRouter([{ path: 'hoy', component: Screen, canActivate: [guard] }]),
       { provide: HttpClient, useValue: { get: () => of(null) } },
       { provide: SyncService, useValue: { start: vi.fn() } },
+      { provide: FONTS_READY, useValue: fonts },
       {
         provide: WorkoutSessionService,
         useValue: { restoreActive: vi.fn().mockResolvedValue(null) },
@@ -47,5 +49,13 @@ describe('App', () => {
 
     expect(el.querySelector('[aria-busy="true"]')).toBeNull();
     expect(el.textContent).toContain('pantalla');
+  });
+
+  it('keeps the splash until the fonts are ready, so the first screen does not swap fonts', async () => {
+    const fixture = await render(() => Promise.resolve(true), new Promise<void>(() => undefined));
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('app-boot-splash')).not.toBeNull();
   });
 });

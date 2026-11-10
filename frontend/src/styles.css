@@ -5,13 +5,50 @@
 
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
 
-/* Tipografía empaquetada (no CDN): la app debe verse igual sin conexión. */
-@import '@fontsource/barlow/400.css';
-@import '@fontsource/barlow/500.css';
-@import '@fontsource/barlow/600.css';
-@import '@fontsource/barlow-condensed/500.css';
-@import '@fontsource/barlow-condensed/600.css';
-@import '@fontsource/barlow-condensed/700.css';
+/* Tipografía empaquetada (no CDN): la app debe verse igual sin conexión. Solo el subconjunto latin
+   (cubre el español); mismas URL que precarga index.html, para no descargarlas dos veces. */
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/barlow-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/barlow-latin-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/barlow-latin-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/barlow-condensed-latin-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/barlow-condensed-latin-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/barlow-condensed-latin-700-normal.woff2') format('woff2');
+}
 
 /* `font-display`: números y títulos condensados (dirección visual "Pista"). */
 @theme {
@@ -294,7 +331,7 @@ body::before {
 }
 
 /* Barlow 600 solo para el título del splash, con `block`: no se dibuja con la fuente del sistema
-   mientras carga (fontsource usa `swap` y el cambio se notaba). Precargada en index.html. */
+   mientras carga (las demás usan `swap`). Precargada en index.html. */
 @font-face {
   font-family: 'Barlow Splash';
   font-style: normal;
