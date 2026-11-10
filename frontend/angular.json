@@ -22,6 +22,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "barlow-latin-600-normal.woff2",
+                "input": "node_modules/@fontsource/barlow/files",
+                "output": "fonts"
               }
             ],
             "styles": [

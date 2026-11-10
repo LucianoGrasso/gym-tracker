@@ -293,6 +293,16 @@ body::before {
   }
 }
 
+/* Barlow 600 solo para el título del splash, con `block`: no se dibuja con la fuente del sistema
+   mientras carga (fontsource usa `swap` y el cambio se notaba). Precargada en index.html. */
+@font-face {
+  font-family: 'Barlow Splash';
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url('/fonts/barlow-latin-600-normal.woff2') format('woff2');
+}
+
 /* Pantalla de arranque (shared/ui/boot-splash.ts y su copia en index.html): CSS puro, se anima antes del JS. */
 .boot-splash {
   position: fixed;
@@ -342,7 +352,7 @@ body::before {
   animation-name: boot-plate-outer;
 }
 .boot-name {
-  font-family: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Barlow Splash', 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: 0.01em;
