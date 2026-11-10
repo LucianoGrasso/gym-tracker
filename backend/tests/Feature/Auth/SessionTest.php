@@ -46,6 +46,7 @@ it('returns the authenticated user', function () {
             'id' => $this->user->id,
             'name' => $this->user->name,
             'email' => $this->user->email,
+            'demo_expires_at' => null,
         ]]);
 });
 

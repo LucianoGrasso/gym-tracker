@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'demo.active'])->group(function () {
     Route::get('/user', fn (Request $request) => new UserResource($request->user()));
 
     Route::get('/invitations', [InvitationController::class, 'index']);

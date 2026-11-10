@@ -13,6 +13,7 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
+            'demo_expires_at' => $this->demo_expires_at?->toIso8601String(),
         ];
     }
 }

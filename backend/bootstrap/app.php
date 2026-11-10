@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureDemoActive;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+        $middleware->alias(['demo.active' => EnsureDemoActive::class]);
         $middleware->redirectGuestsTo(
             fn (Request $request) => $request->is('api/*', 'auth/*') ? null : '/login',
         );

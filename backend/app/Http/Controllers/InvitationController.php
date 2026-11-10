@@ -19,6 +19,7 @@ class InvitationController extends Controller
 
     public function store(Request $request, CreateInvitation $create): JsonResponse
     {
+        abort_if($request->user()->isDemo(), 403, 'La demo no puede invitar.');
         ['invitation' => $invitation, 'token' => $token] = $create->handle($request->user());
 
         return response()->json([
