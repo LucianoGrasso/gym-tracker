@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { AuthService } from './auth.service';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { LOCAL_DB, LocalDb } from '../local-db/local-db';
+import { claimLocalData } from '../local-db/owner';
+import { AuthService, RELOAD_APP } from './auth.service';
 
 const user = { id: 1, name: 'Luciano', email: 'luciano@gymtracker.test', demo_expires_at: null };
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -10,10 +12,19 @@ const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 describe('AuthService', () => {
   let service: AuthService;
   let http: HttpTestingController;
+  let db: LocalDb;
+  let reload: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    db = new LocalDb(`test-${crypto.randomUUID()}`);
+    reload = vi.fn();
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: LOCAL_DB, useValue: db },
+        { provide: RELOAD_APP, useValue: reload },
+      ],
     });
     service = TestBed.inject(AuthService);
     http = TestBed.inject(HttpTestingController);
@@ -94,5 +105,29 @@ describe('AuthService', () => {
     req.flush({ data: demo });
     expect(await result).toEqual(demo);
     expect(service.user()).toEqual(demo);
+  });
+
+  it("clears another user's local data and restarts the app when a different account signs in", async () => {
+    await claimLocalData(db, 99);
+    await db.cache.put({ key: 'today', value: 'del otro', updatedAt: 1 });
+
+    const result = service.loadUser();
+    http.expectOne('/api/user').flush({ data: user });
+    await result;
+
+    expect(await db.cache.get('today')).toBeUndefined();
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps local data and does not restart for the same account', async () => {
+    await claimLocalData(db, user.id);
+    await db.cache.put({ key: 'today', value: 'mío', updatedAt: 1 });
+
+    const result = service.loadUser();
+    http.expectOne('/api/user').flush({ data: user });
+    await result;
+
+    expect(await db.cache.get('today')).toBeDefined();
+    expect(reload).not.toHaveBeenCalled();
   });
 });

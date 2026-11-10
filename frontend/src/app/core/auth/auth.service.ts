@@ -1,6 +1,8 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, InjectionToken, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { LOCAL_DB } from '../local-db/local-db';
+import { claimLocalData } from '../local-db/owner';
 import type { User } from '../models/user';
 
 interface UserResponse {
@@ -15,9 +17,17 @@ export interface RegisterInput {
   password_confirmation: string;
 }
 
+/** Reinicia la app en "Hoy" (suelta todo lo que quedó en memoria de la cuenta anterior). */
+export const RELOAD_APP = new InjectionToken<() => void>('RELOAD_APP', {
+  providedIn: 'root',
+  factory: () => () => window.location.replace('/hoy'),
+});
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly db = inject(LOCAL_DB);
+  private readonly reload = inject(RELOAD_APP);
   private readonly currentUser = signal<User | null | undefined>(undefined);
 
   /** undefined = todavía no se consultó; null = sin sesión. */
@@ -27,7 +37,7 @@ export class AuthService {
   async loadUser(): Promise<User | null> {
     try {
       const { data } = await firstValueFrom(this.http.get<UserResponse>('/api/user'));
-      this.currentUser.set(data);
+      await this.adopt(data);
       return data;
     } catch (error) {
       if (error instanceof HttpErrorResponse && error.status === 401) {
@@ -43,14 +53,14 @@ export class AuthService {
     const { data } = await firstValueFrom(
       this.http.post<UserResponse>('/auth/login', { email, password }),
     );
-    this.currentUser.set(data);
+    await this.adopt(data);
     return data;
   }
 
   async register(input: RegisterInput): Promise<User> {
     await firstValueFrom(this.http.get('/sanctum/csrf-cookie'));
     const { data } = await firstValueFrom(this.http.post<UserResponse>('/auth/register', input));
-    this.currentUser.set(data);
+    await this.adopt(data);
     return data;
   }
 
@@ -58,8 +68,15 @@ export class AuthService {
   async startDemo(): Promise<User> {
     await firstValueFrom(this.http.get('/sanctum/csrf-cookie'));
     const { data } = await firstValueFrom(this.http.post<UserResponse>('/auth/demo', {}));
-    this.currentUser.set(data);
+    await this.adopt(data);
     return data;
+  }
+
+  /** Los datos locales de otra cuenta se borran y la app se reinicia antes de usarlos. */
+  private async adopt(user: User): Promise<void> {
+    const switched = await claimLocalData(this.db, user.id);
+    this.currentUser.set(user);
+    if (switched) this.reload();
   }
 
   async logout(): Promise<void> {

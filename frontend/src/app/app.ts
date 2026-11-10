@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationCancel, NavigationEnd, NavigationError, Router, RouterOutlet } from '@angular/router';
 import { filter, map, take } from 'rxjs';
+import { AuthService } from './core/auth/auth.service';
 import { FONTS_READY } from './core/fonts';
 import { SyncService } from './core/sync/sync.service';
 import { WorkoutSessionService } from './core/workout/workout-session.service';
@@ -34,7 +35,18 @@ export class App {
     void inject(FONTS_READY).then(() => this.fontsReady.set(true));
     // Despierta la BD (Aurora) mientras el usuario mira la pantalla.
     inject(HttpClient).get('/api/health').subscribe({ error: () => undefined });
-    inject(SyncService).start();
-    void inject(WorkoutSessionService).restoreActive();
+    // Recién con el usuario confirmado (y los datos locales ya reclamados para él): así nunca se envían
+    // ni se restauran cambios de otra cuenta que usó este mismo teléfono.
+    const auth = inject(AuthService);
+    const sync = inject(SyncService);
+    const sessions = inject(WorkoutSessionService);
+    const ready = effect(() => {
+      if (!auth.user()) return;
+      untracked(() => {
+        sync.start();
+        void sessions.restoreActive();
+      });
+      ready.destroy();
+    });
   }
 }
