@@ -15,7 +15,7 @@ crea una cuenta temporal con datos realistas, y hoy siempre hay un entreno listo
 - Datos: los 15 ejercicios iniciales + la rutina de 4 días de Luciano (`GymTrackerSeeder`), con los días
   **corridos** para que el primero caiga hoy (misma separación: hoy, +1, +3, +4) y los nombres con el día
   correcto. 6 semanas de historial creíble + peso corporal semanal.
-- Seguridad: la demo no puede crear invitaciones (403); `POST /auth/demo` con `throttle:5,60` (por IP) y
+- Seguridad: la demo no puede crear invitaciones (403); `POST /auth/demo` con límite de 5 por hora por IP (limitador `demo`) y
   tope global de 50 demos activas (503 "La demo está llena. Intenta en un rato.").
 - Una demo vencida recibe 401 en `/api/*` (middleware `demo.active`) y su sesión se cierra.
 - Push funciona igual que para cualquier usuario.
