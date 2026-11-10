@@ -102,7 +102,8 @@ Entra con `luciano@gymtracker.test` / `password` (valores de `SEED_USER_*`) o co
 - Los secretos viven en SSM Parameter Store bajo `/gymtracker/prod/*` y se crean una sola vez con
   `infra/scripts/init-secrets.sh`.
 - Rol OIDC de GitHub (una sola vez): `cd infra && npx cdk deploy GymTrackerCiStack` y guardar el output
-  `DeployRoleArn` en la variable de repo `AWS_DEPLOY_ROLE_ARN`.
+  `DeployRoleArn` en el secret de repo `AWS_DEPLOY_ROLE_ARN` (secret, para que quede enmascarado en los
+  logs públicos).
 - Artisan en producción (requiere `aws login`): `infra/scripts/artisan.sh "migrate:status"`.
 
 ## Cómo se construyó
