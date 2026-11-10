@@ -307,15 +307,23 @@ body::before {
   padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
 }
 .boot-logo {
-  width: 7.5rem;
+  width: 9.5rem;
   height: auto;
   fill: #c8f135;
+  overflow: visible;
+}
+.boot-sleeve {
+  fill: #6b7a2c;
 }
 .boot-plate-inner,
 .boot-plate-outer {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: 1.6s ease-out infinite;
+  animation: 2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+.boot-left {
+  --boot-from: -260px;
+}
+.boot-right {
+  --boot-from: 260px;
 }
 .boot-plate-inner {
   animation-name: boot-plate-inner;
@@ -337,37 +345,44 @@ body::before {
   color: #a3a69c;
 }
 
-/* Discos grandes primero, luego los chicos; se sostienen y se descargan para repetir. */
+/* Como en el gimnasio: los discos entran por el extremo de la barra y se deslizan hacia el centro
+   (grandes primero, luego los chicos); se sostienen y se descargan para repetir. */
 @keyframes boot-plate-inner {
   0% {
-    transform: scaleY(0);
+    transform: translateX(var(--boot-from));
     opacity: 0;
   }
-  18%,
-  78% {
-    transform: scaleY(1);
+  6% {
     opacity: 1;
   }
-  95%,
+  26%,
+  80% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  94%,
   100% {
-    transform: scaleY(1);
+    transform: translateX(0);
     opacity: 0;
   }
 }
 @keyframes boot-plate-outer {
   0%,
-  22% {
-    transform: scaleY(0);
+  24% {
+    transform: translateX(var(--boot-from));
     opacity: 0;
   }
-  40%,
-  78% {
-    transform: scaleY(1);
+  30% {
     opacity: 1;
   }
-  95%,
+  48%,
+  80% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  94%,
   100% {
-    transform: scaleY(1);
+    transform: translateX(0);
     opacity: 0;
   }
 }

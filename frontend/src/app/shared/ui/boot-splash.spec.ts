@@ -12,6 +12,10 @@ describe('BootSplash', () => {
     expect(status?.getAttribute('aria-busy')).toBe('true');
     expect(el.querySelectorAll('svg .boot-plate-inner')).toHaveLength(2);
     expect(el.querySelectorAll('svg .boot-plate-outer')).toHaveLength(2);
+    // Como en el gimnasio: cada disco entra desde su extremo de la barra hacia el centro.
+    expect(el.querySelectorAll('svg .boot-left')).toHaveLength(2);
+    expect(el.querySelectorAll('svg .boot-right')).toHaveLength(2);
+    expect(el.querySelectorAll('svg .boot-sleeve')).toHaveLength(2);
     expect(el.textContent).toContain('GymTracker');
     expect(el.querySelector('.skeleton-hint')?.textContent).toContain('Despertando el servidor…');
   });
