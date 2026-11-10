@@ -1,5 +1,5 @@
 import { formatKg } from '../format/format';
-import type { WorkoutSet } from '../models/exercise';
+import type { SetType, WorkoutSet } from '../models/exercise';
 import { SET_TYPE_LABELS } from '../models/labels';
 import type { SessionExercise, WorkoutSetInput } from '../models/workout';
 
@@ -10,14 +10,57 @@ export function toSetInput(set: WorkoutSet): WorkoutSetInput {
   return input;
 }
 
-/** Valores iniciales de la próxima serie: la anterior de hoy, o la primera efectiva de la última vez. */
+/** Tras un calentamiento basta un minuto (o menos, si la rutina descansa menos). */
+export const WARMUP_REST_SECONDS = 60;
+
+export function isWarmup(set: { set_type: SetType }): boolean {
+  return set.set_type === 'warmup';
+}
+
+/** Series efectivas: todo lo que no es calentamiento. */
+export function workingSets<T extends { set_type: SetType }>(sets: T[]): T[] {
+  return sets.filter((s) => !isWarmup(s));
+}
+
+/** Etiqueta de cada fila: "C" para calentamientos; las efectivas se numeran 1..n saltándolos. */
+export function setNumberLabels(sets: { set_type: SetType }[]): string[] {
+  let n = 0;
+  return sets.map((s) => (isWarmup(s) ? 'C' : String(++n)));
+}
+
+/** Ejercicio pendiente: aún no completa sus series efectivas objetivo (o, sin objetivo, no tiene ninguna). */
+export function isPending(item: SessionExercise): boolean {
+  const done = workingSets(item.sets).length;
+  return item.target_sets === null ? done === 0 : done < item.target_sets;
+}
+
+export function restAfter(set: { set_type: SetType }, restSeconds: number): number {
+  return isWarmup(set) ? Math.min(restSeconds, WARMUP_REST_SECONDS) : restSeconds;
+}
+
+/**
+ * Valores iniciales de la próxima serie: la anterior de hoy, o la primera efectiva de la última vez.
+ * Tras un calentamiento se vuelve al tipo de la rutina y a la carga efectiva de la última vez.
+ */
 export function suggestNextSet(item: SessionExercise): WorkoutSetInput {
   const lastHere = item.sets.at(-1);
-  if (lastHere) {
+  const previous = item.last_performance?.sets;
+  if (lastHere && !isWarmup(lastHere)) {
     return { ...toSetInput(lastHere), pain_level: null, notes: null };
   }
-  const previous = item.last_performance?.sets;
-  const reference = previous?.find((s) => s.set_type !== 'warmup') ?? previous?.[0];
+  if (lastHere) {
+    const working = previous?.find((s) => !isWarmup(s));
+    return {
+      weight_kg: working?.weight_kg ?? lastHere.weight_kg,
+      reps: working?.reps ?? lastHere.reps,
+      set_type: item.default_set_type,
+      side: lastHere.side,
+      rir: null,
+      pain_level: null,
+      notes: null,
+    };
+  }
+  const reference = previous?.find((s) => !isWarmup(s)) ?? previous?.[0];
   return {
     weight_kg: reference?.weight_kg ?? 0,
     reps: reference?.reps ?? item.target_reps_max ?? item.target_reps_min ?? 10,

@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { WorkoutSet } from '../models/exercise';
 import type { SessionExercise } from '../models/workout';
-import { bilboHint, formatNumber, formatSetLine, parseDecimal, stepReps, stepWeight, suggestNextSet } from './set-suggestions';
+import {
+  bilboHint, formatNumber, formatSetLine, isPending, parseDecimal, restAfter, setNumberLabels, stepReps, stepWeight,
+  suggestNextSet, workingSets, WARMUP_REST_SECONDS,
+} from './set-suggestions';
 
 const set = (weight_kg: number, reps: number, set_type: WorkoutSet['set_type'] = 'normal', extra: Partial<WorkoutSet> = {}): WorkoutSet => ({
   id: crypto.randomUUID(), set_number: 1, set_type, weight_kg, reps, side: 'both', rir: null, pain_level: null, notes: null, ...extra,
@@ -72,5 +75,38 @@ describe('formatSetLine', () => {
     expect(formatSetLine(set(42.5, 30, 'bilbo'), false)).toBe('42,5 kg × 30 · Bilbo');
     expect(formatSetLine(set(0, 6), true)).toBe('6 reps');
     expect(formatSetLine(set(10, 5, 'normal', { side: 'right', pain_level: 3 }), true)).toBe('+10 kg × 5 · der. · molestia 3');
+  });
+});
+
+describe('warm-ups', () => {
+  const last = { workout_id: 'w', date: '2026-11-03', sets: [set(40, 10, 'warmup'), set(80, 6, 'heavy'), set(80, 5, 'heavy')] };
+
+  it('after a warm-up, goes back to the routine type with last time working weight', () => {
+    const s = suggestNextSet(exercise({ default_set_type: 'heavy', last_performance: last, sets: [set(50, 8, 'warmup', { rir: 3 })] }));
+    expect(s).toEqual({ weight_kg: 80, reps: 6, set_type: 'heavy', side: 'both', rir: null, pain_level: null, notes: null });
+  });
+
+  it('after a warm-up without history, keeps the warm-up load but the routine type', () => {
+    const s = suggestNextSet(exercise({ default_set_type: 'heavy', sets: [set(50, 8, 'warmup')] }));
+    expect(s).toMatchObject({ weight_kg: 50, reps: 8, set_type: 'heavy' });
+  });
+
+  it('numbers only the working sets', () => {
+    expect(setNumberLabels([set(40, 10, 'warmup'), set(60, 5, 'warmup'), set(80, 6, 'heavy'), set(80, 5)])).toEqual(['C', 'C', '1', '2']);
+    expect(workingSets([set(40, 10, 'warmup'), set(80, 6)])).toHaveLength(1);
+  });
+
+  it('keeps an exercise pending until its working sets are done', () => {
+    expect(isPending(exercise({ target_sets: 2, sets: [set(40, 10, 'warmup'), set(80, 6)] }))).toBe(true);
+    expect(isPending(exercise({ target_sets: 2, sets: [set(40, 10, 'warmup'), set(80, 6), set(80, 6)] }))).toBe(false);
+    expect(isPending(exercise({ target_sets: null, sets: [set(40, 10, 'warmup')] }))).toBe(true);
+    expect(isPending(exercise({ target_sets: null, sets: [set(80, 6)] }))).toBe(false);
+  });
+
+  it('rests at most a minute after a warm-up', () => {
+    expect(WARMUP_REST_SECONDS).toBe(60);
+    expect(restAfter(set(40, 10, 'warmup'), 180)).toBe(60);
+    expect(restAfter(set(40, 10, 'warmup'), 45)).toBe(45);
+    expect(restAfter(set(80, 6, 'heavy'), 180)).toBe(180);
   });
 });
