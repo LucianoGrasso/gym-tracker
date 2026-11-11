@@ -33,7 +33,7 @@ beforeEach(function () {
 
 it('flattens own sets oldest first, resolving the bodyweight', function () {
     $pullUps = Exercise::factory()->for($this->user)->create([
-        'name' => 'Dominadas', 'muscle_group' => MuscleGroup::Back, 'uses_bodyweight' => true, 'archived_at' => now(),
+        'name' => 'Dominadas', 'muscle_group' => MuscleGroup::Lats, 'uses_bodyweight' => true, 'archived_at' => now(),
     ]);
     BodyMetric::factory()->for($this->user)->create(['date' => '2026-10-01', 'bodyweight_kg' => 80]);
     loggedWorkout($this->user, $pullUps, '2026-10-08', [[5, 6, SetType::Normal]], 78.5);
@@ -50,7 +50,7 @@ it('flattens own sets oldest first, resolving the bodyweight', function () {
             ['2026-10-08', 6, 78.5],
         ])
         ->and($sets->first()->exerciseName)->toBe('Dominadas')
-        ->and($sets->first()->muscleGroup)->toBe(MuscleGroup::Back)
+        ->and($sets->first()->muscleGroup)->toBe(MuscleGroup::Lats)
         ->and($sets->first()->usesBodyweight)->toBeTrue();
 });
 

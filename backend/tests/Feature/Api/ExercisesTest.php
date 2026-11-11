@@ -45,7 +45,7 @@ it('lists archived exercises when asked', function () {
 it('filters by search and muscle group', function () {
     Exercise::factory()->for($this->user)->create(['name' => 'Press de banca', 'muscle_group' => 'chest']);
     Exercise::factory()->for($this->user)->create(['name' => 'Press militar', 'muscle_group' => 'shoulders']);
-    Exercise::factory()->for($this->user)->create(['name' => 'Sentadilla', 'muscle_group' => 'legs']);
+    Exercise::factory()->for($this->user)->create(['name' => 'Sentadilla', 'muscle_group' => 'quads']);
 
     $this->getJson('/api/exercises?search=press')->assertJsonCount(2, 'data');
     $this->getJson('/api/exercises?search=press&muscle_group=chest')

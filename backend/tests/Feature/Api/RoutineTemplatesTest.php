@@ -78,7 +78,7 @@ it('creates missing exercises from the catalog', function () {
     $this->actingAs($this->user)->postJson('/api/routine-templates/arnold-golden-six/import')->assertCreated();
 
     $pullUps = Exercise::where('user_id', $this->user->id)->where('name', 'Dominadas')->sole();
-    expect($pullUps->muscle_group)->toBe(MuscleGroup::Back)
+    expect($pullUps->muscle_group)->toBe(MuscleGroup::Lats)
         ->and($pullUps->uses_bodyweight)->toBeTrue()
         ->and(Exercise::where('user_id', $this->user->id)->count())->toBe(6);
 });

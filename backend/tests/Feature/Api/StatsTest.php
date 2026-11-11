@@ -84,10 +84,10 @@ it('returns the weekly volume per muscle group', function () {
         ->assertJsonPath('data.weeks.3.week_start', '2026-11-02')
         ->assertJsonPath('data.weeks.3.volumes.chest', 500.0);
 
-    $this->getJson('/api/stats/weekly-volume?period=4w&muscle_group=back')
+    $this->getJson('/api/stats/weekly-volume?period=4w&muscle_group=lats')
         ->assertOk()
-        ->assertJsonPath('data.muscle_groups', ['back'])
-        ->assertJsonPath('data.weeks.3.volumes.back', 0.0);
+        ->assertJsonPath('data.muscle_groups', ['lats'])
+        ->assertJsonPath('data.weeks.3.volumes.lats', 0.0);
 });
 
 it('uses the Santiago calendar for the consistency', function () {

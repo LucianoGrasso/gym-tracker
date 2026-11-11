@@ -55,19 +55,19 @@ describe('WeeklyMuscleVolumeService', function () use ($today) {
     it('sums the volume per muscle group and week', function () use ($weekly, $today) {
         $sets = collect([
             statsSet(['date' => '2026-10-26', 'weightKg' => 100.0, 'reps' => 5]),
-            statsSet(['date' => '2026-11-01', 'muscleGroup' => MuscleGroup::Back, 'weightKg' => 60.0, 'reps' => 10]),
+            statsSet(['date' => '2026-11-01', 'muscleGroup' => MuscleGroup::Lats, 'weightKg' => 60.0, 'reps' => 10]),
             statsSet(['date' => '2026-11-02', 'weightKg' => 50.0, 'reps' => 10, 'setType' => SetType::Warmup]),
             statsSet(['date' => '2026-11-03', 'weightKg' => 80.0, 'reps' => 5]),
         ]);
 
         $result = $weekly->weekly($sets, $today, '2026-10-26');
 
-        expect($result['muscle_groups'])->toBe(['chest', 'back', 'shoulders', 'biceps', 'triceps', 'legs', 'core', 'other'])
+        expect($result['muscle_groups'])->toBe(['chest', 'lats', 'upper_back', 'shoulders', 'biceps', 'triceps', 'quads', 'hamstrings', 'glutes', 'calves', 'core', 'other'])
             ->and($result['weeks'][0]['week_start'])->toBe('2026-10-26')
             ->and($result['weeks'][0]['volumes']['chest'])->toBe(500.0)
-            ->and($result['weeks'][0]['volumes']['back'])->toBe(600.0)
+            ->and($result['weeks'][0]['volumes']['lats'])->toBe(600.0)
             ->and($result['weeks'][1]['volumes']['chest'])->toBe(400.0)
-            ->and($result['weeks'][1]['volumes']['legs'])->toBe(0.0);
+            ->and($result['weeks'][1]['volumes']['quads'])->toBe(0.0);
     });
 
     it('can keep a single muscle group', function () use ($weekly, $today) {
@@ -107,8 +107,8 @@ describe('OverviewService', function () use ($today) {
         $sets = collect([
             statsSet(['workoutId' => 'a', 'date' => '2026-08-03', 'weightKg' => 90.0, 'reps' => 3]),
             statsSet(['workoutId' => 'b', 'date' => '2026-10-27', 'weightKg' => 85.0, 'reps' => 5]),
-            statsSet(['workoutId' => 'b', 'date' => '2026-10-27', 'exerciseId' => 2, 'exerciseName' => 'Dominadas', 'muscleGroup' => MuscleGroup::Back, 'weightKg' => 60.0, 'reps' => 8]),
-            statsSet(['workoutId' => 'c', 'date' => '2026-11-03', 'exerciseId' => 2, 'exerciseName' => 'Dominadas', 'muscleGroup' => MuscleGroup::Back, 'weightKg' => 40.0, 'reps' => 10, 'setType' => SetType::Warmup]),
+            statsSet(['workoutId' => 'b', 'date' => '2026-10-27', 'exerciseId' => 2, 'exerciseName' => 'Dominadas', 'muscleGroup' => MuscleGroup::Lats, 'weightKg' => 60.0, 'reps' => 8]),
+            statsSet(['workoutId' => 'c', 'date' => '2026-11-03', 'exerciseId' => 2, 'exerciseName' => 'Dominadas', 'muscleGroup' => MuscleGroup::Lats, 'weightKg' => 40.0, 'reps' => 10, 'setType' => SetType::Warmup]),
         ]);
 
         $result = $overview->overview($sets, ['2026-08-03', '2026-10-27', '2026-11-03'], $today, '2026-10-12');

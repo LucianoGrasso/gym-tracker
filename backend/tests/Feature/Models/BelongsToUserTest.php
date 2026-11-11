@@ -23,7 +23,7 @@ it('fills user_id with the authenticated user on create', function () {
 
     $exercise = Exercise::create([
         'name' => 'Dominadas',
-        'muscle_group' => 'back',
+        'muscle_group' => 'lats',
         'equipment' => 'bodyweight',
         'uses_bodyweight' => true,
     ]);
