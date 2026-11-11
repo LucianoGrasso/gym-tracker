@@ -25,4 +25,16 @@ final class StatsCalendar
 
         return $weeks;
     }
+
+    /**
+     * Weeks covered by a period, from its start (or the first session, for all time) to today, both included.
+     * Never less than one, so a fresh period does not inflate the weekly averages.
+     */
+    public static function periodWeeks(?string $from, string $today, ?string $firstWorkout): float
+    {
+        $start = $from ?? $firstWorkout ?? $today;
+        $days = CarbonImmutable::parse($start)->diffInDays(CarbonImmutable::parse($today)) + 1;
+
+        return max(1.0, $days / 7);
+    }
 }

@@ -3,26 +3,26 @@
 namespace App\Enums;
 
 use Carbon\CarbonImmutable;
-use Carbon\CarbonInterface;
 
+/** Rolling windows that end today, so "1 sem" on a monday still shows the last seven days. */
 enum StatsPeriod: string
 {
-    case FourWeeks = '4w';
-    case TwelveWeeks = '12w';
+    case OneWeek = '1w';
+    case OneMonth = '1m';
+    case ThreeMonths = '3m';
     case SixMonths = '6m';
     case OneYear = '1y';
     case All = 'all';
 
-    /** First local date included in the period (a monday), or null for all time. */
+    /** First local date included in the period, or null for all time. */
     public function startDate(CarbonImmutable $today): ?CarbonImmutable
     {
-        $week = $today->startOfWeek(CarbonInterface::MONDAY);
-
         return match ($this) {
-            self::FourWeeks => $week->subWeeks(3),
-            self::TwelveWeeks => $week->subWeeks(11),
-            self::SixMonths => $today->subMonthsNoOverflow(6)->startOfWeek(CarbonInterface::MONDAY),
-            self::OneYear => $today->subYearNoOverflow()->startOfWeek(CarbonInterface::MONDAY),
+            self::OneWeek => $today->subDays(6),
+            self::OneMonth => $today->subMonthsNoOverflow(1)->addDay(),
+            self::ThreeMonths => $today->subMonthsNoOverflow(3)->addDay(),
+            self::SixMonths => $today->subMonthsNoOverflow(6)->addDay(),
+            self::OneYear => $today->subYearNoOverflow()->addDay(),
             self::All => null,
         };
     }

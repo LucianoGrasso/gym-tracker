@@ -37,9 +37,9 @@ it('returns the progress of an exercise with its records, archived or not', func
     statsWorkout($this->user, $this->bench, '2026-10-26', [[40, 10, SetType::Warmup], [80, 8, SetType::Normal], [45, 31, SetType::Bilbo]]);
     $this->bench->update(['archived_at' => now()]);
 
-    $this->getJson("/api/stats/exercises/{$this->bench->id}?period=4w")
+    $this->getJson("/api/stats/exercises/{$this->bench->id}?period=1m")
         ->assertOk()
-        ->assertJsonPath('data.period', '4w')
+        ->assertJsonPath('data.period', '1m')
         ->assertJsonPath('data.exercise.name', 'Press de banca')
         ->assertJsonCount(1, 'data.sessions')
         ->assertJsonPath('data.sessions.0.date', '2026-10-26')
@@ -54,10 +54,14 @@ it('hides the stats of an exercise of another user', function () {
     $this->getJson('/api/stats/exercises/'.Exercise::factory()->create()->id)->assertNotFound();
 });
 
-it('validates the period', function () {
-    $this->getJson('/api/stats/overview?period=2w')
+it('validates the period', function (string $period) {
+    $this->getJson("/api/stats/overview?period={$period}")
         ->assertStatus(422)
         ->assertJsonValidationErrors(['period']);
+})->with(['2w', '4w', '12w']);
+
+it('uses one month by default', function () {
+    $this->getJson('/api/stats/overview')->assertOk()->assertJsonPath('data.period', '1m');
 });
 
 it('summarizes the period with only own data', function () {
@@ -65,7 +69,7 @@ it('summarizes the period with only own data', function () {
     statsWorkout($this->user, $this->bench, '2026-11-08', [[80, 5, SetType::Normal]]);
     statsWorkout(User::factory()->create(), Exercise::factory()->create(), '2026-11-08', [[200, 5, SetType::Normal]]);
 
-    $this->getJson('/api/stats/overview?period=4w')
+    $this->getJson('/api/stats/overview?period=1m')
         ->assertOk()
         ->assertJsonPath('data.sessions', 2)
         ->assertJsonPath('data.total_volume_kg', 900.0)
@@ -78,25 +82,26 @@ it('summarizes the period with only own data', function () {
 it('returns the weekly volume per muscle group', function () {
     statsWorkout($this->user, $this->bench, '2026-11-02', [[100, 5, SetType::Normal]]);
 
-    $this->getJson('/api/stats/weekly-volume?period=4w')
+    $this->getJson('/api/stats/weekly-volume?period=1m')
         ->assertOk()
-        ->assertJsonCount(4, 'data.weeks')
-        ->assertJsonPath('data.weeks.3.week_start', '2026-11-02')
-        ->assertJsonPath('data.weeks.3.volumes.chest', 500.0);
+        ->assertJsonCount(5, 'data.weeks')
+        ->assertJsonPath('data.weeks.4.week_start', '2026-11-02')
+        ->assertJsonPath('data.weeks.4.volumes.chest', 500.0);
 
-    $this->getJson('/api/stats/weekly-volume?period=4w&muscle_group=lats')
+    $this->getJson('/api/stats/weekly-volume?period=1m&muscle_group=lats')
         ->assertOk()
         ->assertJsonPath('data.muscle_groups', ['lats'])
-        ->assertJsonPath('data.weeks.3.volumes.lats', 0.0);
+        ->assertJsonPath('data.weeks.4.volumes.lats', 0.0);
 });
 
 it('uses the Santiago calendar for the consistency', function () {
     statsWorkout($this->user, $this->bench, '2026-11-08', [[80, 5, SetType::Normal]]);
 
-    $this->getJson('/api/stats/consistency?period=4w')
+    $this->getJson('/api/stats/consistency?period=1m')
         ->assertOk()
         ->assertJsonPath('data.streak_weeks', 1)
-        ->assertJsonPath('data.weeks.3', ['week_start' => '2026-11-02', 'sessions' => 1])
+        ->assertJsonCount(5, 'data.weeks')
+        ->assertJsonPath('data.weeks.4', ['week_start' => '2026-11-02', 'sessions' => 1])
         ->assertJsonPath('data.days', [['date' => '2026-11-08', 'sessions' => 1]]);
 });
 
@@ -104,7 +109,7 @@ it('returns the bodyweight series', function () {
     BodyMetric::factory()->for($this->user)->create(['date' => '2026-10-20', 'bodyweight_kg' => 79]);
     statsWorkout($this->user, $this->bench, '2026-11-02', [[100, 5, SetType::Normal]], 78.5);
 
-    $this->getJson('/api/stats/bodyweight?period=4w')
+    $this->getJson('/api/stats/bodyweight?period=1m')
         ->assertOk()
         ->assertJsonPath('data.points', [
             ['date' => '2026-10-20', 'bodyweight_kg' => 79.0, 'source' => 'metric'],

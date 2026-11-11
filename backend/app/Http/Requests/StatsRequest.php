@@ -26,7 +26,7 @@ class StatsRequest extends FormRequest
 
     public function period(): StatsPeriod
     {
-        return StatsPeriod::from($this->validated('period') ?? StatsPeriod::TwelveWeeks->value);
+        return StatsPeriod::from($this->validated('period') ?? StatsPeriod::OneMonth->value);
     }
 
     /** Today in Santiago (the stats calendar). */

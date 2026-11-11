@@ -10,18 +10,31 @@ use App\Services\Stats\VolumeCalculator;
 use Carbon\CarbonImmutable;
 
 describe('StatsPeriod', function () {
-    it('starts on a monday, counting the current week', function () {
+    it('is a rolling window that ends today', function () {
         $today = CarbonImmutable::parse('2026-11-04'); // miércoles
 
-        expect(StatsPeriod::FourWeeks->startDate($today)->toDateString())->toBe('2026-10-12')
-            ->and(StatsPeriod::TwelveWeeks->startDate($today)->toDateString())->toBe('2026-08-17')
-            ->and(StatsPeriod::SixMonths->startDate($today)->toDateString())->toBe('2026-05-04')
-            ->and(StatsPeriod::OneYear->startDate($today)->toDateString())->toBe('2025-11-03')
+        expect(StatsPeriod::OneWeek->startDate($today)->toDateString())->toBe('2026-10-29')
+            ->and(StatsPeriod::OneMonth->startDate($today)->toDateString())->toBe('2026-10-05')
+            ->and(StatsPeriod::ThreeMonths->startDate($today)->toDateString())->toBe('2026-08-05')
+            ->and(StatsPeriod::SixMonths->startDate($today)->toDateString())->toBe('2026-05-05')
+            ->and(StatsPeriod::OneYear->startDate($today)->toDateString())->toBe('2025-11-05')
             ->and(StatsPeriod::All->startDate($today))->toBeNull();
+    });
+
+    it('does not overflow short months', function () {
+        expect(StatsPeriod::OneMonth->startDate(CarbonImmutable::parse('2026-03-31'))->toDateString())->toBe('2026-03-01');
     });
 });
 
 describe('StatsCalendar', function () {
+    it('counts the weeks of a period, at least one', function () {
+        expect(StatsCalendar::periodWeeks('2026-10-29', '2026-11-04', null))->toBe(1.0)
+            ->and(StatsCalendar::periodWeeks('2026-10-05', '2026-11-04', null))->toBe(31 / 7)
+            ->and(StatsCalendar::periodWeeks(null, '2026-11-04', '2026-10-22'))->toBe(2.0)
+            ->and(StatsCalendar::periodWeeks(null, '2026-11-04', '2026-11-04'))->toBe(1.0)
+            ->and(StatsCalendar::periodWeeks(null, '2026-11-04', null))->toBe(1.0);
+    });
+
     it('finds the monday of the week, sunday included', function () {
         expect(StatsCalendar::weekStart('2026-11-08'))->toBe('2026-11-02')
             ->and(StatsCalendar::weekStart('2026-11-09'))->toBe('2026-11-09')
