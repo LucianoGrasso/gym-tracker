@@ -21,13 +21,17 @@ describe('toggleSecondary', () => {
 describe('ExerciseFormPage', () => {
   async function setup() {
     const api = { create: vi.fn().mockResolvedValue({ id: 9 }), update: vi.fn(), get: vi.fn() };
-    TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: ExercisesApi, useValue: api }] });
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), { provide: ExercisesApi, useValue: api }],
+    });
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(ExerciseFormPage);
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
     const chip = (label: string) =>
-      Array.from(el.querySelectorAll<HTMLButtonElement>('[data-secondary]')).find((b) => b.textContent!.trim() === label)!;
+      Array.from(el.querySelectorAll<HTMLButtonElement>('[data-secondary]')).find(
+        (b) => b.textContent!.trim() === label,
+      )!;
     return { fixture, el, api, chip };
   }
 
@@ -46,7 +50,9 @@ describe('ExerciseFormPage', () => {
     el.querySelector('form')!.dispatchEvent(new Event('submit'));
     await fixture.whenStable();
 
-    expect(api.create).toHaveBeenCalledWith(expect.objectContaining({ secondary_muscles: ['triceps', 'shoulders'] }));
+    expect(api.create).toHaveBeenCalledWith(
+      expect.objectContaining({ secondary_muscles: ['triceps', 'shoulders'] }),
+    );
   });
 
   it('drops a secondary muscle that becomes the primary one', async () => {
@@ -55,7 +61,8 @@ describe('ExerciseFormPage', () => {
     await fixture.whenStable();
 
     const select = el.querySelector<HTMLSelectElement>('#muscle_group')!;
-    select.value = select.options[Array.from(select.options).findIndex((o) => o.text === 'Tríceps')].value;
+    select.value =
+      select.options[Array.from(select.options).findIndex((o) => o.text === 'Tríceps')].value;
     select.dispatchEvent(new Event('change'));
     await fixture.whenStable();
 

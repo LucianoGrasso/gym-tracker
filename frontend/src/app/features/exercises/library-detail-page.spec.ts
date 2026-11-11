@@ -7,12 +7,21 @@ import type { LibraryExercise } from '../../core/models/library';
 import { LibraryDetailPage } from './library-detail-page';
 
 const bench: LibraryExercise = {
-  slug: 'press-de-banca', name: 'Press de banca', muscle_group: 'chest', secondary_muscles: ['triceps', 'shoulders'],
-  equipment: 'barbell', is_unilateral: false, uses_bodyweight: false, owned_exercise_id: null,
+  slug: 'press-de-banca',
+  name: 'Press de banca',
+  muscle_group: 'chest',
+  secondary_muscles: ['triceps', 'shoulders'],
+  equipment: 'barbell',
+  is_unilateral: false,
+  uses_bodyweight: false,
+  owned_exercise_id: null,
 };
 
 async function setup(exercise: LibraryExercise) {
-  const api = { list: vi.fn().mockResolvedValue([exercise]), adopt: vi.fn().mockResolvedValue({ id: 7 }) };
+  const api = {
+    list: vi.fn().mockResolvedValue([exercise]),
+    adopt: vi.fn().mockResolvedValue({ id: 7 }),
+  };
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
@@ -41,7 +50,9 @@ describe('LibraryDetailPage', () => {
   it('adds the exercise to the user and opens it', async () => {
     const { fixture, el, api, navigate } = await setup(bench);
 
-    Array.from(el.querySelectorAll('button')).find((b) => b.textContent!.includes('Agregar a mis ejercicios'))!.click();
+    Array.from(el.querySelectorAll('button'))
+      .find((b) => b.textContent!.includes('Agregar a mis ejercicios'))!
+      .click();
     await fixture.whenStable();
 
     expect(api.adopt).toHaveBeenCalledWith('press-de-banca');

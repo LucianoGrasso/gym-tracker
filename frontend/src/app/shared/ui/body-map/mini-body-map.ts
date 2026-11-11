@@ -8,7 +8,12 @@ import { BODY_VIEWS, MIRROR } from './body-map-shapes';
   selector: 'app-mini-body-map',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <svg viewBox="8 0 84 210" class="block h-14 w-auto" aria-hidden="true" [attr.data-view]="view().id">
+    <svg
+      viewBox="8 0 84 210"
+      class="block h-14 w-auto"
+      aria-hidden="true"
+      [attr.data-view]="view().id"
+    >
       @for (part of view().neutral; track $index) {
         @for (d of part.paths; track $index) {
           <path [attr.d]="d" fill="#20231c" />
@@ -42,7 +47,9 @@ export class MiniBodyMap {
       ? back
       : front;
   });
-  private readonly intensities = computed(() => exerciseIntensities(this.primary(), this.secondaries()));
+  private readonly intensities = computed(() =>
+    exerciseIntensities(this.primary(), this.secondaries()),
+  );
 
   protected fill(muscle: MuscleGroup): string {
     return muscleColor(this.intensities()[muscle] ?? 0);

@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, input, resource, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { apiErrorMessage } from '../../core/api/api-error';
 import { ExercisesApi } from '../../core/api/exercises-api';
@@ -14,7 +13,7 @@ import { BodyMap } from '../../shared/ui/body-map/body-map';
 
 @Component({
   selector: 'app-exercise-detail-page',
-  imports: [RouterLink, HlmBadge, HlmButton, AppSkeleton, BodyMap],
+  imports: [RouterLink, HlmButton, AppSkeleton, BodyMap],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a routerLink="/ejercicios" class="mb-4 inline-block text-sm text-muted-foreground">← Ejercicios</a>
@@ -27,7 +26,6 @@ import { BodyMap } from '../../shared/ui/body-map/body-map';
           @if (ex.is_unilateral) { · Unilateral }
           @if (ex.uses_bodyweight) { · Peso corporal }
         </p>
-        @if (ex.archived_at) { <span hlmBadge variant="secondary" class="mt-2">Archivado</span> }
         @if (ex.notes) { <p class="mt-2 whitespace-pre-line">{{ ex.notes }}</p> }
       </header>
 
@@ -42,12 +40,9 @@ import { BodyMap } from '../../shared/ui/body-map/body-map';
         }
         <a hlmBtn variant="outline" class="h-12" [routerLink]="['/ejercicios', ex.id, 'editar']">Editar</a>
         @if (ex.archived_at) {
-          <button hlmBtn variant="outline" class="h-12" (click)="toggleArchive(ex)">Restaurar</button>
+          <button hlmBtn variant="outline" class="h-12" (click)="restore(ex)">Volver a mis ejercicios</button>
         } @else {
-          <button hlmBtn variant="outline" class="h-12" (click)="toggleArchive(ex)">Archivar</button>
-        }
-        @if (!ex.has_history) {
-          <button hlmBtn variant="destructive" class="col-span-2 h-12" (click)="remove(ex)">Eliminar</button>
+          <button hlmBtn variant="outline" class="h-12 text-destructive" (click)="remove(ex)">Quitar de mis ejercicios</button>
         }
       </div>
 
@@ -116,21 +111,29 @@ export class ExerciseDetailPage {
     this.hasMore.set(history.meta.current_page < history.meta.last_page);
   }
 
-  async toggleArchive(exercise: Exercise): Promise<void> {
+  /** Solo se llega aquí a un ejercicio quitado desde sus estadísticas: vuelve a la lista. */
+  async restore(exercise: Exercise): Promise<void> {
     this.error.set(null);
     try {
-      const updated = exercise.archived_at ? await this.api.restore(exercise.id) : await this.api.archive(exercise.id);
-      this.exercise.set(updated);
+      this.exercise.set(await this.api.restore(exercise.id));
     } catch (e) {
       this.error.set(apiErrorMessage(e));
     }
   }
 
+  /**
+   * Sin historial se borra; con historial se oculta (archivado por dentro) para conservar las
+   * estadísticas, y vuelve solo si se elige otra vez desde la biblioteca.
+   */
   async remove(exercise: Exercise): Promise<void> {
-    if (!confirm(`¿Eliminar "${exercise.name}"? Esta acción no se puede deshacer.`)) return;
+    const question = exercise.has_history
+      ? `¿Quitar "${exercise.name}" de tus ejercicios? Tu historial y estadísticas se conservan, y puedes volver a agregarlo desde la biblioteca.`
+      : `¿Quitar "${exercise.name}" de tus ejercicios?`;
+    if (!confirm(question)) return;
     this.error.set(null);
     try {
-      await this.api.remove(exercise.id);
+      if (exercise.has_history) await this.api.archive(exercise.id);
+      else await this.api.remove(exercise.id);
       await this.router.navigateByUrl('/ejercicios');
     } catch (e) {
       this.error.set(apiErrorMessage(e));

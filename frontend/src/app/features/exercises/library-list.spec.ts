@@ -6,9 +6,20 @@ import { LOCAL_DB, LocalDb } from '../../core/local-db/local-db';
 import type { LibraryExercise } from '../../core/models/library';
 import { LibraryList } from './library-list';
 
-const lib = (name: string, muscle_group: LibraryExercise['muscle_group'], equipment: LibraryExercise['equipment'], owned: number | null = null): LibraryExercise => ({
-  slug: name.toLowerCase().replace(/\s+/g, '-'), name, muscle_group, secondary_muscles: [], equipment,
-  is_unilateral: false, uses_bodyweight: false, owned_exercise_id: owned,
+const lib = (
+  name: string,
+  muscle_group: LibraryExercise['muscle_group'],
+  equipment: LibraryExercise['equipment'],
+  owned: number | null = null,
+): LibraryExercise => ({
+  slug: name.toLowerCase().replace(/\s+/g, '-'),
+  name,
+  muscle_group,
+  secondary_muscles: [],
+  equipment,
+  is_unilateral: false,
+  uses_bodyweight: false,
+  owned_exercise_id: owned,
 });
 
 async function setup() {
@@ -19,11 +30,13 @@ async function setup() {
       {
         provide: ExerciseLibraryApi,
         useValue: {
-          list: vi.fn().mockResolvedValue([
-            lib('Press de banca', 'chest', 'barbell', 3),
-            lib('Sentadilla goblet', 'quads', 'kettlebell'),
-            lib('Jalon al pecho', 'lats', 'cable'),
-          ]),
+          list: vi
+            .fn()
+            .mockResolvedValue([
+              lib('Press de banca', 'chest', 'barbell', 3),
+              lib('Sentadilla goblet', 'quads', 'kettlebell'),
+              lib('Jalon al pecho', 'lats', 'cable'),
+            ]),
         },
       },
     ],
@@ -33,8 +46,10 @@ async function setup() {
   await new Promise((r) => setTimeout(r));
   await fixture.whenStable();
   const el = fixture.nativeElement as HTMLElement;
-  const names = () => Array.from(el.querySelectorAll('[data-name]')).map((n) => n.textContent!.trim());
-  const chip = (label: string) => Array.from(el.querySelectorAll('button')).find((b) => b.textContent!.trim() === label)!;
+  const names = () =>
+    Array.from(el.querySelectorAll('[data-name]')).map((n) => n.textContent!.trim());
+  const chip = (label: string) =>
+    Array.from(el.querySelectorAll('button')).find((b) => b.textContent!.trim() === label)!;
   return { fixture, el, names, chip };
 }
 

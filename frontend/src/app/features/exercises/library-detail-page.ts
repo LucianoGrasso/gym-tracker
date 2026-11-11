@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  resource,
+  signal,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { apiErrorMessage } from '../../core/api/api-error';
@@ -16,7 +24,11 @@ import { BodyMap } from '../../shared/ui/body-map/body-map';
   imports: [RouterLink, HlmButton, AppSkeleton, BodyMap],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <a routerLink="/ejercicios" [queryParams]="{ vista: 'biblioteca' }" class="mb-4 inline-block text-sm text-muted-foreground">
+    <a
+      routerLink="/ejercicios"
+      [queryParams]="{ vista: 'biblioteca' }"
+      class="mb-4 inline-block text-sm text-muted-foreground"
+    >
       ← Biblioteca
     </a>
 
@@ -28,21 +40,31 @@ import { BodyMap } from '../../shared/ui/body-map/body-map';
           <h1 class="page-title">{{ ex.name }}</h1>
           <p class="text-muted-foreground">
             {{ equipmentLabels[ex.equipment] }}
-            @if (ex.is_unilateral) { · Unilateral }
-            @if (ex.uses_bodyweight) { · Peso corporal }
+            @if (ex.is_unilateral) {
+              · Unilateral
+            }
+            @if (ex.uses_bodyweight) {
+              · Peso corporal
+            }
           </p>
         </header>
 
         <section class="card mb-6 p-4">
           <app-body-map [intensities]="intensities()" />
           <p class="mt-3 text-center">{{ muscles() }}</p>
-          <p class="mt-1 text-center text-sm text-muted-foreground">Los secundarios cuentan media serie en tus estadísticas.</p>
+          <p class="mt-1 text-center text-sm text-muted-foreground">
+            Los secundarios cuentan media serie en tus estadísticas.
+          </p>
         </section>
 
         @if (ex.owned_exercise_id) {
-          <a hlmBtn class="h-12 w-full" [routerLink]="['/ejercicios', ex.owned_exercise_id]">Ver mi ejercicio</a>
+          <a hlmBtn class="h-12 w-full" [routerLink]="['/ejercicios', ex.owned_exercise_id]"
+            >Ver mi ejercicio</a
+          >
         } @else {
-          <button hlmBtn class="h-12 w-full" [disabled]="adding()" (click)="adopt(ex.slug)">Agregar a mis ejercicios</button>
+          <button hlmBtn class="h-12 w-full" [disabled]="adding()" (click)="adopt(ex.slug)">
+            Agregar a mis ejercicios
+          </button>
         }
         @if (error()) {
           <p class="mt-3 text-sm text-destructive" role="alert">{{ error() }}</p>
@@ -70,7 +92,9 @@ export class LibraryDetailPage {
     loader: () => cachedFetch(this.db, 'exercise-library', () => this.api.list()),
   });
   protected readonly exercise = computed(() =>
-    this.library.hasValue() ? (this.library.value().find((e) => e.slug === this.slug()) ?? null) : null,
+    this.library.hasValue()
+      ? (this.library.value().find((e) => e.slug === this.slug()) ?? null)
+      : null,
   );
   protected readonly intensities = computed(() => {
     const ex = this.exercise();

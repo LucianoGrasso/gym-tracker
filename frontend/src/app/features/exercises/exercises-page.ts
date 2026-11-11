@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, resource, 
 import { RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronRight, lucidePlus } from '@ng-icons/lucide';
-import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { ExercisesApi } from '../../core/api/exercises-api';
@@ -12,10 +11,11 @@ import { filterExercises } from './filter-exercises';
 import { LibraryList } from './library-list';
 
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
+import { MiniBodyMap } from '../../shared/ui/body-map/mini-body-map';
 
 @Component({
   selector: 'app-exercises-page',
-  imports: [RouterLink, NgIcon, HlmBadge, HlmButton, HlmInput, AppSkeleton, LibraryList],
+  imports: [RouterLink, NgIcon, HlmButton, HlmInput, AppSkeleton, LibraryList, MiniBodyMap],
   providers: [provideIcons({ lucidePlus, lucideChevronRight })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -61,10 +61,6 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
         }
       </div>
 
-      <label class="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-        <input type="checkbox" class="size-5" [checked]="archived()" (change)="archived.set(!archived())" />
-        Ver archivados
-      </label>
 
       @if (exercises.isLoading()) {
         <app-skeleton variant="list" [rows]="6" />
@@ -74,18 +70,16 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
         <ul class="divide-y divide-border card">
           @for (exercise of visible(); track exercise.id) {
             <li>
-              <a [routerLink]="['/ejercicios', exercise.id]" class="flex min-h-14 items-center justify-between gap-3 px-4 py-3">
-                <span>
-                  <span class="block font-medium">{{ exercise.name }}</span>
-                  <span class="text-sm text-muted-foreground">
-                    {{ muscleLabels[exercise.muscle_group] }} · {{ equipmentLabels[exercise.equipment] }}
-                  </span>
+              <a [routerLink]="['/ejercicios', exercise.id]" class="flex min-h-16 items-center gap-3 px-4 py-2">
+              <app-mini-body-map [primary]="exercise.muscle_group" [secondaries]="exercise.secondary_muscles" />
+              <span class="min-w-0 flex-1">
+                <span class="block font-medium">{{ exercise.name }}</span>
+                <span class="text-sm text-muted-foreground">
+                  {{ muscleLabels[exercise.muscle_group] }} · {{ equipmentLabels[exercise.equipment] }}
                 </span>
-                <span class="flex items-center gap-2">
-                  @if (exercise.archived_at) { <span hlmBadge variant="secondary">Archivado</span> }
-                  <ng-icon name="lucideChevronRight" class="text-muted-foreground" />
-                </span>
-              </a>
+              </span>
+              <ng-icon name="lucideChevronRight" class="shrink-0 text-muted-foreground" aria-hidden="true" />
+            </a>
             </li>
           } @empty {
             <li class="px-4 py-6 text-center text-muted-foreground">No hay ejercicios que coincidan.</li>
@@ -108,10 +102,9 @@ export class ExercisesPage {
 
   protected readonly search = signal('');
   protected readonly group = signal<MuscleGroup | null>(null);
-  protected readonly archived = signal(false);
 
   protected readonly exercises = resource({
-    params: () => (this.libraryTab() ? undefined : { archived: this.archived() }),
+    params: () => (this.libraryTab() ? undefined : {}),
     loader: ({ params }) => this.api.list(params),
   });
 

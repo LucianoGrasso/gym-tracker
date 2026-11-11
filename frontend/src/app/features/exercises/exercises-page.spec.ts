@@ -7,7 +7,14 @@ import { LOCAL_DB, LocalDb } from '../../core/local-db/local-db';
 import { ExercisesPage } from './exercises-page';
 
 async function render(vista?: string) {
-  const exercises = { list: vi.fn().mockResolvedValue([]) };
+  const exercises = {
+    list: vi.fn().mockResolvedValue([
+      {
+        id: 1, name: 'Press de banca', muscle_group: 'chest', secondary_muscles: ['triceps'], equipment: 'barbell',
+        is_unilateral: false, uses_bodyweight: false, notes: null, archived_at: null,
+      },
+    ]),
+  };
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
@@ -19,7 +26,7 @@ async function render(vista?: string) {
   const fixture = TestBed.createComponent(ExercisesPage);
   if (vista) fixture.componentRef.setInput('vista', vista);
   await fixture.whenStable();
-  return { el: fixture.nativeElement as HTMLElement, exercises };
+  return { fixture, el: fixture.nativeElement as HTMLElement, exercises };
 }
 
 describe('ExercisesPage', () => {
@@ -29,6 +36,17 @@ describe('ExercisesPage', () => {
     expect(el.querySelector('[aria-current="page"]')!.textContent).toContain('Mis ejercicios');
     expect(el.querySelector('app-library-list')).toBeNull();
     expect(exercises.list).toHaveBeenCalled();
+  });
+
+  it('shows my exercises like the library rows, without archived ones', async () => {
+    const { fixture, el, exercises } = await render();
+    await new Promise((r) => setTimeout(r));
+    await fixture.whenStable();
+
+    expect(exercises.list).toHaveBeenCalledWith({});
+    expect(el.querySelector('app-mini-body-map')).not.toBeNull();
+    expect(el.textContent).toContain('Pecho · Barra');
+    expect(el.textContent).not.toContain('Ver archivados');
   });
 
   it('shows the library tab from the URL, without loading my list', async () => {

@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, resource, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  resource,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCheck, lucideChevronRight } from '@ng-icons/lucide';
@@ -8,7 +15,12 @@ import { ExerciseLibraryApi } from '../../core/api/exercise-library-api';
 import { cachedFetch } from '../../core/local-db/cached-fetch';
 import { LOCAL_DB } from '../../core/local-db/local-db';
 import type { Equipment, MuscleGroup } from '../../core/models/exercise';
-import { EQUIPMENTS, EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, MUSCLE_GROUPS } from '../../core/models/labels';
+import {
+  EQUIPMENTS,
+  EQUIPMENT_LABELS,
+  MUSCLE_GROUP_LABELS,
+  MUSCLE_GROUPS,
+} from '../../core/models/labels';
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
 import { MiniBodyMap } from '../../shared/ui/body-map/mini-body-map';
 import { filterLibrary } from './filter-exercises';
@@ -31,11 +43,23 @@ import { filterLibrary } from './filter-exercises';
     />
 
     <div class="-mx-4 mb-2 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label="Músculo">
-      <button hlmBtn size="sm" class="h-10 shrink-0" [variant]="group() === null ? 'default' : 'outline'" (click)="group.set(null)">
+      <button
+        hlmBtn
+        size="sm"
+        class="h-10 shrink-0"
+        [variant]="group() === null ? 'default' : 'outline'"
+        (click)="group.set(null)"
+      >
         Todos
       </button>
       @for (g of groups; track g) {
-        <button hlmBtn size="sm" class="h-10 shrink-0" [variant]="group() === g ? 'default' : 'outline'" (click)="group.set(g)">
+        <button
+          hlmBtn
+          size="sm"
+          class="h-10 shrink-0"
+          [variant]="group() === g ? 'default' : 'outline'"
+          (click)="group.set(g)"
+        >
           {{ muscleLabels[g] }}
         </button>
       }
@@ -61,24 +85,40 @@ import { filterLibrary } from './filter-exercises';
       <ul class="card divide-y divide-border">
         @for (exercise of visible(); track exercise.slug) {
           <li>
-            <a [routerLink]="['/ejercicios/biblioteca', exercise.slug]" class="flex min-h-16 items-center gap-3 px-4 py-2">
-              <app-mini-body-map [primary]="exercise.muscle_group" [secondaries]="exercise.secondary_muscles" />
+            <a
+              [routerLink]="['/ejercicios/biblioteca', exercise.slug]"
+              class="flex min-h-16 items-center gap-3 px-4 py-2"
+            >
+              <app-mini-body-map
+                [primary]="exercise.muscle_group"
+                [secondaries]="exercise.secondary_muscles"
+              />
               <span class="min-w-0 flex-1">
                 <span data-name class="block font-medium">{{ exercise.name }}</span>
                 <span class="text-sm text-muted-foreground">
-                  {{ muscleLabels[exercise.muscle_group] }} · {{ equipmentLabels[exercise.equipment] }}
+                  {{ muscleLabels[exercise.muscle_group] }} ·
+                  {{ equipmentLabels[exercise.equipment] }}
                 </span>
               </span>
               @if (exercise.owned_exercise_id) {
-                <span data-owned class="flex shrink-0 items-center gap-1 text-sm font-semibold text-primary">
+                <span
+                  data-owned
+                  class="flex shrink-0 items-center gap-1 text-sm font-semibold text-primary"
+                >
                   <ng-icon name="lucideCheck" size="16" aria-hidden="true" /> Lo usas
                 </span>
               }
-              <ng-icon name="lucideChevronRight" class="shrink-0 text-muted-foreground" aria-hidden="true" />
+              <ng-icon
+                name="lucideChevronRight"
+                class="shrink-0 text-muted-foreground"
+                aria-hidden="true"
+              />
             </a>
           </li>
         } @empty {
-          <li class="px-4 py-6 text-center text-muted-foreground">No hay ejercicios que coincidan.</li>
+          <li class="px-4 py-6 text-center text-muted-foreground">
+            No hay ejercicios que coincidan.
+          </li>
         }
       </ul>
     } @else {

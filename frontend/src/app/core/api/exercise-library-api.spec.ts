@@ -12,7 +12,9 @@ describe('ExerciseLibraryApi', () => {
   let mock: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     api = TestBed.inject(ExerciseLibraryApi);
     mock = TestBed.inject(HttpTestingController);
   });
