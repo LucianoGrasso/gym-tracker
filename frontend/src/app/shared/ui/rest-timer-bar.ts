@@ -23,6 +23,9 @@ import { RestTimerService } from '../../core/workout/rest-timer.service';
               <ng-icon name="lucideBell" size="18" class="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
               ¿Te aviso cuando termine el descanso, aunque tengas el teléfono bloqueado?
             </p>
+            @if (push.error(); as pushError) {
+              <p class="mt-1 text-xs text-destructive" role="alert">{{ pushError }}</p>
+            }
             <div class="mt-2 flex gap-2">
               <button
                 type="button"

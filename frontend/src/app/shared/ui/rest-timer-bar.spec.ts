@@ -9,6 +9,7 @@ import { RestTimerBar } from './rest-timer-bar';
 async function render(status: PushStatus, running = true) {
   const push = {
     status: signal<PushStatus>(status),
+    error: signal<string | null>(null),
     enable: vi.fn().mockResolvedValue(true),
     decline: vi.fn(),
   };

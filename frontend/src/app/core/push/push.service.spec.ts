@@ -69,6 +69,40 @@ describe('PushService', () => {
     expect(push.status()).toBe('blocked');
   });
 
+  it('asks for the permission first, while the tap still counts (iOS), before any request', async () => {
+    const { push, api } = setup();
+    const order: string[] = [];
+    vi.stubGlobal('Notification', {
+      permission: 'default',
+      requestPermission: vi.fn(() => (order.push('permission'), Promise.resolve('granted'))),
+    });
+    api.publicKey.mockImplementation(() => (order.push('key'), Promise.resolve('BPublicKey')));
+
+    expect(await push.enable()).toBe(true);
+    expect(order).toEqual(['permission', 'key']);
+  });
+
+  it('stops without any request when the permission is refused', async () => {
+    const { push, api } = setup();
+    vi.stubGlobal('Notification', { permission: 'default', requestPermission: vi.fn().mockResolvedValue('denied') });
+
+    expect(await push.enable()).toBe(false);
+    expect(push.status()).toBe('blocked');
+    expect(api.publicKey).not.toHaveBeenCalled();
+  });
+
+  it('explains when enabling fails, and clears it on the next try', async () => {
+    const { push, api } = setup();
+    api.token.mockRejectedValueOnce(new Error('offline'));
+
+    await push.enable();
+    expect(push.error()).toBe('No se pudieron activar los avisos. Revisa tu conexión e inténtalo de nuevo.');
+
+    await push.enable();
+    expect(push.error()).toBeNull();
+    expect(push.status()).toBe('on');
+  });
+
   it('stays unasked when enabling fails for another reason', async () => {
     const { push, api } = setup();
     api.token.mockRejectedValue(new Error('offline'));

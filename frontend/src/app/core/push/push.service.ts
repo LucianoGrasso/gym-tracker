@@ -48,6 +48,8 @@ export class PushService {
   private readonly stored = signal<Stored | null>(readStored());
   private readonly denied = signal(notificationPermission() === 'denied');
   private execution: string | null = readExecution();
+  /** Por qué falló el último intento de activar, para mostrarlo junto al botón. */
+  readonly error = signal<string | null>(null);
 
   private readonly supported = !!this.sw?.isEnabled && typeof window !== 'undefined' && 'PushManager' in window;
 
@@ -66,19 +68,33 @@ export class PushService {
     }
   }
 
-  /** Pide permiso y suscribe este dispositivo. Debe llamarse desde un toque del usuario (iOS lo exige). */
+  /**
+   * Pide permiso y suscribe este dispositivo. Debe llamarse desde un toque del usuario: iOS solo
+   * acepta el permiso pedido de inmediato, por eso va antes de cualquier llamada a la API (con Aurora
+   * en pausa la primera tarda varios segundos y el toque deja de valer).
+   */
   async enable(): Promise<boolean> {
     if (!this.supported) return false;
+    this.error.set(null);
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        this.denied.set(permission === 'denied');
+        return false;
+      }
+    }
     try {
       const serverPublicKey = await this.api.publicKey();
-      if (!serverPublicKey) return false;
+      if (!serverPublicKey) throw new Error('Sin clave pública de avisos');
       const sub = await this.sw!.requestSubscription({ serverPublicKey });
       const subscription = sub.toJSON() as PushSubscriptionJson;
       const signature = await this.api.token(subscription.endpoint);
       this.save({ status: 'on', subscription, signature });
       return true;
     } catch {
-      this.denied.set(notificationPermission() === 'denied');
+      const denied = notificationPermission() === 'denied';
+      this.denied.set(denied);
+      if (!denied) this.error.set('No se pudieron activar los avisos. Revisa tu conexión e inténtalo de nuevo.');
       return false;
     }
   }

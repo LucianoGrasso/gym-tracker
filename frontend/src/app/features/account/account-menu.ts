@@ -118,6 +118,9 @@ import { PushService } from '../../core/push/push.service';
             ></span>
           </button>
         </div>
+        @if (push.error(); as pushError) {
+          <p class="mt-2 text-xs text-destructive" role="alert">{{ pushError }}</p>
+        }
         <p class="mt-2 text-xs text-muted-foreground">
           @switch (push.status()) {
             @case ('unsupported') {

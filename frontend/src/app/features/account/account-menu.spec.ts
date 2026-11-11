@@ -40,6 +40,7 @@ async function render(
   };
   const push = {
     status: signal<PushStatus>(pushStatus),
+    error: signal<string | null>(null),
     enable: vi.fn().mockResolvedValue(true),
     disable: vi.fn().mockResolvedValue(undefined),
   };
