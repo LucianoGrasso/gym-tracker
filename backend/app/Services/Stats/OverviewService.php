@@ -10,26 +10,26 @@ final class OverviewService
     private const RECENT_RECORDS = 5;
 
     public function __construct(
-        private readonly VolumeCalculator $volume,
         private readonly PersonalRecordsService $records,
         private readonly ConsistencyService $consistency,
     ) {}
 
     /**
      * @param  Collection<int, SetRow>  $sets  every set of the user
-     * @param  list<string>  $workoutDates
+     * @param  list<string>  $workoutDates  oldest first
      * @return array<string, mixed>
      */
     public function overview(Collection $sets, array $workoutDates, CarbonImmutable $today, ?string $from): array
     {
         $inPeriod = fn (string $date) => $from === null || $date >= $from;
-        $periodSets = $sets->filter(fn (SetRow $set) => $inPeriod($set->date));
         $working = $sets->reject(fn (SetRow $set) => $set->isWarmup());
+        $sessions = count(array_filter($workoutDates, $inPeriod));
+        $weeks = StatsCalendar::periodWeeks($from, $today->toDateString(), $workoutDates[0] ?? null);
 
         return [
-            'sessions' => count(array_filter($workoutDates, $inPeriod)),
-            'total_volume_kg' => $this->volume->volume($periodSets),
-            'total_sets' => $periodSets->reject(fn (SetRow $set) => $set->isWarmup())->count(),
+            'sessions' => $sessions,
+            'sessions_per_week' => round($sessions / $weeks, 1),
+            'effective_sets' => $working->filter(fn (SetRow $set) => $inPeriod($set->date))->count(),
             'streak_weeks' => $this->consistency->streak($workoutDates, $today),
             'recent_records' => $this->recentRecords($sets, $inPeriod),
             'exercises' => $working

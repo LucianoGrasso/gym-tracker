@@ -5,11 +5,10 @@ use App\Enums\SetType;
 use App\Services\Stats\BodyweightSeriesService;
 use App\Services\Stats\ConsistencyService;
 use App\Services\Stats\EffectiveLoadResolver;
+use App\Services\Stats\MuscleSetsService;
 use App\Services\Stats\OneRepMaxCalculator;
 use App\Services\Stats\OverviewService;
 use App\Services\Stats\PersonalRecordsService;
-use App\Services\Stats\VolumeCalculator;
-use App\Services\Stats\WeeklyMuscleVolumeService;
 use Carbon\CarbonImmutable;
 
 $today = CarbonImmutable::parse('2026-11-04'); // miércoles, semana del 02/11
@@ -49,35 +48,38 @@ describe('ConsistencyService', function () use ($today) {
     });
 });
 
-describe('WeeklyMuscleVolumeService', function () use ($today) {
-    $weekly = new WeeklyMuscleVolumeService(new VolumeCalculator(new EffectiveLoadResolver));
+describe('MuscleSetsService', function () use ($today) {
+    $muscles = new MuscleSetsService;
 
-    it('sums the volume per muscle group and week', function () use ($weekly, $today) {
+    it('averages the effective sets per week of every muscle', function () use ($muscles, $today) {
         $sets = collect([
-            statsSet(['date' => '2026-10-26', 'weightKg' => 100.0, 'reps' => 5]),
-            statsSet(['date' => '2026-11-01', 'muscleGroup' => MuscleGroup::Lats, 'weightKg' => 60.0, 'reps' => 10]),
-            statsSet(['date' => '2026-11-02', 'weightKg' => 50.0, 'reps' => 10, 'setType' => SetType::Warmup]),
-            statsSet(['date' => '2026-11-03', 'weightKg' => 80.0, 'reps' => 5]),
+            ...array_fill(0, 30, statsSet(['date' => '2026-10-28'])),
+            statsSet(['date' => '2026-10-28', 'setType' => SetType::Warmup]),
+            statsSet(['date' => '2026-10-21']),
+            ...array_fill(0, 3, statsSet(['date' => '2026-11-03', 'muscleGroup' => MuscleGroup::Lats, 'setType' => SetType::Failure])),
         ]);
 
-        $result = $weekly->weekly($sets, $today, '2026-10-26');
+        // del 22/10 al 04/11: 14 días, 2 semanas
+        $result = $muscles->summary($sets, ['2026-10-21', '2026-10-28', '2026-11-03'], $today, '2026-10-22');
 
-        expect($result['muscle_groups'])->toBe(['chest', 'lats', 'upper_back', 'shoulders', 'biceps', 'triceps', 'quads', 'hamstrings', 'glutes', 'calves', 'core', 'other'])
-            ->and($result['weeks'][0]['week_start'])->toBe('2026-10-26')
-            ->and($result['weeks'][0]['volumes']['chest'])->toBe(500.0)
-            ->and($result['weeks'][0]['volumes']['lats'])->toBe(600.0)
-            ->and($result['weeks'][1]['volumes']['chest'])->toBe(400.0)
-            ->and($result['weeks'][1]['volumes']['quads'])->toBe(0.0);
+        expect($result['weeks'])->toBe(2.0)
+            ->and(array_column($result['muscles'], 'muscle'))->toBe(array_map(fn (MuscleGroup $g) => $g->value, MuscleGroup::cases()))
+            ->and($result['muscles'][0])->toBe(['muscle' => 'chest', 'sets' => 30, 'sets_per_week' => 15.0, 'status' => 'in_range'])
+            ->and($result['muscles'][1])->toBe(['muscle' => 'lats', 'sets' => 3, 'sets_per_week' => 1.5, 'status' => 'low'])
+            ->and($result['muscles'][6])->toBe(['muscle' => 'quads', 'sets' => 0, 'sets_per_week' => 0.0, 'status' => 'none']);
     });
 
-    it('can keep a single muscle group', function () use ($weekly, $today) {
-        $result = $weekly->weekly(collect([statsSet(['date' => '2026-11-03'])]), $today, '2026-11-02', MuscleGroup::Chest);
+    it('counts all time from the first session', function () use ($muscles, $today) {
+        // del 25/10 al 04/11: 11 días
+        $result = $muscles->summary(collect([statsSet(['date' => '2026-10-25'])]), ['2026-10-25'], $today, null);
 
-        expect($result)->toBe([
-            'muscle_groups' => ['chest'],
-            'weeks' => [['week_start' => '2026-11-02', 'volumes' => ['chest' => 500.0]]],
-        ]);
+        expect($result['weeks'])->toBe(1.6)
+            ->and($result['muscles'][0]['sets_per_week'])->toBe(0.6);
     });
+
+    it('compares the weekly sets with the 10 to 20 range', function (float $perWeek, string $status) {
+        expect(MuscleSetsService::status($perWeek))->toBe($status);
+    })->with([[0.0, 'none'], [9.9, 'low'], [10.0, 'in_range'], [20.0, 'in_range'], [20.1, 'high']]);
 });
 
 describe('BodyweightSeriesService', function () {
@@ -98,7 +100,6 @@ describe('BodyweightSeriesService', function () {
 describe('OverviewService', function () use ($today) {
     $loads = new EffectiveLoadResolver;
     $overview = new OverviewService(
-        new VolumeCalculator($loads),
         new PersonalRecordsService($loads, new OneRepMaxCalculator),
         new ConsistencyService,
     );
@@ -114,8 +115,9 @@ describe('OverviewService', function () use ($today) {
         $result = $overview->overview($sets, ['2026-08-03', '2026-10-27', '2026-11-03'], $today, '2026-10-12');
 
         expect($result['sessions'])->toBe(2)
-            ->and($result['total_volume_kg'])->toBe(905.0)
-            ->and($result['total_sets'])->toBe(2)
+            ->and($result)->not->toHaveKeys(['total_volume_kg', 'total_sets'])
+            ->and($result['effective_sets'])->toBe(2)
+            ->and($result['sessions_per_week'])->toBe(0.6) // 2 sesiones en 24 días
             ->and($result['streak_weeks'])->toBe(2)
             ->and($result['exercises'])->toBe([
                 ['id' => 2, 'name' => 'Dominadas', 'sessions' => 1],

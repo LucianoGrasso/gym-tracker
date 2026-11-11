@@ -7,9 +7,9 @@ use App\Models\Exercise;
 use App\Services\Stats\BodyweightSeriesService;
 use App\Services\Stats\ConsistencyService;
 use App\Services\Stats\ExerciseProgressService;
+use App\Services\Stats\MuscleSetsService;
 use App\Services\Stats\OverviewService;
 use App\Services\Stats\StatsDataLoader;
-use App\Services\Stats\WeeklyMuscleVolumeService;
 use Illuminate\Http\JsonResponse;
 
 /** Glue only: request → data loader → stats service → JSON. */
@@ -32,10 +32,10 @@ class StatsController extends Controller
         ));
     }
 
-    public function weeklyVolume(StatsRequest $request, WeeklyMuscleVolumeService $weekly): JsonResponse
+    public function muscles(StatsRequest $request, MuscleSetsService $muscles): JsonResponse
     {
-        return $this->respond($request, $weekly->weekly(
-            $this->data->sets(), $request->today(), $request->from(), $request->muscleGroup(),
+        return $this->respond($request, $muscles->summary(
+            $this->data->sets(), $this->data->workoutDates(), $request->today(), $request->from(),
         ));
     }
 

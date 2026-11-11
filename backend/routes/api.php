@@ -35,7 +35,7 @@ Route::middleware(['auth:sanctum', 'demo.active'])->group(function () {
     Route::put('/body-metrics/{date}', [BodyMetricController::class, 'upsert']);
 
     Route::get('/stats/overview', [StatsController::class, 'overview']);
-    Route::get('/stats/weekly-volume', [StatsController::class, 'weeklyVolume']);
+    Route::get('/stats/muscles', [StatsController::class, 'muscles']);
     Route::get('/stats/consistency', [StatsController::class, 'consistency']);
     Route::get('/stats/bodyweight', [StatsController::class, 'bodyweight']);
 

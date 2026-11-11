@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\MuscleGroup;
 use App\Enums\StatsPeriod;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
@@ -20,7 +19,6 @@ class StatsRequest extends FormRequest
     {
         return [
             'period' => ['nullable', Rule::enum(StatsPeriod::class)],
-            'muscle_group' => ['nullable', Rule::enum(MuscleGroup::class)],
         ];
     }
 
@@ -39,12 +37,5 @@ class StatsRequest extends FormRequest
     public function from(): ?string
     {
         return $this->period()->startDate($this->today())?->toDateString();
-    }
-
-    public function muscleGroup(): ?MuscleGroup
-    {
-        $value = $this->validated('muscle_group');
-
-        return $value === null ? null : MuscleGroup::from($value);
     }
 }

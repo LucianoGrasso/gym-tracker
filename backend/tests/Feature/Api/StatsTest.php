@@ -72,26 +72,27 @@ it('summarizes the period with only own data', function () {
     $this->getJson('/api/stats/overview?period=1m')
         ->assertOk()
         ->assertJsonPath('data.sessions', 2)
-        ->assertJsonPath('data.total_volume_kg', 900.0)
-        ->assertJsonPath('data.total_sets', 2)
+        ->assertJsonPath('data.effective_sets', 2)
+        ->assertJsonMissingPath('data.total_volume_kg')
         ->assertJsonPath('data.streak_weeks', 2)
         ->assertJsonPath('data.exercises.0.name', 'Press de banca')
         ->assertJsonPath('data.recent_records.0.type', 'heaviest');
 });
 
-it('returns the weekly volume per muscle group', function () {
-    statsWorkout($this->user, $this->bench, '2026-11-02', [[100, 5, SetType::Normal]]);
+it('returns the weekly sets per muscle with only own data', function () {
+    statsWorkout($this->user, $this->bench, '2026-11-02', [[40, 10, SetType::Warmup], [100, 5, SetType::Normal], [100, 5, SetType::Normal]]);
+    statsWorkout(User::factory()->create(), Exercise::factory()->create(['muscle_group' => MuscleGroup::Chest]), '2026-11-02', [[200, 5, SetType::Normal]]);
 
-    $this->getJson('/api/stats/weekly-volume?period=1m')
+    $this->getJson('/api/stats/muscles?period=1w')
         ->assertOk()
-        ->assertJsonCount(5, 'data.weeks')
-        ->assertJsonPath('data.weeks.4.week_start', '2026-11-02')
-        ->assertJsonPath('data.weeks.4.volumes.chest', 500.0);
+        ->assertJsonPath('data.period', '1w')
+        ->assertJsonPath('data.weeks', 1.0)
+        ->assertJsonCount(12, 'data.muscles')
+        ->assertJsonPath('data.muscles.0', ['muscle' => 'chest', 'sets' => 2, 'sets_per_week' => 2.0, 'status' => 'low']);
+});
 
-    $this->getJson('/api/stats/weekly-volume?period=1m&muscle_group=lats')
-        ->assertOk()
-        ->assertJsonPath('data.muscle_groups', ['lats'])
-        ->assertJsonPath('data.weeks.4.volumes.lats', 0.0);
+it('no longer offers the weekly volume in kilos', function () {
+    $this->getJson('/api/stats/weekly-volume')->assertNotFound();
 });
 
 it('uses the Santiago calendar for the consistency', function () {
