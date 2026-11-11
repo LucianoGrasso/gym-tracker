@@ -1,4 +1,5 @@
 import { MUSCLE_GROUP_LABELS } from '../models/labels';
+import type { MuscleGroup } from '../models/exercise';
 import type { MuscleSetsEntry, MuscleStatus } from '../models/stats';
 
 /** Referencia habitual de hipertrofia: series efectivas por músculo y semana. */
@@ -55,4 +56,26 @@ export function rankMuscles(entries: MuscleSetsEntry[]): MuscleSetsEntry[] {
   return entries
     .filter((m) => m.muscle !== 'other' || m.sets > 0)
     .sort((a, b) => b.sets_per_week - a.sets_per_week);
+}
+
+/** Intensidad de un músculo secundario en el esquema de un ejercicio (lima suave). */
+export const SECONDARY_INTENSITY = 0.45;
+
+/** Esquema de un ejercicio: principal en lima fuerte, secundarios en lima suave. */
+export function exerciseIntensities(
+  primary: MuscleGroup,
+  secondaries: readonly MuscleGroup[],
+): Partial<Record<MuscleGroup, number>> {
+  return {
+    ...Object.fromEntries(secondaries.map((m) => [m, SECONDARY_INTENSITY])),
+    [primary]: 1,
+  };
+}
+
+/** "Principal: Pecho · Secundarios: Tríceps, Hombros" */
+export function formatMuscles(primary: MuscleGroup, secondaries: readonly MuscleGroup[]): string {
+  const main = `Principal: ${MUSCLE_GROUP_LABELS[primary]}`;
+  return secondaries.length
+    ? `${main} · Secundarios: ${secondaries.map((m) => MUSCLE_GROUP_LABELS[m]).join(', ')}`
+    : main;
 }

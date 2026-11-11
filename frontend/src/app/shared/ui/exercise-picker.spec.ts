@@ -7,6 +7,7 @@ const exercise = (id: number, name: string, muscle_group: Exercise['muscle_group
   id,
   name,
   muscle_group,
+  secondary_muscles: [],
   equipment: 'barbell',
   is_unilateral: false,
   uses_bodyweight: false,

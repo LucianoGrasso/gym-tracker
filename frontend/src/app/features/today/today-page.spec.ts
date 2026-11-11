@@ -14,6 +14,7 @@ const bench = {
   id: 1,
   name: 'Press de banca',
   muscle_group: 'chest' as const,
+  secondary_muscles: [],
   equipment: 'barbell' as const,
   is_unilateral: false,
   uses_bodyweight: false,

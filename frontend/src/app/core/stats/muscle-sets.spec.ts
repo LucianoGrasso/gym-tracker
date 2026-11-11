@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { MuscleSetsEntry } from '../models/stats';
-import { formatMuscleDetail, muscleColor, muscleIntensity, rankMuscles } from './muscle-sets';
+import {
+  exerciseIntensities,
+  formatMuscleDetail,
+  formatMuscles,
+  muscleColor,
+  muscleIntensity,
+  rankMuscles,
+} from './muscle-sets';
 
 const entry = (
   muscle: MuscleSetsEntry['muscle'],
@@ -59,5 +66,18 @@ describe('rankMuscles', () => {
 
     expect(ranked.map((m) => m.muscle)).toEqual(['quads', 'chest', 'lats', 'calves']);
     expect(rankMuscles([entry('other', 2, 'low')]).map((m) => m.muscle)).toEqual(['other']);
+  });
+});
+
+describe('exerciseIntensities', () => {
+  it('paints the primary muscle strong and the secondary ones soft', () => {
+    expect(exerciseIntensities('chest', ['triceps', 'shoulders'])).toEqual({ chest: 1, triceps: 0.45, shoulders: 0.45 });
+  });
+});
+
+describe('formatMuscles', () => {
+  it('names the primary and the secondary muscles', () => {
+    expect(formatMuscles('chest', ['triceps', 'shoulders'])).toBe('Principal: Pecho · Secundarios: Tríceps, Hombros');
+    expect(formatMuscles('calves', [])).toBe('Principal: Gemelos');
   });
 });

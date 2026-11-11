@@ -33,6 +33,9 @@ export const EQUIPMENT_LABELS: Record<Equipment, string> = {
   bodyweight: 'Peso corporal',
   machine: 'Máquina',
   cable: 'Polea',
+  kettlebell: 'Kettlebell',
+  band: 'Banda elástica',
+  smith: 'Máquina Smith',
 };
 
 export const SET_TYPE_LABELS: Record<SetType, string> = {

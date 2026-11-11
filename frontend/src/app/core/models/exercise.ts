@@ -11,7 +11,15 @@ export type MuscleGroup =
   | 'calves'
   | 'core'
   | 'other';
-export type Equipment = 'barbell' | 'dumbbell' | 'bodyweight' | 'machine' | 'cable';
+export type Equipment =
+  | 'barbell'
+  | 'dumbbell'
+  | 'bodyweight'
+  | 'machine'
+  | 'cable'
+  | 'kettlebell'
+  | 'band'
+  | 'smith';
 export type SetType = 'warmup' | 'normal' | 'bilbo' | 'heavy' | 'failure' | 'dropset';
 export type Side = 'both' | 'left' | 'right';
 
@@ -19,6 +27,8 @@ export interface Exercise {
   id: number;
   name: string;
   muscle_group: MuscleGroup;
+  /** Cuentan ½ serie en las estadísticas. */
+  secondary_muscles: MuscleGroup[];
   equipment: Equipment;
   is_unilateral: boolean;
   uses_bodyweight: boolean;
@@ -29,7 +39,7 @@ export interface Exercise {
 
 export type ExerciseInput = Pick<
   Exercise,
-  'name' | 'muscle_group' | 'equipment' | 'is_unilateral' | 'uses_bodyweight' | 'notes'
+  'name' | 'muscle_group' | 'secondary_muscles' | 'equipment' | 'is_unilateral' | 'uses_bodyweight' | 'notes'
 >;
 
 export interface WorkoutSet {

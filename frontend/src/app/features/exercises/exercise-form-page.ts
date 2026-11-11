@@ -77,6 +77,7 @@ export class ExerciseFormPage implements OnInit {
   protected readonly form = new FormGroup({
     name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(100)] }),
     muscle_group: new FormControl<MuscleGroup>('chest', { nonNullable: true }),
+    secondary_muscles: new FormControl<MuscleGroup[]>([], { nonNullable: true }),
     equipment: new FormControl<Equipment>('barbell', { nonNullable: true }),
     is_unilateral: new FormControl(false, { nonNullable: true }),
     uses_bodyweight: new FormControl(false, { nonNullable: true }),

@@ -3,7 +3,7 @@ import type { Exercise } from '../../core/models/exercise';
 import { filterExercises } from './filter-exercises';
 
 const ex = (name: string, muscle_group: Exercise['muscle_group']): Exercise => ({
-  id: Math.random(), name, muscle_group, equipment: 'barbell', is_unilateral: false,
+  id: Math.random(), name, muscle_group, secondary_muscles: [], equipment: 'barbell', is_unilateral: false,
   uses_bodyweight: false, notes: null, archived_at: null,
 });
 

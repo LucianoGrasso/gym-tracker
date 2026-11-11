@@ -5,7 +5,7 @@ import type { RoutineDayExerciseInput } from '../../core/models/routine';
 import { RoutineExerciseForm } from './routine-exercise-form';
 
 const pullUps: Exercise = {
-  id: 4, name: 'Dominadas', muscle_group: 'lats', equipment: 'bodyweight',
+  id: 4, name: 'Dominadas', muscle_group: 'lats', secondary_muscles: [], equipment: 'bodyweight',
   is_unilateral: false, uses_bodyweight: true, notes: null, archived_at: null,
 };
 

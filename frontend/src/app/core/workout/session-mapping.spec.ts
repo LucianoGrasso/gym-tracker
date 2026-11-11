@@ -4,7 +4,7 @@ import type { WorkoutDetail } from '../models/workout';
 import { freeSession, sessionFromDay, sessionFromDetail, setPayload, workoutExercisePayload, workoutPayload } from './session-mapping';
 
 const bench = {
-  id: 1, name: 'Press de banca', muscle_group: 'chest' as const, equipment: 'barbell' as const,
+  id: 1, name: 'Press de banca', muscle_group: 'chest' as const, secondary_muscles: [], equipment: 'barbell' as const,
   is_unilateral: false, uses_bodyweight: false, notes: null, archived_at: null,
 };
 
