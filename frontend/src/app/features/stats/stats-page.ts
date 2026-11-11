@@ -18,12 +18,13 @@ import { parseDecimal } from '../../core/workout/set-suggestions';
 import { consistencyOption, heatmapRange, lineOption } from '../../shared/charts/chart-options';
 import { ChipGroup } from '../../shared/ui/chip-group';
 import { formatRecentRecord } from './format-record';
+import { MuscleSection } from './muscle-section';
 
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
 @Component({
   selector: 'app-stats-page',
-  imports: [RouterLink, NgIcon, HlmButton, HlmInput, NgxEchartsDirective, ChipGroup, AppSkeleton],
+  imports: [RouterLink, NgIcon, HlmButton, HlmInput, NgxEchartsDirective, ChipGroup, AppSkeleton, MuscleSection],
   providers: [provideIcons({ lucideChevronRight, lucideTrophy })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -59,7 +60,20 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
           <dd class="num text-4xl font-bold">{{ formatSetsPerWeek(o.sessions_per_week) }}</dd>
         </div>
       </dl>
+    } @else {
+      <app-skeleton variant="list" [rows]="2" />
+    }
 
+    @if (muscles.error()) {
+      <p class="mb-6 text-destructive">No se pudieron cargar las series por músculo.</p>
+    } @else if (muscles.value(); as m) {
+      <app-muscle-section [entries]="m.muscles" />
+    } @else {
+      <app-skeleton variant="list" [rows]="2" />
+    }
+
+    <!-- value() lanza si el recurso falló: se revisa error() primero. -->
+    @if (!overview.error() && overview.value(); as o) {
       @if (o.recent_records.length) {
         <section class="mb-6">
           <h2 class="section-title mb-3">Récords recientes</h2>
@@ -80,8 +94,6 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
           </ul>
         </section>
       }
-    } @else {
-      <app-skeleton variant="list" [rows]="2" />
     }
 
     <section class="card mb-6 p-4">
