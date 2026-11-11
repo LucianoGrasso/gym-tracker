@@ -5,14 +5,14 @@ namespace App\Services;
 use App\Models\Exercise;
 use App\Models\Routine;
 use App\Models\User;
-use App\Support\ExerciseCatalog;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 /** Copia una plantilla como rutina del usuario (inactiva), reutilizando sus ejercicios por nombre. */
 class RoutineTemplateImporter
 {
+    public function __construct(private readonly LibraryExerciseResolver $exercises) {}
+
     /** @param array<string, mixed> $template una entrada de RoutineTemplates::all() */
     public function import(User $user, array $template): Routine
     {
@@ -64,26 +64,9 @@ class RoutineTemplateImporter
     /** @return Collection<string, Exercise> nombre de la plantilla => ejercicio del usuario */
     private function resolveExercises(User $user, array $template): Collection
     {
-        $owned = Exercise::withoutGlobalScopes()->where('user_id', $user->id)->get()
-            ->keyBy(fn (Exercise $e) => $this->key($e->name));
-
         return collect($template['days'])
             ->flatMap(fn (array $day) => array_column($day['exercises'], 'name'))
             ->unique()
-            ->mapWithKeys(function (string $name) use ($user, $owned) {
-                $exercise = $owned->get($this->key($name));
-                if ($exercise === null) {
-                    $exercise = Exercise::create(['user_id' => $user->id, 'name' => $name] + ExerciseCatalog::get($name));
-                } elseif ($exercise->archived_at !== null) {
-                    $exercise->update(['archived_at' => null]);
-                }
-
-                return [$name => $exercise];
-            });
-    }
-
-    private function key(string $name): string
-    {
-        return Str::lower(trim($name));
+            ->mapWithKeys(fn (string $name) => [$name => $this->exercises->resolve($user, $name)[0]]);
     }
 }

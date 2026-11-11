@@ -80,6 +80,7 @@ it('creates missing exercises from the catalog', function () {
     $pullUps = Exercise::where('user_id', $this->user->id)->where('name', 'Dominadas')->sole();
     expect($pullUps->muscle_group)->toBe(MuscleGroup::Lats)
         ->and($pullUps->uses_bodyweight)->toBeTrue()
+        ->and($pullUps->secondary_muscles->all())->toBe([MuscleGroup::Biceps, MuscleGroup::UpperBack])
         ->and(Exercise::where('user_id', $this->user->id)->count())->toBe(6);
 });
 
