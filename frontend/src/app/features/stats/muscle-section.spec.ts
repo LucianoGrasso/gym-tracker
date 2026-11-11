@@ -24,7 +24,9 @@ describe('MuscleSection', () => {
     const chest = el.querySelector('[data-muscle="chest"]')!;
 
     expect(chest.getAttribute('fill')).toBe('#c8f135');
-    expect(el.querySelector('[data-muscle="quads"]')!.getAttribute('aria-label')).toBe('Cuádriceps, 11,8 series por semana');
+    expect(el.querySelector('[data-muscle="quads"]')!.getAttribute('aria-label')).toBe(
+      'Cuádriceps, 11,8 series por semana',
+    );
   });
 
   it('explains how to use the map until a muscle is chosen', async () => {
@@ -39,7 +41,9 @@ describe('MuscleSection', () => {
 
   it('shares the selection between the ranking and the map', async () => {
     const { fixture, el, detail } = await setup();
-    const lats = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Dorsales'))!;
+    const lats = Array.from(el.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Dorsales'),
+    )!;
 
     lats.click();
     await fixture.whenStable();

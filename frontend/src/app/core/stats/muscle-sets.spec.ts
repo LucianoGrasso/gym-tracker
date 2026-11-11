@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import type { MuscleSetsEntry } from '../models/stats';
 import { formatMuscleDetail, muscleColor, muscleIntensity, rankMuscles } from './muscle-sets';
 
-const entry = (muscle: MuscleSetsEntry['muscle'], sets_per_week: number, status: MuscleSetsEntry['status']): MuscleSetsEntry => ({
+const entry = (
+  muscle: MuscleSetsEntry['muscle'],
+  sets_per_week: number,
+  status: MuscleSetsEntry['status'],
+): MuscleSetsEntry => ({
   muscle,
   sets: Math.round(sets_per_week * 4),
   sets_per_week,
@@ -28,10 +32,18 @@ describe('muscleColor', () => {
 
 describe('formatMuscleDetail', () => {
   it('describes the weekly sets against the 10–20 range', () => {
-    expect(formatMuscleDetail(entry('quads', 11.8, 'in_range'))).toBe('Cuádriceps · 11,8 series/sem · en rango (10–20)');
-    expect(formatMuscleDetail(entry('lats', 4, 'low'))).toBe('Dorsales · 4 series/sem · bajo el rango (10–20)');
-    expect(formatMuscleDetail(entry('chest', 22.5, 'high'))).toBe('Pecho · 22,5 series/sem · sobre el rango (10–20)');
-    expect(formatMuscleDetail(entry('calves', 0, 'none'))).toBe('Gemelos · sin series en el período');
+    expect(formatMuscleDetail(entry('quads', 11.8, 'in_range'))).toBe(
+      'Cuádriceps · 11,8 series/sem · en rango (10–20)',
+    );
+    expect(formatMuscleDetail(entry('lats', 4, 'low'))).toBe(
+      'Dorsales · 4 series/sem · bajo el rango (10–20)',
+    );
+    expect(formatMuscleDetail(entry('chest', 22.5, 'high'))).toBe(
+      'Pecho · 22,5 series/sem · sobre el rango (10–20)',
+    );
+    expect(formatMuscleDetail(entry('calves', 0, 'none'))).toBe(
+      'Gemelos · sin series en el período',
+    );
   });
 });
 

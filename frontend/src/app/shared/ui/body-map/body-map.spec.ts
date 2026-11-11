@@ -10,7 +10,8 @@ async function setup(intensities: Partial<Record<MuscleGroup, number>> = {}) {
   fixture.componentRef.setInput('labels', { quads: 'Cuádriceps, 11,8 series por semana' });
   await fixture.whenStable();
   const el = fixture.nativeElement as HTMLElement;
-  const muscle = (m: MuscleGroup) => Array.from(el.querySelectorAll<SVGGElement>(`[data-muscle="${m}"]`));
+  const muscle = (m: MuscleGroup) =>
+    Array.from(el.querySelectorAll<SVGGElement>(`[data-muscle="${m}"]`));
   return { fixture, el, muscle };
 }
 
@@ -51,7 +52,9 @@ describe('BodyMap', () => {
   it('names every muscle for screen readers', async () => {
     const { muscle } = await setup();
 
-    expect(muscle('quads')[0].getAttribute('aria-label')).toBe('Cuádriceps, 11,8 series por semana');
+    expect(muscle('quads')[0].getAttribute('aria-label')).toBe(
+      'Cuádriceps, 11,8 series por semana',
+    );
     expect(muscle('chest')[0].getAttribute('aria-label')).toBe('Pecho');
     expect(muscle('chest')[0].getAttribute('role')).toBe('button');
   });

@@ -18,17 +18,24 @@ import { BODY_VIEWS, MIRROR } from './body-map-shapes';
       transition: fill 300ms ease;
     }
     .muscle path {
-      stroke: transparent;
-      stroke-width: 1.5;
+      stroke: #181a15;
+      stroke-width: 0.8;
+      stroke-linejoin: round;
       transition: stroke 150ms ease;
     }
     .muscle[aria-pressed='true'] path,
     .muscle:focus-visible path {
       stroke: #f2f4ec;
+      stroke-width: 1.2;
     }
   `,
   template: `
-    <svg viewBox="0 0 220 210" class="mx-auto block w-full max-w-[22rem]" role="group" aria-label="Mapa de músculos">
+    <svg
+      viewBox="0 0 220 210"
+      class="mx-auto block w-full max-w-[22rem]"
+      role="group"
+      aria-label="Mapa de músculos"
+    >
       @for (view of views; track view.id) {
         <g [attr.transform]="'translate(' + view.x + ' 0)'">
           @for (part of view.neutral; track $index) {

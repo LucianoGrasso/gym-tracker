@@ -1,7 +1,7 @@
 import type { MuscleGroup } from '../../../core/models/exercise';
 
 /**
- * Siluetas estilizadas (dirección "Pista"): formas redondeadas, sin anatomía realista.
+ * Silueta del cuerpo con los músculos en su forma anatómica simplificada (dirección "Pista").
  * Cada figura mide 100 × 210; las formas pares se dibujan del lado izquierdo y se reflejan.
  */
 
@@ -32,44 +32,87 @@ export interface BodyView {
   muscles: MuscleShape[];
 }
 
-const head: BodyShape = { paths: [ellipse(50, 15, 10, 12), roundedRect(45, 25, 10, 8, 2)], mirror: false };
-const limbs: BodyShape = {
-  paths: [ellipse(18, 85, 4, 11), ellipse(16, 101, 3.5, 4.5), ellipse(42, 159, 4, 4), ellipse(40, 198, 6, 3)],
-  mirror: true,
-};
+/** Mitad izquierda del contorno del cuerpo (cuello a pie); se refleja para cerrar la silueta. */
+const SILHOUETTE =
+  'M50 30 L44 30 Q36 32 30 34 Q22 36 20 44 Q17 54 17 64 Q15 76 14 86 Q12 96 13 104 Q14 110 17 108 ' +
+  'Q19 104 19 98 Q21 86 23 76 Q25 68 27 62 L30 56 Q31 70 33 84 Q32 94 34 100 Q31 120 33 140 Q34 152 36 160 ' +
+  'Q34 172 36 186 Q37 196 36 200 Q34 204 38 206 L46 206 Q46 200 45 196 Q46 180 46 170 Q46 162 47 158 ' +
+  'Q48 140 49 118 L50 112 Z';
+
+const body: BodyShape[] = [
+  { paths: [ellipse(50, 15, 9, 11), roundedRect(45, 23, 10, 9, 2)], mirror: false },
+  { paths: [SILHOUETTE], mirror: true },
+];
+
+/** Abdominales por bloques más el oblicuo, del lado izquierdo. */
+const ABS = [
+  roundedRect(44, 59, 5, 7, 1.5),
+  roundedRect(44, 67.5, 5, 7, 1.5),
+  roundedRect(44, 76, 5, 7, 1.5),
+  roundedRect(44.5, 84.5, 4.5, 9, 2),
+  'M42 60 Q36 64 35 76 Q36 88 41 95 L43 92 L43 60 Z',
+];
 
 export const BODY_VIEWS: BodyView[] = [
   {
     id: 'front',
     label: 'Frente',
     x: 0,
-    neutral: [head, limbs, { paths: ['M38 96 H62 L58 104 H42 Z'], mirror: false }],
+    neutral: body,
     muscles: [
-      { muscle: 'shoulders', paths: [ellipse(26, 43, 7, 8)], mirror: true },
-      { muscle: 'chest', paths: ['M49 36 H38 Q31 37 31 44 V49 Q32 56 40 56 Q46 56 49 53 Z'], mirror: true },
-      { muscle: 'biceps', paths: [ellipse(22, 62, 5, 10)], mirror: true },
-      { muscle: 'core', paths: [roundedRect(41, 59, 18, 34, 5)], mirror: false },
-      { muscle: 'quads', paths: ['M48 106 H36 Q32 112 33 128 Q34 146 38 152 H46 Q49 140 49 126 Z'], mirror: true },
-      { muscle: 'calves', paths: [ellipse(41, 178, 4.5, 13)], mirror: true },
+      {
+        muscle: 'shoulders',
+        paths: ['M30 35 Q21 37 20 46 Q20 53 23 57 Q26 50 31 46 Q33 41 33 37 Z'],
+        mirror: true,
+      },
+      { muscle: 'chest', paths: ['M49 37 Q41 35 33 38 Q30 42 31 48 Q33 56 41 57 Q47 57 49 54 Z'], mirror: true },
+      { muscle: 'biceps', paths: ['M22 58 Q19 64 20 72 Q22 76 25 74 Q28 66 28 60 Q26 56 22 58 Z'], mirror: true },
+      { muscle: 'core', paths: ABS, mirror: true },
+      {
+        muscle: 'quads',
+        paths: [
+          'M37 104 Q32 118 34 136 Q35 148 39 155 Q40 140 40 126 Q40 112 42 104 Z',
+          'M43 104 Q41 118 42 134 Q43 148 46 156 Q49 154 49 146 Q49 128 48 112 Q47 106 43 104 Z',
+        ],
+        mirror: true,
+      },
+      {
+        muscle: 'calves',
+        paths: [
+          'M37 164 Q34 172 35 182 Q37 188 39 186 Q40 176 39 166 Z',
+          'M45 164 Q47 172 46 182 Q44 186 43 184 Q42 174 43 166 Z',
+        ],
+        mirror: true,
+      },
     ],
   },
   {
     id: 'back',
     label: 'Espalda',
     x: 120,
-    neutral: [head, limbs, { paths: [roundedRect(46, 63, 8, 30, 3)], mirror: false }],
+    neutral: body,
     muscles: [
+      { muscle: 'upper_back', paths: ['M50 26 Q46 30 38 33 Q32 35 31 37 Q38 40 42 46 Q46 56 50 66 Z'], mirror: true },
+      { muscle: 'shoulders', paths: ['M31 36 Q22 37 20 46 Q20 53 23 57 Q27 49 33 43 Z'], mirror: true },
+      { muscle: 'lats', paths: ['M33 46 Q31 60 34 74 Q38 86 46 92 L49 88 Q46 76 44 66 Q40 54 33 46 Z'], mirror: true },
+      { muscle: 'triceps', paths: ['M21 58 Q18 66 20 74 Q23 77 26 73 Q28 64 27 58 Q24 55 21 58 Z'], mirror: true },
+      { muscle: 'glutes', paths: ['M49 96 Q40 94 35 100 Q32 110 36 118 Q42 122 49 118 Z'], mirror: true },
       {
-        muscle: 'upper_back',
-        paths: ['M50 27 L40 34 L31 38 Q38 42 42 50 L46 62 H54 L58 50 Q62 42 69 38 L60 34 Z'],
-        mirror: false,
+        muscle: 'hamstrings',
+        paths: [
+          'M36 122 Q33 134 35 146 Q37 154 40 156 Q41 140 41 124 Z',
+          'M42 123 Q42 140 43 150 Q45 157 48 154 Q49 140 49 122 Z',
+        ],
+        mirror: true,
       },
-      { muscle: 'shoulders', paths: [ellipse(26, 43, 7, 8)], mirror: true },
-      { muscle: 'lats', paths: ['M44 60 Q37 52 32 48 Q30 62 33 74 Q37 86 46 92 Z'], mirror: true },
-      { muscle: 'triceps', paths: [ellipse(22, 62, 5, 10)], mirror: true },
-      { muscle: 'glutes', paths: [ellipse(43, 107, 7.5, 9)], mirror: true },
-      { muscle: 'hamstrings', paths: ['M48 118 H37 Q33 124 34 134 Q35 148 39 153 H46 Q49 142 49 130 Z'], mirror: true },
-      { muscle: 'calves', paths: [ellipse(41, 175, 5.5, 13)], mirror: true },
+      {
+        muscle: 'calves',
+        paths: [
+          'M37 162 Q33 170 34 180 Q36 188 40 186 Q41 174 41 164 Z',
+          'M42 163 Q41 175 42 184 Q45 190 47 184 Q48 172 46 163 Z',
+        ],
+        mirror: true,
+      },
     ],
   },
 ];

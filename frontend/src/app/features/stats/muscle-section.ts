@@ -2,7 +2,11 @@ import { ChangeDetectionStrategy, Component, computed, input, signal } from '@an
 import type { MuscleGroup } from '../../core/models/exercise';
 import { MUSCLE_GROUP_LABELS } from '../../core/models/labels';
 import type { MuscleSetsEntry } from '../../core/models/stats';
-import { formatMuscleDetail, formatSetsPerWeek, muscleIntensity } from '../../core/stats/muscle-sets';
+import {
+  formatMuscleDetail,
+  formatSetsPerWeek,
+  muscleIntensity,
+} from '../../core/stats/muscle-sets';
 import { BodyMap } from '../../shared/ui/body-map/body-map';
 import { MuscleRanking } from '../../shared/ui/muscle-ranking';
 
@@ -14,7 +18,9 @@ import { MuscleRanking } from '../../shared/ui/muscle-ranking';
   template: `
     <section class="card mb-6 p-4">
       <h2 class="section-title mb-1">Músculos</h2>
-      <p class="mb-3 text-sm text-muted-foreground">Series efectivas por semana · referencia 10–20</p>
+      <p class="mb-3 text-sm text-muted-foreground">
+        Series efectivas por semana · referencia 10–20
+      </p>
       <app-body-map [intensities]="intensities()" [labels]="ariaLabels()" [(selected)]="selected" />
       <p data-detail class="num mt-3 min-h-7 text-center text-lg" aria-live="polite">
         {{ detail() ?? 'Toca un músculo para ver sus series por semana.' }}

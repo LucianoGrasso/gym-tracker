@@ -2,7 +2,13 @@ import { ChangeDetectionStrategy, Component, computed, input, model } from '@ang
 import type { MuscleGroup } from '../../core/models/exercise';
 import { MUSCLE_GROUP_LABELS } from '../../core/models/labels';
 import type { MuscleSetsEntry } from '../../core/models/stats';
-import { MUSCLE_RANGE, formatSetsPerWeek, muscleColor, muscleIntensity, rankMuscles } from '../../core/stats/muscle-sets';
+import {
+  MUSCLE_RANGE,
+  formatSetsPerWeek,
+  muscleColor,
+  muscleIntensity,
+  rankMuscles,
+} from '../../core/stats/muscle-sets';
 
 /** Escala mínima de las barras: deja ver la banda 10–20 completa aunque se entrene poco. */
 const MIN_SCALE = 25;
@@ -22,7 +28,9 @@ const MIN_SCALE = 25;
             [attr.aria-pressed]="selected() === m.muscle"
             (click)="selected.set(m.muscle)"
           >
-            <span class="truncate" [class.text-muted-foreground]="m.sets === 0">{{ labels[m.muscle] }}</span>
+            <span class="truncate" [class.text-muted-foreground]="m.sets === 0">{{
+              labels[m.muscle]
+            }}</span>
             <span class="relative h-3 overflow-hidden rounded-full bg-[#20231c]" aria-hidden="true">
               <span
                 data-band
