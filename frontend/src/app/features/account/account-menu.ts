@@ -124,7 +124,7 @@ import { PushService } from '../../core/push/push.service';
         <p class="mt-2 text-xs text-muted-foreground">
           @switch (push.status()) {
             @case ('unsupported') {
-              Este navegador no permite avisos. En iPhone, instala la app en tu pantalla de inicio.
+              Este navegador no permite avisos. En iPhone, toca Compartir → Agregar a inicio y abre la app desde ahí.
             }
             @case ('blocked') {
               Bloqueaste las notificaciones. Actívalas en Ajustes del teléfono.

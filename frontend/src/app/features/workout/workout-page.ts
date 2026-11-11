@@ -68,7 +68,13 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
       <section class="mt-4">
         @if (picking()) {
-          <app-exercise-picker [exercises]="available()" [(value)]="picked" label="Ejercicio a agregar" />
+          <app-exercise-picker
+            [exercises]="available()"
+            [(value)]="picked"
+            [withLibrary]="true"
+            (adopted)="adopted($event)"
+            label="Ejercicio a agregar"
+          />
           <button hlmBtn class="mt-2 h-12 w-full" [disabled]="picked() === null" (click)="addExercise(picked())">
             Agregar
           </button>
@@ -165,6 +171,11 @@ export class WorkoutPage implements OnInit {
     } catch (e) {
       this.error.set(apiErrorMessage(e));
     }
+  }
+
+  /** Recién agregado desde la biblioteca: ya es mío, queda disponible para sumarlo al entrenamiento. */
+  protected adopted(exercise: Exercise): void {
+    this.exercises.update((list) => [...list, exercise]);
   }
 
   protected async addExercise(id: number | null): Promise<void> {

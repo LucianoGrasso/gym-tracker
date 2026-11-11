@@ -181,7 +181,7 @@ describe('AccountMenu', () => {
       const { el, open } = await render([], 'unsupported');
       await open();
       expect(toggle(el).disabled).toBe(true);
-      expect(el.textContent).toContain('instala la app en tu pantalla de inicio');
+      expect(el.textContent).toContain('toca Compartir → Agregar a inicio');
     });
 
     it('explains how to unblock them', async () => {

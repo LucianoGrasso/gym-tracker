@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { ExerciseLibraryApi } from '../../core/api/exercise-library-api';
+import { LOCAL_DB, LocalDb } from '../../core/local-db/local-db';
+import type { LibraryExercise } from '../../core/models/library';
 import type { Exercise } from '../../core/models/exercise';
 import { ExercisePicker } from './exercise-picker';
 
@@ -103,5 +106,77 @@ describe('ExercisePicker', () => {
     el.querySelector<HTMLButtonElement>('[aria-selected=true]')?.click();
     await fixture.whenStable();
     expect(el.querySelector('[role=listbox]')).toBeNull();
+  });
+});
+
+describe('ExercisePicker with the library', () => {
+  const lib = (slug: string, name: string, owned: number | null = null): LibraryExercise => ({
+    slug, name, muscle_group: 'glutes', secondary_muscles: [], equipment: 'barbell', is_unilateral: false,
+    uses_bodyweight: false, owned_exercise_id: owned,
+  });
+
+  async function setupLibrary(adopt = vi.fn().mockResolvedValue(exercise(50, 'Hip thrust', 'glutes'))) {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: LOCAL_DB, useValue: new LocalDb(`test-${crypto.randomUUID()}`) },
+        {
+          provide: ExerciseLibraryApi,
+          useValue: {
+            list: vi.fn().mockResolvedValue([
+              lib('press-de-banca', 'Press de banca', 1),
+              lib('sentadilla', 'Sentadilla'),
+              lib('hip-thrust', 'Hip thrust'),
+            ]),
+            adopt,
+          },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(ExercisePicker);
+    fixture.componentRef.setInput('exercises', EXERCISES);
+    fixture.componentRef.setInput('withLibrary', true);
+    const adopted: Exercise[] = [];
+    fixture.componentInstance.adopted.subscribe((e) => adopted.push(e));
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r));
+    await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    const libraryNames = () => Array.from(el.querySelectorAll('[data-library] .name')).map((n) => n.textContent?.trim());
+    return { fixture, el, adopted, adopt, libraryNames };
+  }
+
+  it('lists the library after my exercises, without the ones I already have', async () => {
+    const { el, libraryNames } = await setupLibrary();
+
+    expect(el.textContent).toContain('Biblioteca');
+    expect(libraryNames()).toEqual(['Hip thrust']);
+  });
+
+  it('adds a library exercise to mine when chosen and selects it', async () => {
+    const { fixture, el, adopted, adopt } = await setupLibrary();
+
+    el.querySelector<HTMLButtonElement>('[data-library]')!.click();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r));
+    await fixture.whenStable();
+
+    expect(adopt).toHaveBeenCalledWith('hip-thrust');
+    expect(fixture.componentInstance.value()).toBe(50);
+    expect(adopted.map((e) => e.id)).toEqual([50]);
+    expect(el.querySelector('.picked')!.textContent).toContain('Hip thrust');
+  });
+
+  it('explains that adding from the library needs a connection', async () => {
+    const { fixture, el } = await setupLibrary(vi.fn().mockRejectedValue(new Error('offline')));
+
+    el.querySelector<HTMLButtonElement>('[data-library]')!.click();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r));
+    await fixture.whenStable();
+
+    expect(el.querySelector('[role=alert]')!.textContent).toContain(
+      'Necesitas conexión para agregar un ejercicio nuevo de la biblioteca',
+    );
+    expect(fixture.componentInstance.value()).toBeNull();
   });
 });

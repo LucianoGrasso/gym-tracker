@@ -22,6 +22,8 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
             [exercises]="list"
             [value]="form.controls.exercise_id.value"
             (valueChange)="form.controls.exercise_id.setValue($event)"
+            [withLibrary]="withLibrary()"
+            (adopted)="adopted.emit($event)"
           />
         </div>
       }
@@ -72,6 +74,9 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
 export class RoutineExerciseForm implements OnInit {
   /** Ejercicios elegibles; null al editar (el ejercicio no cambia). */
   readonly exercises = input<Exercise[] | null>(null);
+  /** Ofrecer también la biblioteca al elegir el ejercicio. */
+  readonly withLibrary = input(false);
+  readonly adopted = output<Exercise>();
   readonly initial = input<RoutineDayExercise | null>(null);
   readonly submitLabel = input('Guardar');
 

@@ -77,7 +77,8 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
       @if (adding()) {
         <section class="card p-4">
           <h2 class="mb-3 section-title">Agregar ejercicio</h2>
-          <app-routine-exercise-form [exercises]="availableExercises()" submitLabel="Agregar"
+          <app-routine-exercise-form [exercises]="availableExercises()" submitLabel="Agregar" [withLibrary]="true"
+            (adopted)="exercises.update((list) => [...list, $event])"
             (saved)="add(d, $event)" (cancelled)="adding.set(false)" />
         </section>
       } @else {
