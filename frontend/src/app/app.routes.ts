@@ -37,6 +37,10 @@ export const routes: Routes = [
         children: [
           { path: '', loadComponent: () => import('./features/exercises/exercises-page').then((m) => m.ExercisesPage) },
           { path: 'nuevo', loadComponent: () => import('./features/exercises/exercise-form-page').then((m) => m.ExerciseFormPage) },
+          {
+            path: 'biblioteca/:slug',
+            loadComponent: () => import('./features/exercises/library-detail-page').then((m) => m.LibraryDetailPage),
+          },
           { path: ':id', loadComponent: () => import('./features/exercises/exercise-detail-page').then((m) => m.ExerciseDetailPage) },
           { path: ':id/editar', loadComponent: () => import('./features/exercises/exercise-form-page').then((m) => m.ExerciseFormPage) },
         ],
