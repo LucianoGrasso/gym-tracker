@@ -66,7 +66,7 @@ it('validates the exercise payload', function () {
     $this->postJson('/api/exercises', exercisePayload([
         'name' => '',
         'muscle_group' => 'neck',
-        'equipment' => 'kettlebell',
+        'equipment' => 'trx',
     ]))
         ->assertStatus(422)
         ->assertJsonValidationErrors(['name', 'muscle_group', 'equipment']);
