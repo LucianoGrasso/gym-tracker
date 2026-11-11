@@ -3,6 +3,7 @@
 use App\Http\Controllers\BodyMetricController;
 use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\ExerciseHistoryController;
+use App\Http\Controllers\ExerciseLibraryController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\PushController;
@@ -41,6 +42,8 @@ Route::middleware(['auth:sanctum', 'demo.active'])->group(function () {
 
     Route::get('/exercises', [ExerciseController::class, 'index']);
     Route::post('/exercises', [ExerciseController::class, 'store']);
+    Route::get('/exercise-library', [ExerciseLibraryController::class, 'index']);
+    Route::post('/exercises/from-library', [ExerciseLibraryController::class, 'adopt']);
     Route::middleware('can:manage,exercise')->group(function () {
         Route::get('/exercises/{exercise}', [ExerciseController::class, 'show']);
         Route::put('/exercises/{exercise}', [ExerciseController::class, 'update']);
