@@ -13,6 +13,7 @@ class ExerciseResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'muscle_group' => $this->muscle_group,
+            'secondary_muscles' => $this->secondary_muscles?->values() ?? [],
             'equipment' => $this->equipment,
             'is_unilateral' => $this->is_unilateral,
             'uses_bodyweight' => $this->uses_bodyweight,

@@ -24,6 +24,8 @@ class ExerciseRequest extends FormRequest
                     ->ignore($this->route('exercise')),
             ],
             'muscle_group' => ['required', Rule::enum(MuscleGroup::class)],
+            'secondary_muscles' => ['nullable', 'array', 'max:4'],
+            'secondary_muscles.*' => ['distinct', Rule::enum(MuscleGroup::class), 'different:muscle_group'],
             'equipment' => ['required', Rule::enum(Equipment::class)],
             'is_unilateral' => ['required', 'boolean'],
             'uses_bodyweight' => ['required', 'boolean'],
@@ -36,6 +38,8 @@ class ExerciseRequest extends FormRequest
         return [
             'name.required' => 'El nombre es obligatorio.',
             'name.unique' => 'Ya tienes un ejercicio con ese nombre.',
+            'secondary_muscles.max' => 'Elige hasta 4 músculos secundarios.',
+            'secondary_muscles.*.different' => 'El músculo principal no puede ser también secundario.',
         ];
     }
 }

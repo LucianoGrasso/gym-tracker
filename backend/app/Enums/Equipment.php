@@ -9,4 +9,7 @@ enum Equipment: string
     case Bodyweight = 'bodyweight';
     case Machine = 'machine';
     case Cable = 'cable';
+    case Kettlebell = 'kettlebell';
+    case Band = 'band';
+    case Smith = 'smith';
 }

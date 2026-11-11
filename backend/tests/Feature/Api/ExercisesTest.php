@@ -151,3 +151,38 @@ it('requires authentication', function () {
 
     $this->getJson('/api/exercises')->assertUnauthorized();
 });
+
+it('saves the secondary muscles and the new equipment', function () {
+    $this->postJson('/api/exercises', exercisePayload([
+        'name' => 'Swing', 'muscle_group' => 'glutes', 'equipment' => 'kettlebell',
+        'secondary_muscles' => ['hamstrings', 'core'],
+    ]))
+        ->assertCreated()
+        ->assertJsonPath('data.equipment', 'kettlebell')
+        ->assertJsonPath('data.secondary_muscles', ['hamstrings', 'core']);
+
+    $exercise = Exercise::where('name', 'Swing')->first();
+    $this->putJson("/api/exercises/{$exercise->id}", exercisePayload(['name' => 'Swing', 'muscle_group' => 'glutes', 'secondary_muscles' => []]))
+        ->assertOk()
+        ->assertJsonPath('data.secondary_muscles', []);
+});
+
+it('returns no secondary muscles by default', function () {
+    $this->postJson('/api/exercises', exercisePayload())->assertCreated()->assertJsonPath('data.secondary_muscles', []);
+});
+
+it('validates the secondary muscles', function (array $secondary) {
+    $this->postJson('/api/exercises', exercisePayload(['secondary_muscles' => $secondary]))
+        ->assertStatus(422)
+        ->assertJsonValidationErrorFor('secondary_muscles'.(count($secondary) > 4 ? '' : '.0'));
+})->with([
+    'the primary muscle' => [['shoulders']],
+    'an unknown muscle' => [['neck']],
+    'more than four' => [['chest', 'triceps', 'core', 'lats', 'biceps']],
+]);
+
+it('rejects repeated secondary muscles', function () {
+    $this->postJson('/api/exercises', exercisePayload(['secondary_muscles' => ['triceps', 'triceps']]))
+        ->assertStatus(422)
+        ->assertJsonValidationErrorFor('secondary_muscles.0');
+});
