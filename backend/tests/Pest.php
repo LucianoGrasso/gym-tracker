@@ -65,6 +65,7 @@ function statsSet(array $overrides = []): SetRow
         'exerciseId' => 1,
         'exerciseName' => 'Press de banca',
         'muscleGroup' => MuscleGroup::Chest,
+        'secondaryMuscles' => [],
         'usesBodyweight' => false,
         'setType' => SetType::Normal,
         'weightKg' => 100.0,

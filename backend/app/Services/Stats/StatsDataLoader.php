@@ -33,7 +33,7 @@ final class StatsDataLoader
             ->orderBy('s.set_number')
             ->get([
                 'w.id as workout_id', 'w.date', 'w.bodyweight_kg', 'we.exercise_id', 'e.name as exercise_name',
-                'e.muscle_group', 'e.uses_bodyweight', 's.set_type', 's.weight_kg', 's.reps',
+                'e.muscle_group', 'e.secondary_muscles', 'e.uses_bodyweight', 's.set_type', 's.weight_kg', 's.reps',
             ])
             ->map(function (object $row) use ($timeline) {
                 // SQLite guarda las fechas como "Y-m-d H:i:s"; Postgres como "Y-m-d".
@@ -50,6 +50,7 @@ final class StatsDataLoader
                     weightKg: (float) $row->weight_kg,
                     reps: (int) $row->reps,
                     bodyweightKg: $timeline->at($date, $row->bodyweight_kg === null ? null : (float) $row->bodyweight_kg),
+                    secondaryMuscles: array_map(MuscleGroup::from(...), json_decode((string) ($row->secondary_muscles ?? '[]'), true) ?? []),
                 );
             });
     }

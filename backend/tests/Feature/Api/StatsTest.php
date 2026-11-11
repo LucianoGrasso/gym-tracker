@@ -88,7 +88,7 @@ it('returns the weekly sets per muscle with only own data', function () {
         ->assertJsonPath('data.period', '1w')
         ->assertJsonPath('data.weeks', 1.0)
         ->assertJsonCount(12, 'data.muscles')
-        ->assertJsonPath('data.muscles.0', ['muscle' => 'chest', 'sets' => 2, 'sets_per_week' => 2.0, 'status' => 'low']);
+        ->assertJsonPath('data.muscles.0', ['muscle' => 'chest', 'sets' => 2.0, 'sets_per_week' => 2.0, 'status' => 'low']);
 });
 
 it('no longer offers the weekly volume in kilos', function () {

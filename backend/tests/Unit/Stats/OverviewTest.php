@@ -64,9 +64,24 @@ describe('MuscleSetsService', function () use ($today) {
 
         expect($result['weeks'])->toBe(2.0)
             ->and(array_column($result['muscles'], 'muscle'))->toBe(array_map(fn (MuscleGroup $g) => $g->value, MuscleGroup::cases()))
-            ->and($result['muscles'][0])->toBe(['muscle' => 'chest', 'sets' => 30, 'sets_per_week' => 15.0, 'status' => 'in_range'])
-            ->and($result['muscles'][1])->toBe(['muscle' => 'lats', 'sets' => 3, 'sets_per_week' => 1.5, 'status' => 'low'])
-            ->and($result['muscles'][6])->toBe(['muscle' => 'quads', 'sets' => 0, 'sets_per_week' => 0.0, 'status' => 'none']);
+            ->and($result['muscles'][0])->toBe(['muscle' => 'chest', 'sets' => 30.0, 'sets_per_week' => 15.0, 'status' => 'in_range'])
+            ->and($result['muscles'][1])->toBe(['muscle' => 'lats', 'sets' => 3.0, 'sets_per_week' => 1.5, 'status' => 'low'])
+            ->and($result['muscles'][6])->toBe(['muscle' => 'quads', 'sets' => 0.0, 'sets_per_week' => 0.0, 'status' => 'none']);
+    });
+
+    it('counts half a set for each secondary muscle', function () use ($muscles, $today) {
+        $bench = ['date' => '2026-11-03', 'secondaryMuscles' => [MuscleGroup::Triceps, MuscleGroup::Shoulders]];
+        $sets = collect([
+            ...array_fill(0, 4, statsSet($bench)),
+            statsSet([...$bench, 'setType' => SetType::Warmup]),
+            statsSet(['date' => '2026-11-03', 'muscleGroup' => MuscleGroup::Triceps]),
+        ]);
+
+        $bySet = array_column($muscles->summary($sets, ['2026-11-03'], $today, '2026-10-29')['muscles'], 'sets', 'muscle');
+
+        expect($bySet['chest'])->toBe(4.0)
+            ->and($bySet['triceps'])->toBe(3.0)
+            ->and($bySet['shoulders'])->toBe(2.0);
     });
 
     it('counts all time from the first session', function () use ($muscles, $today) {

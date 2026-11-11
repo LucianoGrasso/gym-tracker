@@ -19,6 +19,8 @@ final readonly class SetRow
         public float $weightKg,
         public int $reps,
         public ?float $bodyweightKg,
+        /** @var list<MuscleGroup> cuentan ½ serie cada uno */
+        public array $secondaryMuscles = [],
     ) {}
 
     public function isWarmup(): bool
