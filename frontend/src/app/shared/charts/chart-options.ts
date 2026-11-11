@@ -1,8 +1,8 @@
 import type { EChartsCoreOption } from 'echarts/core';
 import { addDays, formatDate, formatShortDate } from '../../core/format/format';
 import { MUSCLE_GROUP_LABELS } from '../../core/models/labels';
-import type { Consistency, WeeklyVolume } from '../../core/models/stats';
-import { CHART, CONSISTENCY_COLORS, MUSCLE_GROUP_COLORS } from './chart-theme';
+import type { Consistency } from '../../core/models/stats';
+import { CHART, CONSISTENCY_COLORS } from './chart-theme';
 
 const numberFormatter = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 1 });
 
@@ -65,46 +65,6 @@ export function lineOption(points: LinePoint[], name: string, unit: string): ECh
         },
       },
     ],
-  };
-}
-
-/** Barras apiladas de volumen semanal; solo los grupos entrenados, cada uno con su color fijo. */
-export function weeklyVolumeOption(weekly: WeeklyVolume): EChartsCoreOption {
-  const active = weekly.muscle_groups.filter((group) => weekly.weeks.some((w) => (w.volumes[group] ?? 0) > 0));
-
-  return {
-    animationDuration: 300,
-    legend: {
-      top: 0,
-      left: 0,
-      icon: 'roundRect',
-      itemWidth: 12,
-      itemHeight: 12,
-      textStyle: { color: CHART.axis, fontFamily: CHART.font },
-    },
-    grid: { left: 8, right: 8, top: 56, bottom: 8, containLabel: true },
-    tooltip: {
-      ...tooltipBase,
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      valueFormatter: (value: unknown) => `${formatChartNumber(Number(value))} kg`,
-    },
-    xAxis: {
-      type: 'category',
-      data: weekly.weeks.map((w) => formatShortDate(w.week_start)),
-      ...axisBase,
-      splitLine: { show: false },
-    },
-    yAxis: { type: 'value', ...axisBase, axisLabel: { ...axisLabel, formatter: formatChartNumber } },
-    series: active.map((group) => ({
-      name: MUSCLE_GROUP_LABELS[group],
-      type: 'bar',
-      stack: 'volume',
-      barMaxWidth: 28,
-      emphasis: { focus: 'series' },
-      itemStyle: { color: MUSCLE_GROUP_COLORS[group], borderColor: CHART.surface, borderWidth: 1 },
-      data: weekly.weeks.map((w) => w.volumes[group] ?? 0),
-    })),
   };
 }
 

@@ -8,13 +8,14 @@ import { NgxEchartsDirective } from 'ngx-echarts';
 import { apiErrorMessage } from '../../core/api/api-error';
 import { BodyMetricsApi } from '../../core/api/body-metrics-api';
 import { StatsApi } from '../../core/api/stats-api';
-import { formatDate, formatKg, localToday } from '../../core/format/format';
+import { formatDate, localToday } from '../../core/format/format';
 import { cachedFetch } from '../../core/local-db/cached-fetch';
 import { LOCAL_DB } from '../../core/local-db/local-db';
 import { PERIOD_LABELS, STATS_PERIODS } from '../../core/models/labels';
-import type { StatsPeriod } from '../../core/models/stats';
+import { DEFAULT_STATS_PERIOD, type StatsPeriod } from '../../core/models/stats';
+import { formatSetsPerWeek } from '../../core/stats/muscle-sets';
 import { parseDecimal } from '../../core/workout/set-suggestions';
-import { consistencyOption, heatmapRange, lineOption, weeklyVolumeOption } from '../../shared/charts/chart-options';
+import { consistencyOption, heatmapRange, lineOption } from '../../shared/charts/chart-options';
 import { ChipGroup } from '../../shared/ui/chip-group';
 import { formatRecentRecord } from './format-record';
 
@@ -50,12 +51,12 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
           </dd>
         </div>
         <div class="card p-4">
-          <dt class="eyebrow">Volumen</dt>
-          <dd class="num text-3xl font-bold">{{ formatKg(o.total_volume_kg) }}</dd>
+          <dt class="eyebrow">Series efectivas</dt>
+          <dd class="num text-4xl font-bold">{{ o.effective_sets }}</dd>
         </div>
         <div class="card p-4">
-          <dt class="eyebrow">Series</dt>
-          <dd class="num text-3xl font-bold">{{ o.total_sets }}</dd>
+          <dt class="eyebrow">Sesiones/semana</dt>
+          <dd class="num text-4xl font-bold">{{ formatSetsPerWeek(o.sessions_per_week) }}</dd>
         </div>
       </dl>
 
@@ -82,15 +83,6 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
     } @else {
       <app-skeleton variant="list" [rows]="2" />
     }
-
-    <section class="card mb-6 p-4">
-      <h2 class="section-title mb-2">Volumen semanal por grupo</h2>
-      @if (weeklyChart(); as option) {
-        <div echarts [options]="option" class="h-64" role="img" aria-label="Volumen semanal por grupo muscular, en kg"></div>
-      } @else {
-        <p class="text-sm text-muted-foreground">Sin series en este período.</p>
-      }
-    </section>
 
     <section class="card mb-6 p-4">
       <h2 class="section-title mb-1">Constancia</h2>
@@ -153,12 +145,12 @@ export class StatsPage {
   private readonly bodyMetrics = inject(BodyMetricsApi);
   private readonly db = inject(LOCAL_DB);
 
-  protected readonly formatKg = formatKg;
+  protected readonly formatSetsPerWeek = formatSetsPerWeek;
   protected readonly formatDate = formatDate;
   protected readonly formatRecentRecord = formatRecentRecord;
   protected readonly periodOptions = STATS_PERIODS.map((value) => ({ value, label: PERIOD_LABELS[value] }));
 
-  protected readonly period = signal<StatsPeriod>('12w');
+  protected readonly period = signal<StatsPeriod>(DEFAULT_STATS_PERIOD);
   protected readonly savingWeight = signal(false);
   protected readonly weightError = signal<string | null>(null);
 
@@ -166,9 +158,9 @@ export class StatsPage {
     params: () => this.period(),
     loader: ({ params }) => cachedFetch(this.db, `stats:overview:${params}`, () => this.api.overview(params)),
   });
-  protected readonly weekly = resource({
+  protected readonly muscles = resource({
     params: () => this.period(),
-    loader: ({ params }) => cachedFetch(this.db, `stats:weekly:${params}`, () => this.api.weeklyVolume(params)),
+    loader: ({ params }) => cachedFetch(this.db, `stats:muscles:${params}`, () => this.api.muscles(params)),
   });
   protected readonly consistency = resource({
     params: () => this.period(),
@@ -179,11 +171,6 @@ export class StatsPage {
     loader: ({ params }) => cachedFetch(this.db, `stats:bodyweight:${params}`, () => this.api.bodyweight(params)),
   });
 
-  protected readonly weeklyChart = computed(() => {
-    const weekly = this.weekly.value();
-    const trained = weekly?.weeks.some((w) => Object.values(w.volumes).some((v) => (v ?? 0) > 0));
-    return weekly && trained ? weeklyVolumeOption(weekly) : null;
-  });
   protected readonly consistencyChart = computed(() => {
     const c = this.consistency.value();
     return c && c.weeks.length ? consistencyOption(c.days, heatmapRange(c.weeks)) : null;

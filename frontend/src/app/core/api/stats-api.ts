@@ -5,9 +5,9 @@ import type {
   BodyweightSeries,
   Consistency,
   ExerciseStats,
+  MuscleSets,
   StatsOverview,
   StatsPeriod,
-  WeeklyVolume,
 } from '../models/stats';
 
 @Injectable({ providedIn: 'root' })
@@ -22,8 +22,8 @@ export class StatsApi {
     return this.get('/api/stats/overview', period);
   }
 
-  weeklyVolume(period: StatsPeriod): Promise<WeeklyVolume> {
-    return this.get('/api/stats/weekly-volume', period);
+  muscles(period: StatsPeriod): Promise<MuscleSets> {
+    return this.get('/api/stats/muscles', period);
   }
 
   consistency(period: StatsPeriod): Promise<Consistency> {

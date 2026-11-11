@@ -17,7 +17,7 @@ const exercise = (id: number, name: string, muscle_group: Exercise['muscle_group
 const EXERCISES = [
   exercise(1, 'Press de banca', 'chest'),
   exercise(2, 'Extensión de tríceps en polea', 'triceps'),
-  exercise(3, 'Sentadilla', 'legs'),
+  exercise(3, 'Sentadilla', 'quads'),
   exercise(4, 'Press militar', 'shoulders'),
 ];
 

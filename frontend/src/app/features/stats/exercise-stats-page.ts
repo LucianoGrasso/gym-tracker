@@ -8,7 +8,7 @@ import { formatDate, formatKg } from '../../core/format/format';
 import { cachedFetch } from '../../core/local-db/cached-fetch';
 import { LOCAL_DB } from '../../core/local-db/local-db';
 import { PERIOD_LABELS, STATS_PERIODS } from '../../core/models/labels';
-import type { ExerciseSessionStats, StatsPeriod } from '../../core/models/stats';
+import { DEFAULT_STATS_PERIOD, type ExerciseSessionStats, type StatsPeriod } from '../../core/models/stats';
 import { lineOption, type LinePoint } from '../../shared/charts/chart-options';
 import { ChipGroup } from '../../shared/ui/chip-group';
 import { formatBestE1rm, formatHeaviest, formatMostReps } from './format-record';
@@ -161,7 +161,7 @@ export class ExerciseStatsPage {
   protected readonly periodOptions = STATS_PERIODS.map((value) => ({ value, label: PERIOD_LABELS[value] }));
   protected readonly metricOptions = EXERCISE_METRICS.map((m) => ({ value: m.key, label: m.label }));
 
-  protected readonly period = signal<StatsPeriod>('12w');
+  protected readonly period = signal<StatsPeriod>(DEFAULT_STATS_PERIOD);
   protected readonly metric = signal<MetricKey>('e1rm_kg');
   protected readonly metricLabel = computed(() => EXERCISE_METRICS.find((m) => m.key === this.metric())!.label);
 

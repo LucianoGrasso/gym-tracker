@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { WeeklyVolume } from '../../core/models/stats';
-import { CHART, MUSCLE_GROUP_COLORS } from './chart-theme';
-import { consistencyOption, heatmapRange, lineOption, weeklyVolumeOption } from './chart-options';
+import { CHART } from './chart-theme';
+import { consistencyOption, heatmapRange, lineOption } from './chart-options';
 
 // Las opciones de ECharts son objetos anidados sin tipos estrictos por serie.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,27 +26,6 @@ describe('lineOption', () => {
     ]);
     expect(option.series[0].lineStyle.color).toBe(CHART.accent);
     expect(Array.isArray(option.yAxis)).toBe(false);
-  });
-});
-
-describe('weeklyVolumeOption', () => {
-  const weekly: WeeklyVolume = {
-    period: '4w',
-    muscle_groups: ['chest', 'back', 'legs'],
-    weeks: [
-      { week_start: '2026-10-26', volumes: { chest: 1000, back: 0, legs: 0 } },
-      { week_start: '2026-11-02', volumes: { chest: 500, back: 800, legs: 0 } },
-    ],
-  };
-
-  it('stacks only the trained muscle groups, each with its fixed color', () => {
-    const option = weeklyVolumeOption(weekly) as AnyOption;
-
-    expect(option.xAxis.data).toEqual(['26/10', '02/11']);
-    expect(option.series.map((s: AnyOption) => s.name)).toEqual(['Pecho', 'Espalda']);
-    expect(option.series[1].data).toEqual([0, 800]);
-    expect(option.series[1].itemStyle.color).toBe(MUSCLE_GROUP_COLORS.back);
-    expect(option.series.every((s: AnyOption) => s.stack === 'volume')).toBe(true);
   });
 });
 

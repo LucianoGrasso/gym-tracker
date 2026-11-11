@@ -1,4 +1,16 @@
-export type MuscleGroup = 'chest' | 'back' | 'shoulders' | 'biceps' | 'triceps' | 'legs' | 'core' | 'other';
+export type MuscleGroup =
+  | 'chest'
+  | 'lats'
+  | 'upper_back'
+  | 'shoulders'
+  | 'biceps'
+  | 'triceps'
+  | 'quads'
+  | 'hamstrings'
+  | 'glutes'
+  | 'calves'
+  | 'core'
+  | 'other';
 export type Equipment = 'barbell' | 'dumbbell' | 'bodyweight' | 'machine' | 'cable';
 export type SetType = 'warmup' | 'normal' | 'bilbo' | 'heavy' | 'failure' | 'dropset';
 export type Side = 'both' | 'left' | 'right';

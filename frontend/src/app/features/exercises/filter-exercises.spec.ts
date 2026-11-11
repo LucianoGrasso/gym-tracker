@@ -7,7 +7,7 @@ const ex = (name: string, muscle_group: Exercise['muscle_group']): Exercise => (
   uses_bodyweight: false, notes: null, archived_at: null,
 });
 
-const list = [ex('Jalón al pecho', 'back'), ex('Press de banca', 'chest'), ex('Press militar', 'shoulders')];
+const list = [ex('Jalón al pecho', 'lats'), ex('Press de banca', 'chest'), ex('Press militar', 'shoulders')];
 
 describe('filterExercises', () => {
   it('returns everything without filters', () => {

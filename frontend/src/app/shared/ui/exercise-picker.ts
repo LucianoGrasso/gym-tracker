@@ -3,7 +3,7 @@ import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCheck } from '@ng-icons/lucide';
 import { HlmInput } from '@spartan-ng/helm/input';
 import type { Exercise } from '../../core/models/exercise';
-import { MUSCLE_GROUP_LABELS } from '../../core/models/labels';
+import { MUSCLE_GROUP_LABELS, MUSCLE_REGION_LABELS } from '../../core/models/labels';
 
 /** Minúsculas y sin tildes: "Tríceps" y "triceps" coinciden. */
 const normalize = (text: string): string =>
@@ -90,7 +90,8 @@ export class ExercisePicker {
   private readonly indexed = computed(() =>
     this.exercises().map((exercise) => {
       const group = MUSCLE_GROUP_LABELS[exercise.muscle_group];
-      return { exercise, group, haystack: normalize(`${exercise.name} ${group}`) };
+      const region = MUSCLE_REGION_LABELS[exercise.muscle_group] ?? '';
+      return { exercise, group, haystack: normalize(`${exercise.name} ${group} ${region}`) };
     }),
   );
 

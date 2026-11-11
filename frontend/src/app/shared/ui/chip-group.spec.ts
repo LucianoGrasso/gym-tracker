@@ -6,10 +6,10 @@ describe('ChipGroup', () => {
   it('marks the selected chip and updates the value on click', async () => {
     const fixture = TestBed.createComponent(ChipGroup);
     fixture.componentRef.setInput('options', [
-      { value: '4w', label: '4 sem' },
-      { value: '12w', label: '12 sem' },
+      { value: '1w', label: '1 sem' },
+      { value: '1m', label: '1 mes' },
     ]);
-    fixture.componentRef.setInput('value', '12w');
+    fixture.componentRef.setInput('value', '1m');
     fixture.componentRef.setInput('label', 'Período');
     await fixture.whenStable();
 
@@ -19,7 +19,7 @@ describe('ChipGroup', () => {
     first.click();
     await fixture.whenStable();
 
-    expect(fixture.componentInstance.value()).toBe('4w');
+    expect(fixture.componentInstance.value()).toBe('1w');
     expect(first.getAttribute('aria-checked')).toBe('true');
   });
 });

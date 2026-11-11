@@ -4,13 +4,27 @@ import type { StatsPeriod } from './stats';
 
 export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {
   chest: 'Pecho',
-  back: 'Espalda',
+  lats: 'Dorsales',
+  upper_back: 'Espalda alta',
   shoulders: 'Hombros',
   biceps: 'Bíceps',
   triceps: 'Tríceps',
-  legs: 'Piernas',
+  quads: 'Cuádriceps',
+  hamstrings: 'Femorales',
+  glutes: 'Glúteos',
+  calves: 'Gemelos',
   core: 'Core',
   other: 'Otro',
+};
+
+/** Zona del cuerpo de cada músculo: sirve para buscar "pierna" o "espalda". */
+export const MUSCLE_REGION_LABELS: Partial<Record<MuscleGroup, string>> = {
+  lats: 'Espalda',
+  upper_back: 'Espalda',
+  quads: 'Piernas',
+  hamstrings: 'Piernas',
+  glutes: 'Piernas',
+  calves: 'Piernas',
 };
 
 export const EQUIPMENT_LABELS: Record<Equipment, string> = {
@@ -46,8 +60,9 @@ export const SET_TYPES = Object.keys(SET_TYPE_LABELS) as SetType[];
 export const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7];
 
 export const PERIOD_LABELS: Record<StatsPeriod, string> = {
-  '4w': '4 sem',
-  '12w': '12 sem',
+  '1w': '1 sem',
+  '1m': '1 mes',
+  '3m': '3 meses',
   '6m': '6 meses',
   '1y': '1 año',
   all: 'Todo',

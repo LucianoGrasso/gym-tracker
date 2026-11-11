@@ -1,6 +1,8 @@
 import type { MuscleGroup } from './exercise';
 
-export type StatsPeriod = '4w' | '12w' | '6m' | '1y' | 'all';
+export type StatsPeriod = '1w' | '1m' | '3m' | '6m' | '1y' | 'all';
+
+export const DEFAULT_STATS_PERIOD: StatsPeriod = '1m';
 
 export interface HeaviestRecord {
   load_kg: number;
@@ -53,17 +55,26 @@ export type RecentRecord = { exercise_id: number; exercise_name: string } & (
 export interface StatsOverview {
   period: StatsPeriod;
   sessions: number;
-  total_volume_kg: number;
-  total_sets: number;
+  sessions_per_week: number;
+  effective_sets: number;
   streak_weeks: number;
   recent_records: RecentRecord[];
   exercises: { id: number; name: string; sessions: number }[];
 }
 
-export interface WeeklyVolume {
+export type MuscleStatus = 'none' | 'low' | 'in_range' | 'high';
+
+export interface MuscleSetsEntry {
+  muscle: MuscleGroup;
+  sets: number;
+  sets_per_week: number;
+  status: MuscleStatus;
+}
+
+export interface MuscleSets {
   period: StatsPeriod;
-  muscle_groups: MuscleGroup[];
-  weeks: { week_start: string; volumes: Partial<Record<MuscleGroup, number>> }[];
+  weeks: number;
+  muscles: MuscleSetsEntry[];
 }
 
 export interface Consistency {
