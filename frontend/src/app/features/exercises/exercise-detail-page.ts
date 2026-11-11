@@ -8,11 +8,13 @@ import { formatDate, formatKg } from '../../core/format/format';
 import type { Exercise, ExerciseSession } from '../../core/models/exercise';
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, SET_TYPE_LABELS } from '../../core/models/labels';
 
+import { exerciseIntensities, formatMuscles } from '../../core/stats/muscle-sets';
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
+import { BodyMap } from '../../shared/ui/body-map/body-map';
 
 @Component({
   selector: 'app-exercise-detail-page',
-  imports: [RouterLink, HlmBadge, HlmButton, AppSkeleton],
+  imports: [RouterLink, HlmBadge, HlmButton, AppSkeleton, BodyMap],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a routerLink="/ejercicios" class="mb-4 inline-block text-sm text-muted-foreground">← Ejercicios</a>
@@ -28,6 +30,11 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
         @if (ex.archived_at) { <span hlmBadge variant="secondary" class="mt-2">Archivado</span> }
         @if (ex.notes) { <p class="mt-2 whitespace-pre-line">{{ ex.notes }}</p> }
       </header>
+
+      <section class="card mb-6 p-4" aria-label="Músculos que trabaja">
+        <app-body-map [intensities]="intensities(ex)" />
+        <p class="mt-3 text-center">{{ muscles(ex) }}</p>
+      </section>
 
       <div class="mb-6 grid grid-cols-2 gap-3">
         @if (ex.has_history) {
@@ -73,6 +80,9 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
   `,
 })
 export class ExerciseDetailPage {
+  protected readonly intensities = (ex: Exercise) => exerciseIntensities(ex.muscle_group, ex.secondary_muscles);
+  protected readonly muscles = (ex: Exercise) => formatMuscles(ex.muscle_group, ex.secondary_muscles);
+
   private readonly api = inject(ExercisesApi);
   private readonly router = inject(Router);
 

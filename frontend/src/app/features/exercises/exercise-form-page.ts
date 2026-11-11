@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -10,6 +11,15 @@ import { ExercisesApi } from '../../core/api/exercises-api';
 import type { Equipment, ExerciseInput, MuscleGroup } from '../../core/models/exercise';
 import { EQUIPMENTS, EQUIPMENT_LABELS, MUSCLE_GROUPS, MUSCLE_GROUP_LABELS } from '../../core/models/labels';
 import { SELECT_CLASS } from '../../shared/ui/form-styles';
+
+const MAX_SECONDARY = 4;
+
+/** Marca o desmarca un músculo secundario: nunca el principal y como máximo cuatro. */
+export function toggleSecondary(list: readonly MuscleGroup[], muscle: MuscleGroup, primary: MuscleGroup): MuscleGroup[] {
+  if (list.includes(muscle)) return list.filter((m) => m !== muscle);
+  if (muscle === primary || list.length >= MAX_SECONDARY) return [...list];
+  return [...list, muscle];
+}
 
 @Component({
   selector: 'app-exercise-form-page',
@@ -37,6 +47,29 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
           </select>
         </div>
       </div>
+      <fieldset class="flex flex-col gap-2">
+        <legend class="mb-2 text-sm font-medium">
+          Músculos secundarios <span class="text-muted-foreground">(opcional, hasta {{ maxSecondary }} · cuentan ½ serie)</span>
+        </legend>
+        <div class="flex flex-wrap gap-2">
+          @for (g of groups; track g) {
+            <button
+              type="button"
+              data-secondary
+              class="h-10 rounded-full border px-3 text-sm font-medium disabled:opacity-40"
+              [class.bg-primary]="secondary().includes(g)"
+              [class.border-primary]="secondary().includes(g)"
+              [class.text-primary-foreground]="secondary().includes(g)"
+              [class.border-border]="!secondary().includes(g)"
+              [attr.aria-pressed]="secondary().includes(g)"
+              [disabled]="g === primary()"
+              (click)="toggle(g)"
+            >
+              {{ muscleLabels[g] }}
+            </button>
+          }
+        </div>
+      </fieldset>
       <label class="flex min-h-12 items-center gap-3">
         <input type="checkbox" class="size-5" formControlName="is_unilateral" />
         Unilateral (se registra cada lado por separado)
@@ -83,6 +116,29 @@ export class ExerciseFormPage implements OnInit {
     uses_bodyweight: new FormControl(false, { nonNullable: true }),
     notes: new FormControl<string | null>(null),
   });
+
+  protected readonly maxSecondary = MAX_SECONDARY;
+  protected readonly primary = toSignal(this.form.controls.muscle_group.valueChanges, {
+    initialValue: this.form.controls.muscle_group.value,
+  });
+  protected readonly secondary = toSignal(this.form.controls.secondary_muscles.valueChanges, {
+    initialValue: this.form.controls.secondary_muscles.value,
+  });
+
+  constructor() {
+    // Si el principal pasa a ser uno de los secundarios, deja de ser secundario.
+    this.form.controls.muscle_group.valueChanges.pipe(takeUntilDestroyed()).subscribe((primary) => {
+      const secondary = this.form.controls.secondary_muscles.value;
+      if (secondary.includes(primary)) {
+        this.form.controls.secondary_muscles.setValue(secondary.filter((m) => m !== primary));
+      }
+    });
+  }
+
+  protected toggle(muscle: MuscleGroup): void {
+    const control = this.form.controls.secondary_muscles;
+    control.setValue(toggleSecondary(control.value, muscle, this.form.controls.muscle_group.value));
+  }
 
   async ngOnInit(): Promise<void> {
     const id = this.id();
