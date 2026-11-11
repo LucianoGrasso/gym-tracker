@@ -7,6 +7,7 @@ import {
   linkedSignal,
   signal,
 } from '@angular/core';
+import { ConfirmService } from '../../shared/ui/confirm-dialog';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCheck, lucideTrash2, lucideX } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -290,6 +291,7 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
   `,
 })
 export class ExerciseCard {
+  private readonly confirm = inject(ConfirmService);
   private readonly sessions = inject(WorkoutSessionService);
   private readonly timer = inject(RestTimerService);
 
@@ -406,15 +408,20 @@ export class ExerciseCard {
   }
 
   protected async removeSet(set: WorkoutSet): Promise<void> {
-    if (!confirm('¿Borrar esta serie?')) return;
+    if (!(await this.confirm.ask({ title: '¿Borrar esta serie?', confirmLabel: 'Borrar', destructive: true }))) return;
     await this.sessions.deleteSet(this.item().id, set.id);
     if (this.editingSetId() === set.id) this.editingSetId.set(null);
   }
 
   protected async removeExercise(): Promise<void> {
     const ex = this.item();
-    const warning = ex.sets.length ? ` Se borrarán sus ${ex.sets.length} series.` : '';
-    if (!confirm(`¿Quitar ${ex.exercise.name} de esta sesión?${warning}`)) return;
+    const ok = await this.confirm.ask({
+      title: `¿Quitar ${ex.exercise.name} de esta sesión?`,
+      message: ex.sets.length ? `Se borrarán sus ${ex.sets.length} series.` : undefined,
+      confirmLabel: 'Quitar',
+      destructive: true,
+    });
+    if (!ok) return;
     await this.sessions.removeExercise(ex.id);
   }
 }

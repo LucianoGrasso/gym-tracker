@@ -5,6 +5,7 @@ import {
   CdkDropList,
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
+import { ConfirmService } from '../../shared/ui/confirm-dialog';
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -166,6 +167,7 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
   `,
 })
 export class RoutineDetailPage implements OnInit {
+  private readonly confirm = inject(ConfirmService);
   private readonly api = inject(RoutinesApi);
   private readonly router = inject(Router);
 
@@ -247,15 +249,19 @@ export class RoutineDetailPage implements OnInit {
   }
 
   async removeDay(day: RoutineDay): Promise<void> {
-    if (!confirm(`¿Eliminar el día "${day.name}"?`)) return;
+    if (!(await this.confirm.ask({ title: `¿Eliminar el día "${day.name}"?`, confirmLabel: 'Eliminar', destructive: true })))
+      return;
     await this.run(() => this.api.removeDay(day.id));
   }
 
   async removeRoutine(routine: Routine): Promise<void> {
-    if (
-      !confirm(`¿Eliminar la rutina "${routine.name}"? El historial de entrenamientos se conserva.`)
-    )
-      return;
+    const ok = await this.confirm.ask({
+      title: `¿Eliminar la rutina "${routine.name}"?`,
+      message: 'El historial de entrenamientos se conserva.',
+      confirmLabel: 'Eliminar',
+      destructive: true,
+    });
+    if (!ok) return;
     try {
       await this.api.remove(routine.id);
       await this.router.navigateByUrl('/rutinas');

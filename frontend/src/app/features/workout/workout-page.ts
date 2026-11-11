@@ -7,6 +7,7 @@ import {
   input,
   signal,
 } from '@angular/core';
+import { ConfirmService } from '../../shared/ui/confirm-dialog';
 import { Router, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronLeft } from '@ng-icons/lucide';
@@ -131,6 +132,7 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
   `,
 })
 export class WorkoutPage implements OnInit {
+  private readonly confirm = inject(ConfirmService);
   private readonly sessions = inject(WorkoutSessionService);
   private readonly timer = inject(RestTimerService);
   private readonly exercisesApi = inject(ExercisesApi);
@@ -193,7 +195,13 @@ export class WorkoutPage implements OnInit {
   }
 
   protected async remove(): Promise<void> {
-    if (!confirm('¿Eliminar este entrenamiento y todas sus series?')) return;
+    const ok = await this.confirm.ask({
+      title: '¿Eliminar este entrenamiento?',
+      message: 'Se borrarán todas sus series.',
+      confirmLabel: 'Eliminar',
+      destructive: true,
+    });
+    if (!ok) return;
     await this.sessions.remove();
     this.timer.stop();
     await this.router.navigateByUrl('/hoy');

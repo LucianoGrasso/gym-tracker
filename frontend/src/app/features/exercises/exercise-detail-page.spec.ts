@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { ExercisesApi } from '../../core/api/exercises-api';
 import type { Exercise } from '../../core/models/exercise';
+import { ConfirmService } from '../../shared/ui/confirm-dialog';
 import { ExerciseDetailPage } from './exercise-detail-page';
 
 const bench: Exercise = {
@@ -17,9 +18,15 @@ async function setup(exercise: Exercise) {
     archive: vi.fn().mockResolvedValue({ ...exercise, archived_at: '2026-11-11T00:00:00Z' }),
     remove: vi.fn().mockResolvedValue(undefined),
   };
-  TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: ExercisesApi, useValue: api }] });
+  const confirm = { ask: vi.fn().mockResolvedValue(true) };
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter([]),
+      { provide: ExercisesApi, useValue: api },
+      { provide: ConfirmService, useValue: confirm },
+    ],
+  });
   const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
-  vi.stubGlobal('confirm', vi.fn(() => true));
   const fixture = TestBed.createComponent(ExerciseDetailPage);
   fixture.componentRef.setInput('id', String(exercise.id));
   await fixture.whenStable();
@@ -27,12 +34,10 @@ async function setup(exercise: Exercise) {
   await fixture.whenStable();
   const el = fixture.nativeElement as HTMLElement;
   const button = (text: string) => Array.from(el.querySelectorAll('button')).find((b) => b.textContent!.includes(text));
-  return { fixture, el, api, navigate, button };
+  return { fixture, el, api, navigate, button, confirm };
 }
 
 describe('ExerciseDetailPage', () => {
-  afterEach(() => vi.unstubAllGlobals());
-
   it('offers a single "Quitar" action instead of archive and delete', async () => {
     const { button } = await setup(bench);
 
@@ -42,11 +47,12 @@ describe('ExerciseDetailPage', () => {
   });
 
   it('hides an exercise with history, keeping its history', async () => {
-    const { fixture, api, navigate, button } = await setup(bench);
+    const { fixture, api, navigate, button, confirm } = await setup(bench);
 
     button('Quitar de mis ejercicios')!.click();
     await fixture.whenStable();
 
+    expect(confirm.ask).toHaveBeenCalledWith(expect.objectContaining({ confirmLabel: 'Quitar', destructive: true }));
     expect(api.archive).toHaveBeenCalledWith(4);
     expect(api.remove).not.toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledWith('/ejercicios');

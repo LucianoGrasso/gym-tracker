@@ -1,3 +1,4 @@
+import { ConfirmService } from '../../shared/ui/confirm-dialog';
 import { ChangeDetectionStrategy, Component, inject, input, resource, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -75,6 +76,7 @@ import { BodyMap } from '../../shared/ui/body-map/body-map';
   `,
 })
 export class ExerciseDetailPage {
+  private readonly confirm = inject(ConfirmService);
   protected readonly intensities = (ex: Exercise) => exerciseIntensities(ex.muscle_group, ex.secondary_muscles);
   protected readonly muscles = (ex: Exercise) => formatMuscles(ex.muscle_group, ex.secondary_muscles);
 
@@ -126,10 +128,15 @@ export class ExerciseDetailPage {
    * estadísticas, y vuelve solo si se elige otra vez desde la biblioteca.
    */
   async remove(exercise: Exercise): Promise<void> {
-    const question = exercise.has_history
-      ? `¿Quitar "${exercise.name}" de tus ejercicios? Tu historial y estadísticas se conservan, y puedes volver a agregarlo desde la biblioteca.`
-      : `¿Quitar "${exercise.name}" de tus ejercicios?`;
-    if (!confirm(question)) return;
+    const ok = await this.confirm.ask({
+      title: `¿Quitar "${exercise.name}" de tus ejercicios?`,
+      message: exercise.has_history
+        ? 'Tu historial y estadísticas se conservan, y puedes volver a agregarlo desde la biblioteca.'
+        : undefined,
+      confirmLabel: 'Quitar',
+      destructive: true,
+    });
+    if (!ok) return;
     this.error.set(null);
     try {
       if (exercise.has_history) await this.api.archive(exercise.id);

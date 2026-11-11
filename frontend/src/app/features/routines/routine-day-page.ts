@@ -1,3 +1,4 @@
+import { ConfirmService } from '../../shared/ui/confirm-dialog';
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -92,6 +93,7 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
   `,
 })
 export class RoutineDayPage implements OnInit {
+  private readonly confirm = inject(ConfirmService);
   private readonly routinesApi = inject(RoutinesApi);
   private readonly exercisesApi = inject(ExercisesApi);
 
@@ -181,7 +183,12 @@ export class RoutineDayPage implements OnInit {
   }
 
   async remove(item: RoutineDayExercise): Promise<void> {
-    if (!confirm(`¿Quitar "${item.exercise.name}" de este día?`)) return;
+    const ok = await this.confirm.ask({
+      title: `¿Quitar "${item.exercise.name}" de este día?`,
+      confirmLabel: 'Quitar',
+      destructive: true,
+    });
+    if (!ok) return;
     await this.run(() => this.routinesApi.removeExercise(item.id));
   }
 
