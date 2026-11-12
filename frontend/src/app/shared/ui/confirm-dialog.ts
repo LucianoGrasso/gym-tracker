@@ -21,7 +21,8 @@ export interface ConfirmOptions {
     'aria-modal': 'true',
     'aria-labelledby': 'confirm-title',
     '[attr.aria-describedby]': 'data.message ? "confirm-message" : null',
-    class: 'confirm-sheet block rounded-t-2xl border border-border bg-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl',
+    class:
+      'confirm-sheet block rounded-t-2xl border border-border bg-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl',
   },
   template: `
     <h2 id="confirm-title" class="text-lg font-bold">{{ data.title }}</h2>
@@ -29,7 +30,11 @@ export interface ConfirmOptions {
       <p id="confirm-message" class="mt-2 text-sm text-muted-foreground">{{ data.message }}</p>
     }
     <div class="mt-5 grid grid-cols-2 gap-3">
-      <button type="button" class="h-12 rounded-xl border border-border font-semibold" (click)="ref.close(false)">
+      <button
+        type="button"
+        class="h-12 rounded-xl border border-border font-semibold"
+        (click)="ref.close(false)"
+      >
         Cancelar
       </button>
       <button
