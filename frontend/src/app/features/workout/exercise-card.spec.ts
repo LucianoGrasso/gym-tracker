@@ -36,7 +36,27 @@ const item: SessionExercise = {
   sets: [],
 };
 
-async function render(finished = false) {
+const dumbbellPress: SessionExercise = {
+  ...item,
+  id: 'we2',
+  exercise: { id: 2, name: 'Press con mancuernas', uses_bodyweight: false, is_unilateral: false, equipment: 'dumbbell' },
+  target_sets: 3,
+  target_reps_min: 8,
+  target_reps_max: 12,
+  target_text: null,
+  default_set_type: 'normal',
+  rest_seconds: 120,
+  last_performance: {
+    workout_id: 'w0',
+    date: '2026-11-10',
+    sets: [1, 2, 3].map((n) => ({
+      id: `p${n}`, set_number: n, set_type: 'normal' as const, weight_kg: 24, reps: 12,
+      side: 'both' as const, rir: null, pain_level: null, notes: null,
+    })),
+  },
+};
+
+async function render(finished = false, data: SessionExercise = item) {
   const sessions = {
     addSet: vi.fn().mockResolvedValue(undefined),
     session: () => ({ id: 'w1' }),
@@ -52,7 +72,7 @@ async function render(finished = false) {
     ],
   });
   const fixture = TestBed.createComponent(ExerciseCard);
-  fixture.componentRef.setInput('item', item);
+  fixture.componentRef.setInput('item', data);
   fixture.componentRef.setInput('finished', finished);
   await fixture.whenStable();
   return { fixture, sessions, timer, el: fixture.nativeElement as HTMLElement };
@@ -62,6 +82,33 @@ const button = (el: HTMLElement, text: string) =>
   Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.trim() === text)!;
 
 describe('ExerciseCard', () => {
+  it('suggests the next weight and prefills it', async () => {
+    const { el, fixture, sessions } = await render(false, dumbbellPress);
+    expect(el.textContent).toContain('📈 ¡Sube a 26 kg!');
+    expect(el.textContent).toContain('La última vez: 3×12 con 24 kg');
+
+    button(el, 'Guardar serie').click();
+    await fixture.whenStable();
+    expect(sessions.addSet).toHaveBeenCalledWith('we2', expect.objectContaining({ weight_kg: 26, reps: 8 }));
+  });
+
+  it('keeps last time\'s weight when asked', async () => {
+    const { el, fixture, sessions } = await render(false, dumbbellPress);
+    button(el, 'Mantener 24 kg').click();
+    await fixture.whenStable();
+    expect(el.textContent).not.toContain('¡Sube a 26 kg!');
+
+    button(el, 'Guardar serie').click();
+    await fixture.whenStable();
+    expect(sessions.addSet).toHaveBeenCalledWith('we2', expect.objectContaining({ weight_kg: 24, reps: 12 }));
+  });
+
+  it('hides the suggestion once a working set is logged today', async () => {
+    const logged = { ...dumbbellPress.last_performance!.sets[0], id: 't1', weight_kg: 26, reps: 9 };
+    const { el } = await render(false, { ...dumbbellPress, sets: [logged] });
+    expect(el.textContent).not.toContain('¡Sube a 26 kg!');
+  });
+
   it('saves a warm-up with the chip and rests at most a minute, announcing the first working set', async () => {
     const { el, fixture, sessions, timer } = await render();
     const chip = button(el, 'Calentamiento');

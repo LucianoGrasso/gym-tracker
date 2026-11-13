@@ -32,6 +32,7 @@ import {
   toSetInput,
   workingSets,
 } from '../../core/workout/set-suggestions';
+import { progressionCopy, suggestProgression } from '../../core/workout/progression';
 import { WorkoutSessionService } from '../../core/workout/workout-session.service';
 import { SELECT_CLASS } from '../../shared/ui/form-styles';
 
@@ -112,6 +113,21 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
             </li>
           }
         </ol>
+      }
+
+      @if (!finished() && progressionText(); as copy) {
+        <div
+          class="mb-3 flex items-center justify-between gap-3 rounded-xl border border-primary/40 bg-primary/10 p-3"
+          role="status"
+        >
+          <div class="min-w-0">
+            <p class="font-semibold text-primary">📈 {{ copy.title }}</p>
+            <p class="num text-sm text-muted-foreground">{{ copy.detail }}</p>
+          </div>
+          <button hlmBtn variant="ghost" size="sm" class="shrink-0" (click)="keepWeight.set(true)">
+            {{ copy.keep }}
+          </button>
+        </div>
       }
 
       <div class="grid grid-cols-2 gap-3">
@@ -311,7 +327,18 @@ export class ExerciseCard {
   protected readonly parseDecimal = parseDecimal;
   protected readonly formatNumber = formatNumber;
 
-  protected readonly entry = linkedSignal<WorkoutSetInput>(() => suggestNextSet(this.item()));
+  /** "Mantener" descarta la sugerencia de subir peso en esta tarjeta (no se sincroniza). */
+  protected readonly keepWeight = signal(false);
+  protected readonly progression = computed(() =>
+    this.keepWeight() || workingSets(this.item().sets).length > 0 ? null : suggestProgression(this.item()),
+  );
+  protected readonly progressionText = computed(() => {
+    const suggestion = this.progression();
+    return suggestion ? progressionCopy(suggestion, this.item().exercise.uses_bodyweight) : null;
+  });
+  protected readonly entry = linkedSignal<WorkoutSetInput>(() =>
+    suggestNextSet(this.item(), this.progression()),
+  );
   /** Serie recién guardada: su fila destella y muestra un check. */
   protected readonly lastSavedId = signal<string | null>(null);
   protected readonly savedFlash = signal(false);
@@ -370,7 +397,7 @@ export class ExerciseCard {
 
   protected cancelEdit(): void {
     this.editingSetId.set(null);
-    this.entry.set(suggestNextSet(this.item()));
+    this.entry.set(suggestNextSet(this.item(), this.progression()));
   }
 
   protected async save(): Promise<void> {
