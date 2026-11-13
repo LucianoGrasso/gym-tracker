@@ -13,7 +13,7 @@ Spec: `docs/superpowers/specs/2026-11-13-sugerencias-progresion-design.md`. Rama
 ## Global Constraints
 
 - Textos de UI en español (Chile), kg con coma decimal (`formatKg`: `62.5 → "62,5 kg"`).
-- Incrementos: barbell 2,5 · smith 2,5 · dumbbell 2 · machine 5 · cable 5 · bodyweight 2,5 (lastre) · kettlebell 4 · band sin sugerencia.
+- Incrementos: barbell 2,5 · smith 2,5 · dumbbell 2,5 · machine 5 · cable 5 · bodyweight 2,5 (lastre) · kettlebell 4 · band sin sugerencia.
 - Sin cambios de backend, migraciones ni endpoints.
 - Calentamientos (`set_type: 'warmup'`) nunca cuentan; Bilbo no recibe sugerencia.
 - Nunca `confirm()`/`alert()` del navegador.

@@ -7,7 +7,7 @@ import { workingSets } from './set-suggestions';
 export const PROGRESSION_STEP_KG: Record<Equipment, number | null> = {
   barbell: 2.5,
   smith: 2.5,
-  dumbbell: 2,
+  dumbbell: 2.5,
   machine: 5,
   cable: 5,
   bodyweight: 2.5,

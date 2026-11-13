@@ -62,7 +62,7 @@ describe('suggestProgression', () => {
     const to = (equipment: Equipment) => suggestProgression(exercise(threeAtTop, {}, equipment))?.to;
     expect(to('barbell')).toBe(62.5);
     expect(to('smith')).toBe(62.5);
-    expect(to('dumbbell')).toBe(62);
+    expect(to('dumbbell')).toBe(62.5);
     expect(to('machine')).toBe(65);
     expect(to('cable')).toBe(65);
     expect(to('kettlebell')).toBe(64);

@@ -34,7 +34,7 @@ Incremento por equipamiento (`PROGRESSION_STEP_KG`):
 | Equipamiento | Incremento |
 |---|---|
 | barbell, smith | 2,5 kg |
-| dumbbell | 2 kg |
+| dumbbell | 2,5 kg |
 | machine, cable | 5 kg |
 | bodyweight | 2,5 kg de lastre |
 | kettlebell | 4 kg |
