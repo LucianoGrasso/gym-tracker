@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Equipment;
 use App\Enums\MuscleGroup;
 use App\Enums\SetType;
 use App\Models\BodyMetric;
@@ -120,7 +121,7 @@ it('returns the bodyweight series', function () {
 
 function stalledBench(User $user, Exercise $bench): void
 {
-    $bench->update(['equipment' => App\Enums\Equipment::Barbell]);
+    $bench->update(['equipment' => Equipment::Barbell]);
     statsWorkout($user, $bench, '2026-10-01', [[100, 5, SetType::Normal]]);
     statsWorkout($user, $bench, '2026-10-15', [[100, 5, SetType::Normal]]);
     statsWorkout($user, $bench, '2026-10-25', [[95, 5, SetType::Normal]]);
