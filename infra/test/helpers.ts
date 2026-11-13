@@ -3,7 +3,7 @@ import { Template } from 'aws-cdk-lib/assertions';
 import * as path from 'node:path';
 import { GymTrackerStack } from '../lib/gymtracker-stack';
 
-export const WARM_UP = { minute: '45', hour: '18', weekDay: 'MON,TUE,THU,FRI' };
+export const WARM_UP = { minute: '12', hour: '12', weekDay: 'MON,TUE,THU,FRI' };
 
 export function buildStack(): GymTrackerStack {
   const app = new App();

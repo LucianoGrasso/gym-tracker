@@ -46,9 +46,9 @@ describe('Backend', () => {
     template.hasResourceProperties('AWS::ApiGatewayV2::Route', { RouteKey: '$default' });
   });
 
-  it('wakes Aurora up before training (Mon, Tue, Thu, Fri 18:45 Santiago)', () => {
+  it('wakes Aurora up before training (Mon, Tue, Thu, Fri 12:12 Santiago)', () => {
     template.hasResourceProperties('AWS::Scheduler::Schedule', {
-      ScheduleExpression: 'cron(45 18 ? * MON,TUE,THU,FRI *)',
+      ScheduleExpression: 'cron(12 12 ? * MON,TUE,THU,FRI *)',
       ScheduleExpressionTimezone: 'America/Santiago',
       Target: Match.objectLike({
         Arn: { 'Fn::GetAtt': [Match.stringLikeRegexp('BackendArtisan'), 'Arn'] },
