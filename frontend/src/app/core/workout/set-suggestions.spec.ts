@@ -31,6 +31,28 @@ describe('suggestNextSet', () => {
   it('falls back to the target reps', () => {
     expect(suggestNextSet(exercise())).toMatchObject({ weight_kg: 0, reps: 12, set_type: 'normal' });
   });
+
+  const progression = { from: 60, to: 62.5, reps: 8, lastReps: 12, lastSets: 3 };
+  const lastTime = { workout_id: 'w', date: '2026-11-10', sets: [set(60, 12), set(60, 12), set(60, 12)] };
+
+  it('prefills the suggested weight and the bottom of the range', () => {
+    expect(suggestNextSet(exercise({ last_performance: lastTime }), progression))
+      .toEqual({ weight_kg: 62.5, reps: 8, set_type: 'normal', side: 'both', rir: null, pain_level: null, notes: null });
+  });
+
+  it('keeps the suggestion after a warm-up', () => {
+    expect(suggestNextSet(exercise({ last_performance: lastTime, sets: [set(40, 10, 'warmup')] }), progression))
+      .toMatchObject({ weight_kg: 62.5, reps: 8, set_type: 'normal' });
+  });
+
+  it('copies today\'s previous working set once there is one', () => {
+    expect(suggestNextSet(exercise({ last_performance: lastTime, sets: [set(62.5, 9)] }), progression))
+      .toMatchObject({ weight_kg: 62.5, reps: 9 });
+  });
+
+  it('uses last time without a suggestion', () => {
+    expect(suggestNextSet(exercise({ last_performance: lastTime }), null)).toMatchObject({ weight_kg: 60, reps: 12 });
+  });
 });
 
 describe('steppers and parsing', () => {

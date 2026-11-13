@@ -2,6 +2,7 @@ import { formatKg } from '../format/format';
 import type { SetType, WorkoutSet } from '../models/exercise';
 import { SET_TYPE_LABELS } from '../models/labels';
 import type { SessionExercise, WorkoutSetInput } from '../models/workout';
+import type { ProgressionSuggestion } from './progression';
 
 export const BILBO_INCREASE_REPS = 35;
 
@@ -41,12 +42,27 @@ export function restAfter(set: { set_type: SetType }, restSeconds: number): numb
 /**
  * Valores iniciales de la próxima serie: la anterior de hoy, o la primera efectiva de la última vez.
  * Tras un calentamiento se vuelve al tipo de la rutina y a la carga efectiva de la última vez.
+ * Con una sugerencia de progresión y sin series efectivas hoy, se precarga el peso nuevo.
  */
-export function suggestNextSet(item: SessionExercise): WorkoutSetInput {
+export function suggestNextSet(
+  item: SessionExercise,
+  progression: ProgressionSuggestion | null = null,
+): WorkoutSetInput {
   const lastHere = item.sets.at(-1);
   const previous = item.last_performance?.sets;
   if (lastHere && !isWarmup(lastHere)) {
     return { ...toSetInput(lastHere), pain_level: null, notes: null };
+  }
+  if (progression && workingSets(item.sets).length === 0) {
+    return {
+      weight_kg: progression.to,
+      reps: progression.reps,
+      set_type: item.default_set_type,
+      side: lastHere?.side ?? 'both',
+      rir: null,
+      pain_level: null,
+      notes: null,
+    };
   }
   if (lastHere) {
     const working = previous?.find((s) => !isWarmup(s));
