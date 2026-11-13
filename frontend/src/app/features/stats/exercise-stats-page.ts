@@ -12,6 +12,7 @@ import { DEFAULT_STATS_PERIOD, type ExerciseSessionStats, type StatsPeriod } fro
 import { lineOption, type LinePoint } from '../../shared/charts/chart-options';
 import { ChipGroup } from '../../shared/ui/chip-group';
 import { formatBestE1rm, formatHeaviest, formatMostReps } from './format-record';
+import { STALLED_ALTERNATIVES, StalledNote } from './stalled-note';
 
 type MetricKey = 'e1rm_kg' | 'best_load_kg' | 'volume_kg' | 'total_reps';
 
@@ -34,7 +35,7 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
 @Component({
   selector: 'app-exercise-stats-page',
-  imports: [RouterLink, NgIcon, NgxEchartsDirective, ChipGroup, AppSkeleton],
+  imports: [RouterLink, NgIcon, NgxEchartsDirective, ChipGroup, AppSkeleton, StalledNote],
   providers: [provideIcons({ lucideChevronLeft })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -61,6 +62,13 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
     />
 
     @if (stats.value(); as s) {
+      @if (s.stalled; as stalled) {
+        <div class="card mb-4 border-primary/40 p-4" role="status">
+          <p class="font-semibold text-primary">Estancado</p>
+          <app-stalled-note [item]="stalled" />
+          <p class="mt-1 text-sm text-muted-foreground">{{ stalledAlternatives }}</p>
+        </div>
+      }
       <div class="mb-6 grid grid-cols-2 gap-2">
         <div class="card col-span-2 p-4">
           <p class="eyebrow">Mejor 1RM estimado</p>
@@ -158,6 +166,7 @@ export class ExerciseStatsPage {
   protected readonly formatHeaviest = formatHeaviest;
   protected readonly formatBestE1rm = formatBestE1rm;
   protected readonly formatMostReps = formatMostReps;
+  protected readonly stalledAlternatives = STALLED_ALTERNATIVES;
   protected readonly periodOptions = STATS_PERIODS.map((value) => ({ value, label: PERIOD_LABELS[value] }));
   protected readonly metricOptions = EXERCISE_METRICS.map((m) => ({ value: m.key, label: m.label }));
 

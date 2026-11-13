@@ -19,12 +19,13 @@ import { consistencyOption, heatmapRange, lineOption } from '../../shared/charts
 import { ChipGroup } from '../../shared/ui/chip-group';
 import { formatRecentRecord } from './format-record';
 import { MuscleSection } from './muscle-section';
+import { StalledSection } from './stalled-note';
 
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
 @Component({
   selector: 'app-stats-page',
-  imports: [RouterLink, NgIcon, HlmButton, HlmInput, NgxEchartsDirective, ChipGroup, AppSkeleton, MuscleSection],
+  imports: [RouterLink, NgIcon, HlmButton, HlmInput, NgxEchartsDirective, ChipGroup, AppSkeleton, MuscleSection, StalledSection],
   providers: [provideIcons({ lucideChevronRight, lucideTrophy })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -94,6 +95,10 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
           </ul>
         </section>
       }
+    }
+
+    @if (!stalled.error() && stalled.value(); as list) {
+      <app-stalled-section [items]="list" />
     }
 
     <section class="card mb-6 p-4">
@@ -181,6 +186,11 @@ export class StatsPage {
   protected readonly bodyweight = resource({
     params: () => this.period(),
     loader: ({ params }) => cachedFetch(this.db, `stats:bodyweight:${params}`, () => this.api.bodyweight(params)),
+  });
+
+  /** Sin período: siempre mira las últimas 4 semanas. */
+  protected readonly stalled = resource({
+    loader: () => cachedFetch(this.db, 'stats:stalled', () => this.api.stalled()),
   });
 
   protected readonly consistencyChart = computed(() => {

@@ -40,11 +40,24 @@ export interface ExerciseSessionStats {
   bilbo: { load_kg: number | null; reps: number }[];
 }
 
+export interface StalledExercise {
+  exercise_id: number;
+  name: string;
+  best_e1rm_kg: number;
+  /** Primera vez que se alcanzó el récord (fecha local). */
+  best_date: string;
+  sessions_since: number;
+  /** null en peso corporal y bandas. */
+  deload_kg: number | null;
+}
+
 export interface ExerciseStats {
   period: StatsPeriod;
   exercise: { id: number; name: string; uses_bodyweight: boolean };
   sessions: ExerciseSessionStats[];
   records: PersonalRecords;
+  /** Falta en respuestas guardadas en caché antes del 2026-11-13. */
+  stalled?: StalledExercise | null;
 }
 
 export type RecentRecord = { exercise_id: number; exercise_name: string } & (

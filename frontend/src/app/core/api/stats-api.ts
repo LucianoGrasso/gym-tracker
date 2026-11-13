@@ -6,6 +6,7 @@ import type {
   Consistency,
   ExerciseStats,
   MuscleSets,
+  StalledExercise,
   StatsOverview,
   StatsPeriod,
 } from '../models/stats';
@@ -32,6 +33,13 @@ export class StatsApi {
 
   bodyweight(period: StatsPeriod): Promise<BodyweightSeries> {
     return this.get('/api/stats/bodyweight', period);
+  }
+
+  async stalled(): Promise<StalledExercise[]> {
+    const response = await firstValueFrom(
+      this.http.get<{ data: { exercises: StalledExercise[] } }>('/api/stats/stalled'),
+    );
+    return response.data.exercises;
   }
 
   private async get<T>(url: string, period: StatsPeriod): Promise<T> {
