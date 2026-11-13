@@ -1,6 +1,9 @@
-import type { Exercise, ExerciseSession, SetType, WorkoutSet } from './exercise';
+import type { Equipment, Exercise, ExerciseSession, SetType, WorkoutSet } from './exercise';
 
-export type ExerciseRef = Pick<Exercise, 'id' | 'name' | 'uses_bodyweight' | 'is_unilateral'>;
+/** `equipment` puede faltar en sesiones guardadas en el dispositivo antes del 2026-11-13. */
+export type ExerciseRef = Pick<Exercise, 'id' | 'name' | 'uses_bodyweight' | 'is_unilateral'> & {
+  equipment?: Equipment;
+};
 
 export type WorkoutSetInput = Omit<WorkoutSet, 'id' | 'set_number'>;
 

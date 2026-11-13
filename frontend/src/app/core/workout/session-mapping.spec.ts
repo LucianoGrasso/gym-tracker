@@ -30,7 +30,7 @@ describe('session mapping', () => {
       id: 'id0', routine_day_id: 10, name: 'Lunes – Pecho', date: '2026-11-02',
       started_at: '2026-11-02T22:00:00.000Z', finished_at: null, bodyweight_kg: null, notes: null,
       exercises: [{
-        id: 'id1', exercise: { id: 1, name: 'Press de banca', uses_bodyweight: false, is_unilateral: false },
+        id: 'id1', exercise: { id: 1, name: 'Press de banca', uses_bodyweight: false, is_unilateral: false, equipment: 'barbell' },
         position: 0, target_sets: 1, target_reps_min: null, target_reps_max: null, target_text: '~30',
         default_set_type: 'bilbo', rest_seconds: 180, notes: null, last_performance: null, sets: [],
       }],
@@ -72,7 +72,9 @@ describe('session mapping', () => {
     };
     const session = sessionFromDetail(detail);
     expect(session.name).toBe('Sesión libre');
-    expect(session.exercises[0].exercise).toEqual({ id: 1, name: 'Press de banca', uses_bodyweight: false, is_unilateral: false });
+    expect(session.exercises[0].exercise).toEqual({
+      id: 1, name: 'Press de banca', uses_bodyweight: false, is_unilateral: false, equipment: 'barbell',
+    });
     expect(session.exercises[0].sets).toHaveLength(1);
     expect(session.exercises[0].last_performance).toBeNull();
   });
