@@ -39,6 +39,7 @@ Route::middleware(['auth:sanctum', 'demo.active'])->group(function () {
     Route::get('/stats/muscles', [StatsController::class, 'muscles']);
     Route::get('/stats/consistency', [StatsController::class, 'consistency']);
     Route::get('/stats/bodyweight', [StatsController::class, 'bodyweight']);
+    Route::get('/stats/stalled', [StatsController::class, 'stalled']);
 
     Route::get('/exercises', [ExerciseController::class, 'index']);
     Route::post('/exercises', [ExerciseController::class, 'store']);

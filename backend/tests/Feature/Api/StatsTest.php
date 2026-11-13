@@ -117,3 +117,50 @@ it('returns the bodyweight series', function () {
             ['date' => '2026-11-02', 'bodyweight_kg' => 78.5, 'source' => 'workout'],
         ]);
 });
+
+function stalledBench(User $user, Exercise $bench): void
+{
+    $bench->update(['equipment' => App\Enums\Equipment::Barbell]);
+    statsWorkout($user, $bench, '2026-10-01', [[100, 5, SetType::Normal]]);
+    statsWorkout($user, $bench, '2026-10-15', [[100, 5, SetType::Normal]]);
+    statsWorkout($user, $bench, '2026-10-25', [[95, 5, SetType::Normal]]);
+    statsWorkout($user, $bench, '2026-11-05', [[97.5, 5, SetType::Normal]]);
+}
+
+it('lists the stalled exercises of the user', function () {
+    stalledBench($this->user, $this->bench);
+    $other = User::factory()->create();
+    stalledBench($other, Exercise::factory()->for($other)->create());
+
+    $this->getJson('/api/stats/stalled')
+        ->assertOk()
+        ->assertJsonCount(1, 'data.exercises')
+        ->assertJsonPath('data.exercises.0.name', 'Press de banca')
+        ->assertJsonPath('data.exercises.0.best_date', '2026-10-01')
+        ->assertJsonPath('data.exercises.0.sessions_since', 3)
+        ->assertJsonPath('data.exercises.0.deload_kg', 87.5);
+});
+
+it('leaves archived exercises out of the stalled list', function () {
+    stalledBench($this->user, $this->bench);
+    $this->bench->update(['archived_at' => now()]);
+
+    $this->getJson('/api/stats/stalled')->assertOk()->assertJsonCount(0, 'data.exercises');
+});
+
+it('requires a session for the stalled list', function () {
+    $this->app['auth']->forgetGuards();
+
+    $this->getJson('/api/stats/stalled')->assertUnauthorized();
+});
+
+it('tells whether an exercise is stalled in its stats', function () {
+    $this->getJson("/api/stats/exercises/{$this->bench->id}")->assertOk()->assertJsonPath('data.stalled', null);
+
+    stalledBench($this->user, $this->bench);
+
+    $this->getJson("/api/stats/exercises/{$this->bench->id}")
+        ->assertOk()
+        ->assertJsonPath('data.stalled.best_date', '2026-10-01')
+        ->assertJsonPath('data.stalled.deload_kg', 87.5);
+});

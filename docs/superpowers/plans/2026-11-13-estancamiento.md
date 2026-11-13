@@ -361,7 +361,7 @@ it('leaves archived exercises out of the stalled list', function () {
 });
 
 it('requires a session for the stalled list', function () {
-    auth()->guard('web')->logout();
+    $this->app['auth']->forgetGuards();
 
     $this->getJson('/api/stats/stalled')->assertUnauthorized();
 });

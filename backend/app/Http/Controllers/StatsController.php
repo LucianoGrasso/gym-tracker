@@ -9,6 +9,7 @@ use App\Services\Stats\ConsistencyService;
 use App\Services\Stats\ExerciseProgressService;
 use App\Services\Stats\MuscleSetsService;
 use App\Services\Stats\OverviewService;
+use App\Services\Stats\StalledExercisesService;
 use App\Services\Stats\StatsDataLoader;
 use Illuminate\Http\JsonResponse;
 
@@ -17,11 +18,28 @@ class StatsController extends Controller
 {
     public function __construct(private readonly StatsDataLoader $data) {}
 
-    public function exercise(StatsRequest $request, Exercise $exercise, ExerciseProgressService $progress): JsonResponse
+    public function exercise(StatsRequest $request, Exercise $exercise, ExerciseProgressService $progress, StalledExercisesService $stalled): JsonResponse
     {
+        $sets = $this->data->sets($exercise->id);
+        $active = $exercise->archived_at === null ? [$exercise->id => $exercise->equipment] : [];
+
         return $this->respond($request, [
             'exercise' => ['id' => $exercise->id, 'name' => $exercise->name, 'uses_bodyweight' => $exercise->uses_bodyweight],
-            ...$progress->progress($this->data->sets($exercise->id), $request->from()),
+            ...$progress->progress($sets, $request->from()),
+            'stalled' => $stalled->stalled($sets, $active, $request->today()->toDateString())[0] ?? null,
+        ]);
+    }
+
+    public function stalled(StatsRequest $request, StalledExercisesService $stalled): JsonResponse
+    {
+        $active = Exercise::query()
+            ->whereNull('archived_at')
+            ->get(['id', 'equipment'])
+            ->mapWithKeys(fn (Exercise $exercise) => [$exercise->id => $exercise->equipment])
+            ->all();
+
+        return $this->respond($request, [
+            'exercises' => $stalled->stalled($this->data->sets(), $active, $request->today()->toDateString()),
         ]);
     }
 
