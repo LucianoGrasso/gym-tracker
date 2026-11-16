@@ -132,3 +132,11 @@ describe('warm-ups', () => {
     expect(restAfter(set(80, 6, 'heavy'), 180)).toBe(180);
   });
 });
+
+describe('isPending', () => {
+  it('marks cardio as done after its first segment', () => {
+    const cardio = exercise({ target_sets: 3, exercise: { id: 2, name: 'Trote', uses_bodyweight: false, is_unilateral: false, kind: 'cardio' } });
+    expect(isPending(cardio)).toBe(true);
+    expect(isPending({ ...cardio, sets: [set(0, 0)] })).toBe(false);
+  });
+});

@@ -20,12 +20,15 @@ export type Equipment =
   | 'kettlebell'
   | 'band'
   | 'smith';
+export type ExerciseKind = 'strength' | 'cardio';
 export type SetType = 'warmup' | 'normal' | 'bilbo' | 'heavy' | 'failure' | 'dropset';
 export type Side = 'both' | 'left' | 'right';
 
 export interface Exercise {
   id: number;
   name: string;
+  /** Ausente en ejercicios guardados en el dispositivo antes del 2026-11-16: es fuerza. */
+  kind?: ExerciseKind;
   muscle_group: MuscleGroup;
   /** Cuentan ½ serie en las estadísticas. */
   secondary_muscles: MuscleGroup[];
@@ -40,7 +43,7 @@ export interface Exercise {
 export type ExerciseInput = Pick<
   Exercise,
   'name' | 'muscle_group' | 'secondary_muscles' | 'equipment' | 'is_unilateral' | 'uses_bodyweight' | 'notes'
->;
+> & { kind: ExerciseKind };
 
 export interface WorkoutSet {
   id: string;
@@ -52,6 +55,13 @@ export interface WorkoutSet {
   rir: number | null;
   pain_level: number | null;
   notes: string | null;
+  /** Tramos de cardio (ausentes en series guardadas antes del 2026-11-16). */
+  duration_seconds?: number | null;
+  speed_kmh?: number | null;
+  incline_pct?: number | null;
+  distance_km?: number | null;
+  avg_heart_rate?: number | null;
+  calories?: number | null;
 }
 
 export interface ExerciseSession {

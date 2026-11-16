@@ -1,4 +1,4 @@
-import type { Equipment, MuscleGroup, SetType } from './exercise';
+import type { Equipment, ExerciseKind, MuscleGroup, SetType } from './exercise';
 import type { TemplateGoal, TemplateLevel } from './routine-template';
 import type { StatsPeriod } from './stats';
 
@@ -84,3 +84,8 @@ export const TEMPLATE_GOAL_LABELS: Record<TemplateGoal, string> = {
   hypertrophy: 'Hipertrofia',
   mixed: 'Fuerza e hipertrofia',
 };
+
+/** "Cardio" para ejercicios de cardio; si no, el músculo principal. */
+export function categoryLabel(exercise: { kind?: ExerciseKind; muscle_group: MuscleGroup }): string {
+  return exercise.kind === 'cardio' ? 'Cardio' : MUSCLE_GROUP_LABELS[exercise.muscle_group];
+}

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import type { Exercise } from '../models/exercise';
 import type { Today } from '../models/routine';
 import type { WorkoutDetail } from '../models/workout';
-import { freeSession, sessionFromDay, sessionFromDetail, setPayload, workoutExercisePayload, workoutPayload } from './session-mapping';
+import { freeSession, sessionExerciseFrom, sessionFromDay, sessionFromDetail, setPayload, workoutExercisePayload, workoutPayload } from './session-mapping';
 
 const bench = {
   id: 1, name: 'Press de banca', muscle_group: 'chest' as const, secondary_muscles: [], equipment: 'barbell' as const,
@@ -77,5 +78,13 @@ describe('session mapping', () => {
     });
     expect(session.exercises[0].sets).toHaveLength(1);
     expect(session.exercises[0].last_performance).toBeNull();
+  });
+
+  it('keeps the exercise kind in the session', () => {
+    const walk: Exercise = {
+      id: 7, name: 'Trote', kind: 'cardio', muscle_group: 'other', secondary_muscles: [], equipment: 'machine',
+      is_unilateral: false, uses_bodyweight: false, notes: null, archived_at: null,
+    };
+    expect(sessionExerciseFrom(walk, 'we', 0, null).exercise.kind).toBe('cardio');
   });
 });

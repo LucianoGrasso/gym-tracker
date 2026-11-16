@@ -8,7 +8,7 @@ import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import { apiErrorMessage } from '../../core/api/api-error';
 import { ExercisesApi } from '../../core/api/exercises-api';
-import type { Equipment, ExerciseInput, MuscleGroup } from '../../core/models/exercise';
+import type { Equipment, ExerciseInput, ExerciseKind, MuscleGroup } from '../../core/models/exercise';
 import { EQUIPMENTS, EQUIPMENT_LABELS, MUSCLE_GROUPS, MUSCLE_GROUP_LABELS } from '../../core/models/labels';
 import { SELECT_CLASS } from '../../shared/ui/form-styles';
 
@@ -109,6 +109,7 @@ export class ExerciseFormPage implements OnInit {
 
   protected readonly form = new FormGroup({
     name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(100)] }),
+    kind: new FormControl<ExerciseKind>('strength', { nonNullable: true }),
     muscle_group: new FormControl<MuscleGroup>('chest', { nonNullable: true }),
     secondary_muscles: new FormControl<MuscleGroup[]>([], { nonNullable: true }),
     equipment: new FormControl<Equipment>('barbell', { nonNullable: true }),

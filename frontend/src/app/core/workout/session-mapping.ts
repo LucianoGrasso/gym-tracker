@@ -8,6 +8,7 @@ const ref = (exercise: Exercise | ExerciseRef): ExerciseRef => ({
   uses_bodyweight: exercise.uses_bodyweight,
   is_unilateral: exercise.is_unilateral,
   equipment: exercise.equipment,
+  kind: exercise.kind,
 });
 
 /** Copia la plantilla del día (ejercicios + objetivos) a una sesión nueva. */
