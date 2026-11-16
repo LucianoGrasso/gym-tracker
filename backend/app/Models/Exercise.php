@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Equipment;
+use App\Enums\ExerciseKind;
 use App\Enums\MuscleGroup;
 use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,13 +17,17 @@ class Exercise extends Model
     use BelongsToUser, HasFactory;
 
     protected $fillable = [
-        'user_id', 'name', 'muscle_group', 'secondary_muscles', 'equipment',
+        'user_id', 'name', 'kind', 'muscle_group', 'secondary_muscles', 'equipment',
         'is_unilateral', 'uses_bodyweight', 'notes', 'archived_at',
     ];
+
+    /** @var array<string, mixed> */
+    protected $attributes = ['kind' => 'strength'];
 
     protected function casts(): array
     {
         return [
+            'kind' => ExerciseKind::class,
             'muscle_group' => MuscleGroup::class,
             'secondary_muscles' => AsEnumCollection::of(MuscleGroup::class),
             'equipment' => Equipment::class,

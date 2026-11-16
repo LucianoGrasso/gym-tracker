@@ -186,3 +186,39 @@ it('rejects repeated secondary muscles', function () {
         ->assertStatus(422)
         ->assertJsonValidationErrorFor('secondary_muscles.0');
 });
+
+it('creates a cardio exercise without muscles', function () {
+    $this->postJson('/api/exercises', exercisePayload([
+        'name' => 'Caminata inclinada', 'kind' => 'cardio', 'equipment' => 'machine',
+        'muscle_group' => 'quads', 'secondary_muscles' => ['calves'], 'is_unilateral' => true, 'uses_bodyweight' => true,
+    ]))
+        ->assertCreated()
+        ->assertJsonPath('data.kind', 'cardio')
+        ->assertJsonPath('data.muscle_group', 'other')
+        ->assertJsonPath('data.secondary_muscles', [])
+        ->assertJsonPath('data.is_unilateral', false)
+        ->assertJsonPath('data.uses_bodyweight', false);
+});
+
+it('defaults to a strength exercise', function () {
+    $this->postJson('/api/exercises', exercisePayload())
+        ->assertCreated()
+        ->assertJsonPath('data.kind', 'strength');
+});
+
+it('refuses to change the kind of an exercise with history', function () {
+    $exercise = Exercise::factory()->for($this->user)->create();
+    WorkoutExercise::factory()->create(['exercise_id' => $exercise->id]);
+
+    $this->putJson("/api/exercises/{$exercise->id}", exercisePayload(['kind' => 'cardio']))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['kind' => 'no puedes cambiar su tipo']);
+});
+
+it('changes the kind of an exercise without history', function () {
+    $exercise = Exercise::factory()->for($this->user)->create();
+
+    $this->putJson("/api/exercises/{$exercise->id}", exercisePayload(['kind' => 'cardio']))
+        ->assertOk()
+        ->assertJsonPath('data.kind', 'cardio');
+});
