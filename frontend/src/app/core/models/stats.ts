@@ -1,4 +1,4 @@
-import type { MuscleGroup } from './exercise';
+import type { ExerciseKind, MuscleGroup } from './exercise';
 
 export type StatsPeriod = '1w' | '1m' | '3m' | '6m' | '1y' | 'all';
 
@@ -53,11 +53,38 @@ export interface StalledExercise {
 
 export interface ExerciseStats {
   period: StatsPeriod;
-  exercise: { id: number; name: string; uses_bodyweight: boolean };
+  exercise: { id: number; name: string; uses_bodyweight: boolean; kind?: 'strength' };
   sessions: ExerciseSessionStats[];
   records: PersonalRecords;
   /** Falta en respuestas guardadas en caché antes del 2026-11-13. */
   stalled?: StalledExercise | null;
+}
+
+export interface CardioSessionStats {
+  workout_id: string;
+  date: string;
+  minutes: number;
+  distance_km: number | null;
+  calories: number | null;
+  avg_speed_kmh: number | null;
+  avg_incline_pct: number | null;
+  avg_heart_rate: number | null;
+}
+
+export interface CardioExerciseStats {
+  period: StatsPeriod;
+  exercise: { id: number; name: string; kind: 'cardio' };
+  sessions: CardioSessionStats[];
+}
+
+export interface CardioSummary {
+  minutes: number;
+  sessions: number;
+  distance_km: number;
+}
+
+export function isCardioStats(stats: ExerciseStats | CardioExerciseStats): stats is CardioExerciseStats {
+  return stats.exercise.kind === 'cardio';
 }
 
 export type RecentRecord = { exercise_id: number; exercise_name: string } & (
@@ -72,7 +99,9 @@ export interface StatsOverview {
   effective_sets: number;
   streak_weeks: number;
   recent_records: RecentRecord[];
-  exercises: { id: number; name: string; sessions: number }[];
+  /** Falta en respuestas guardadas en caché antes del 2026-11-16. */
+  cardio?: CardioSummary;
+  exercises: { id: number; name: string; sessions: number; kind?: ExerciseKind }[];
 }
 
 export type MuscleStatus = 'none' | 'low' | 'in_range' | 'high';

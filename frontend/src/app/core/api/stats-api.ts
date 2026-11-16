@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import type {
   BodyweightSeries,
+  CardioExerciseStats,
   Consistency,
   ExerciseStats,
   MuscleSets,
@@ -15,7 +16,7 @@ import type {
 export class StatsApi {
   private readonly http = inject(HttpClient);
 
-  exercise(id: number, period: StatsPeriod): Promise<ExerciseStats> {
+  exercise(id: number, period: StatsPeriod): Promise<ExerciseStats | CardioExerciseStats> {
     return this.get(`/api/stats/exercises/${id}`, period);
   }
 

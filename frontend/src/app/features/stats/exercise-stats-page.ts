@@ -8,10 +8,11 @@ import { formatDate, formatKg } from '../../core/format/format';
 import { cachedFetch } from '../../core/local-db/cached-fetch';
 import { LOCAL_DB } from '../../core/local-db/local-db';
 import { PERIOD_LABELS, STATS_PERIODS } from '../../core/models/labels';
-import { DEFAULT_STATS_PERIOD, type ExerciseSessionStats, type StatsPeriod } from '../../core/models/stats';
+import { DEFAULT_STATS_PERIOD, isCardioStats, type ExerciseSessionStats, type StatsPeriod } from '../../core/models/stats';
 import { lineOption, type LinePoint } from '../../shared/charts/chart-options';
 import { ChipGroup } from '../../shared/ui/chip-group';
 import { formatBestE1rm, formatHeaviest, formatMostReps } from './format-record';
+import { CardioStats } from './cardio-stats';
 import { STALLED_ALTERNATIVES, StalledNote } from './stalled-note';
 
 type MetricKey = 'e1rm_kg' | 'best_load_kg' | 'volume_kg' | 'total_reps';
@@ -35,7 +36,7 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
 @Component({
   selector: 'app-exercise-stats-page',
-  imports: [RouterLink, NgIcon, NgxEchartsDirective, ChipGroup, AppSkeleton, StalledNote],
+  imports: [RouterLink, NgIcon, NgxEchartsDirective, ChipGroup, AppSkeleton, StalledNote, CardioStats],
   providers: [provideIcons({ lucideChevronLeft })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -61,7 +62,9 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
       (valueChange)="period.set($any($event))"
     />
 
-    @if (stats.value(); as s) {
+    @if (cardio(); as c) {
+      <app-cardio-stats [stats]="c" />
+    } @else if (strength(); as s) {
       @if (s.stalled; as stalled) {
         <div class="card mb-4 border-primary/40 p-4" role="status">
           <p class="font-semibold text-primary">Estancado</p>
@@ -182,17 +185,26 @@ export class ExerciseStatsPage {
       ),
   });
 
+  protected readonly cardio = computed(() => {
+    const value = this.stats.value();
+    return value && isCardioStats(value) ? value : null;
+  });
+  protected readonly strength = computed(() => {
+    const value = this.stats.value();
+    return value && !isCardioStats(value) ? value : null;
+  });
+
   protected readonly chart = computed(() => {
-    const sessions = this.stats.value()?.sessions ?? [];
+    const sessions = this.strength()?.sessions ?? [];
     const metric = EXERCISE_METRICS.find((m) => m.key === this.metric())!;
     const points = sessions.map((s) => ({ date: s.date, value: s[metric.key] }));
     return points.some((p) => p.value !== null) ? lineOption(points, metric.label, metric.unit) : null;
   });
 
   protected readonly bilboChart = computed(() => {
-    const points = bilboPoints(this.stats.value()?.sessions ?? []);
+    const points = bilboPoints(this.strength()?.sessions ?? []);
     return points.length ? lineOption(points, 'Reps Bilbo', 'reps') : null;
   });
 
-  protected readonly sessionsNewestFirst = computed(() => [...(this.stats.value()?.sessions ?? [])].reverse());
+  protected readonly sessionsNewestFirst = computed(() => [...(this.strength()?.sessions ?? [])].reverse());
 }
