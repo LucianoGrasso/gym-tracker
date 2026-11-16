@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ExerciseKind;
 use App\Enums\MuscleGroup;
 use App\Enums\SetType;
 use App\Models\BodyMetric;
@@ -69,4 +70,16 @@ it('filters by exercise and lists session dates and bodyweights', function () {
         ->and($loader->workoutDates())->toBe(['2026-10-01', '2026-10-03'])
         ->and($loader->workoutBodyweights())->toBe(['2026-10-01' => 80.0])
         ->and($loader->bodyMetrics())->toBe(['2026-10-02' => 79.5]);
+});
+
+it('leaves cardio out of the strength sets', function () {
+    $bench = Exercise::factory()->for($this->user)->create(['name' => 'Press de banca']);
+    $walk = Exercise::factory()->for($this->user)->create(['name' => 'Caminata', 'kind' => ExerciseKind::Cardio, 'muscle_group' => MuscleGroup::Other]);
+    loggedWorkout($this->user, $bench, '2026-11-10', [[60, 8, SetType::Normal]]);
+    loggedWorkout($this->user, $walk, '2026-11-12', [[0, 0, SetType::Normal]]);
+
+    $sets = app(StatsDataLoader::class)->sets();
+
+    expect($sets)->toHaveCount(1)
+        ->and($sets->first()->exerciseName)->toBe('Press de banca');
 });

@@ -2,6 +2,7 @@
 
 namespace App\Services\Stats;
 
+use App\Enums\ExerciseKind;
 use App\Enums\MuscleGroup;
 use App\Enums\SetType;
 use App\Models\BodyMetric;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 final class StatsDataLoader
 {
     /**
-     * Every set of the authenticated user (archived exercises included), oldest first.
+     * Every strength set of the authenticated user (archived exercises included, cardio left out), oldest first.
      *
      * @return Collection<int, SetRow>
      */
@@ -26,6 +27,7 @@ final class StatsDataLoader
             ->join('workouts as w', 'w.id', '=', 'we.workout_id')
             ->join('exercises as e', 'e.id', '=', 'we.exercise_id')
             ->where('w.user_id', auth()->id())
+            ->where('e.kind', ExerciseKind::Strength->value)
             ->when($exerciseId, fn ($query) => $query->where('we.exercise_id', $exerciseId))
             ->orderBy('w.date')
             ->orderBy('w.started_at')
