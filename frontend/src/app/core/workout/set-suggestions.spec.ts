@@ -134,6 +134,10 @@ describe('warm-ups', () => {
 });
 
 describe('isPending', () => {
+  it('stops being pending when ended early', () => {
+    expect(isPending(exercise({ ended_early: true }))).toBe(false);
+    expect(isPending(exercise({ ended_early: false }))).toBe(true);
+  });
   it('marks cardio as done after its first segment', () => {
     const cardio = exercise({ target_sets: 3, exercise: { id: 2, name: 'Trote', uses_bodyweight: false, is_unilateral: false, kind: 'cardio' } });
     expect(isPending(cardio)).toBe(true);

@@ -31,6 +31,7 @@ export function setNumberLabels(sets: { set_type: SetType }[]): string[] {
 
 /** Ejercicio pendiente: aún no completa sus series efectivas objetivo (o, sin objetivo, no tiene ninguna). El cardio queda hecho con su primer tramo. */
 export function isPending(item: SessionExercise): boolean {
+  if (item.ended_early) return false;
   if (item.exercise.kind === 'cardio') return item.sets.length === 0;
   const done = workingSets(item.sets).length;
   return item.target_sets === null ? done === 0 : done < item.target_sets;

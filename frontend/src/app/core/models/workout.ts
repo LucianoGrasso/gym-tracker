@@ -21,6 +21,8 @@ export interface SessionExercise {
   /** Lo que se hizo la última vez (solo informativo, no se sincroniza). */
   last_performance: ExerciseSession | null;
   sets: WorkoutSet[];
+  /** Terminado antes de completar sus series (solo local: no se sincroniza). */
+  ended_early?: boolean;
 }
 
 /** Documento local de una sesión (en curso o pasada). */
