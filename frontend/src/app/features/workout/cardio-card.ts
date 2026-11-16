@@ -163,8 +163,7 @@ import { ConfirmService } from '../../shared/ui/confirm-dialog';
         </div>
       </div>
 
-      @if (showMore()) {
-        <div class="mt-3 grid grid-cols-3 gap-2">
+      <div class="mt-3 grid grid-cols-3 gap-2">
           <label class="eyebrow flex flex-col gap-1.5"
             >Distancia (km)
             <input
@@ -195,13 +194,9 @@ import { ConfirmService } from '../../shared/ui/confirm-dialog';
               (change)="patch({ calories: optionalInt($any($event.target).value) })"
             />
           </label>
-        </div>
-      }
+      </div>
 
       <div class="mt-3 flex gap-2">
-        <button hlmBtn variant="ghost" class="h-14" (click)="showMore.set(!showMore())">
-          {{ showMore() ? 'Menos' : 'Más' }}
-        </button>
         <button hlmBtn class="num h-14 flex-1 text-xl font-bold tracking-wide uppercase" (click)="save()">
           {{ editingSetId() ? 'Actualizar' : 'Guardar tramo' }}
         </button>
@@ -230,7 +225,6 @@ export class CardioCard {
   protected readonly entry = linkedSignal<WorkoutSetInput>(() => suggestNextSegment(this.item()));
   protected readonly seconds = computed(() => this.entry().duration_seconds ?? 0);
   protected readonly editingSetId = signal<string | null>(null);
-  protected readonly showMore = signal(false);
   protected readonly total = computed(() => formatCardioTotal(this.item().sets));
 
   protected readonly targetLine = computed(() => {

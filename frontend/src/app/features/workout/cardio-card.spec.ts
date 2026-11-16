@@ -71,10 +71,9 @@ describe('CardioCard', () => {
     expect(el.textContent).toContain('Total: 15 min · 1,5 km');
   });
 
-  it('records distance, heart rate and calories under "Más"', async () => {
+  it('records distance, heart rate and calories without extra taps', async () => {
     const { fixture, el, sessions, button } = await render();
-    button('Más').click();
-    await fixture.whenStable();
+    expect(button('Más')).toBeUndefined();
     const hr = el.querySelector<HTMLInputElement>('[aria-label="FC promedio"]')!;
     hr.value = '128';
     hr.dispatchEvent(new Event('change'));
