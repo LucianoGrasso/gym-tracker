@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Enums\Equipment;
+use App\Enums\ExerciseKind;
 use App\Enums\MuscleGroup;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -173,22 +174,45 @@ final class ExerciseCatalog
         'Superman' => [MuscleGroup::Other, [MuscleGroup::Glutes], Equipment::Bodyweight, false, true],
     ];
 
+    /** Cardio: name => equipo. Sin músculos (no cuentan en las estadísticas de fuerza). */
+    private const CARDIO = [
+        'Caminata inclinada en trotadora' => Equipment::Machine,
+        'Trote en trotadora' => Equipment::Machine,
+        'Bicicleta estática' => Equipment::Machine,
+        'Elíptica' => Equipment::Machine,
+        'Remoergómetro' => Equipment::Machine,
+        'Escaladora' => Equipment::Machine,
+        'Caminata al aire libre' => Equipment::Bodyweight,
+        'Trote al aire libre' => Equipment::Bodyweight,
+    ];
+
     public static function has(string $name): bool
     {
-        return array_key_exists($name, self::EXERCISES);
+        return array_key_exists($name, self::EXERCISES) || array_key_exists($name, self::CARDIO);
     }
 
     /**
-     * @return array{muscle_group: MuscleGroup, secondary_muscles: list<MuscleGroup>, equipment: Equipment, is_unilateral: bool, uses_bodyweight: bool}
+     * @return array{kind: ExerciseKind, muscle_group: MuscleGroup, secondary_muscles: list<MuscleGroup>, equipment: Equipment, is_unilateral: bool, uses_bodyweight: bool}
      */
     public static function get(string $name): array
     {
         if (! self::has($name)) {
             throw new InvalidArgumentException("Ejercicio desconocido en el catálogo: {$name}");
         }
+        if (array_key_exists($name, self::CARDIO)) {
+            return [
+                'kind' => ExerciseKind::Cardio,
+                'muscle_group' => MuscleGroup::Other,
+                'secondary_muscles' => [],
+                'equipment' => self::CARDIO[$name],
+                'is_unilateral' => false,
+                'uses_bodyweight' => false,
+            ];
+        }
         [$muscle, $secondary, $equipment, $unilateral, $bodyweight] = self::EXERCISES[$name];
 
         return [
+            'kind' => ExerciseKind::Strength,
             'muscle_group' => $muscle,
             'secondary_muscles' => $secondary,
             'equipment' => $equipment,
@@ -198,19 +222,19 @@ final class ExerciseCatalog
     }
 
     /**
-     * La biblioteca completa, en el orden del catálogo (agrupada por músculo principal).
+     * La biblioteca completa, en el orden del catálogo (agrupada por músculo principal; el cardio al final).
      *
-     * @return list<array{slug: string, name: string, muscle_group: MuscleGroup, secondary_muscles: list<MuscleGroup>, equipment: Equipment, is_unilateral: bool, uses_bodyweight: bool}>
+     * @return list<array{slug: string, name: string, kind: ExerciseKind, muscle_group: MuscleGroup, secondary_muscles: list<MuscleGroup>, equipment: Equipment, is_unilateral: bool, uses_bodyweight: bool}>
      */
     public static function all(): array
     {
         return array_map(
             fn (string $name) => ['slug' => Str::slug($name), 'name' => $name] + self::get($name),
-            array_keys(self::EXERCISES),
+            [...array_keys(self::EXERCISES), ...array_keys(self::CARDIO)],
         );
     }
 
-    /** @return array{slug: string, name: string, muscle_group: MuscleGroup, secondary_muscles: list<MuscleGroup>, equipment: Equipment, is_unilateral: bool, uses_bodyweight: bool}|null */
+    /** @return array{slug: string, name: string, kind: ExerciseKind, muscle_group: MuscleGroup, secondary_muscles: list<MuscleGroup>, equipment: Equipment, is_unilateral: bool, uses_bodyweight: bool}|null */
     public static function findBySlug(string $slug): ?array
     {
         foreach (self::all() as $exercise) {

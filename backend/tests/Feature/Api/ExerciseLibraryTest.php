@@ -13,11 +13,11 @@ it('lists the library marking the exercises the user already has', function () {
     Exercise::factory()->for($this->user)->create(['name' => 'Plancha', 'archived_at' => now()]);
     Exercise::factory()->create(['name' => 'Sentadilla']);
 
-    $response = $this->getJson('/api/exercise-library')->assertOk()->assertJsonCount(147, 'data');
+    $response = $this->getJson('/api/exercise-library')->assertOk()->assertJsonCount(155, 'data');
 
     $bySlug = collect($response->json('data'))->keyBy('slug');
     expect($bySlug['press-de-banca'])->toBe([
-        'slug' => 'press-de-banca', 'name' => 'Press de banca', 'muscle_group' => 'chest',
+        'slug' => 'press-de-banca', 'name' => 'Press de banca', 'kind' => 'strength', 'muscle_group' => 'chest',
         'secondary_muscles' => ['triceps', 'shoulders'], 'equipment' => 'barbell',
         'is_unilateral' => false, 'uses_bodyweight' => false, 'owned_exercise_id' => $own->id,
     ])
@@ -57,4 +57,11 @@ it('requires authentication', function () {
     $this->app['auth']->forgetGuards();
 
     $this->getJson('/api/exercise-library')->assertUnauthorized();
+});
+
+it('adopts a cardio exercise with its kind', function () {
+    $this->postJson('/api/exercises/from-library', ['slug' => 'caminata-inclinada-en-trotadora'])
+        ->assertCreated()
+        ->assertJsonPath('data.kind', 'cardio')
+        ->assertJsonPath('data.muscle_group', 'other');
 });
