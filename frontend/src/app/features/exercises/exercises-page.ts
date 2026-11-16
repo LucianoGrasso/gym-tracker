@@ -6,16 +6,16 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { ExercisesApi } from '../../core/api/exercises-api';
 import type { MuscleGroup } from '../../core/models/exercise';
-import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, MUSCLE_GROUPS } from '../../core/models/labels';
+import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, MUSCLE_GROUPS, categoryLabel } from '../../core/models/labels';
 import { filterExercises } from './filter-exercises';
 import { LibraryList } from './library-list';
 
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
-import { MiniBodyMap } from '../../shared/ui/body-map/mini-body-map';
+import { ExerciseThumb } from '../../shared/ui/exercise-thumb';
 
 @Component({
   selector: 'app-exercises-page',
-  imports: [RouterLink, NgIcon, HlmButton, HlmInput, AppSkeleton, LibraryList, MiniBodyMap],
+  imports: [RouterLink, NgIcon, HlmButton, HlmInput, AppSkeleton, LibraryList, ExerciseThumb],
   providers: [provideIcons({ lucidePlus, lucideChevronRight })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -71,11 +71,11 @@ import { MiniBodyMap } from '../../shared/ui/body-map/mini-body-map';
           @for (exercise of visible(); track exercise.id) {
             <li>
               <a [routerLink]="['/ejercicios', exercise.id]" class="flex min-h-16 items-center gap-3 px-4 py-2">
-              <app-mini-body-map [primary]="exercise.muscle_group" [secondaries]="exercise.secondary_muscles" />
+              <app-exercise-thumb [exercise]="exercise" />
               <span class="min-w-0 flex-1">
                 <span class="block font-medium">{{ exercise.name }}</span>
                 <span class="text-sm text-muted-foreground">
-                  {{ muscleLabels[exercise.muscle_group] }} · {{ equipmentLabels[exercise.equipment] }}
+                  {{ categoryLabel(exercise) }} · {{ equipmentLabels[exercise.equipment] }}
                 </span>
               </span>
               <ng-icon name="lucideChevronRight" class="shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -98,6 +98,7 @@ export class ExercisesPage {
 
   protected readonly groups = MUSCLE_GROUPS;
   protected readonly muscleLabels = MUSCLE_GROUP_LABELS;
+  protected readonly categoryLabel = categoryLabel;
   protected readonly equipmentLabels = EQUIPMENT_LABELS;
 
   protected readonly search = signal('');

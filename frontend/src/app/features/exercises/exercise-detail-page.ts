@@ -6,7 +6,7 @@ import { apiErrorMessage } from '../../core/api/api-error';
 import { ExercisesApi } from '../../core/api/exercises-api';
 import { formatDate, formatKg } from '../../core/format/format';
 import type { Exercise, ExerciseSession } from '../../core/models/exercise';
-import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, SET_TYPE_LABELS } from '../../core/models/labels';
+import { EQUIPMENT_LABELS, SET_TYPE_LABELS, categoryLabel } from '../../core/models/labels';
 
 import { exerciseIntensities, formatMuscles } from '../../core/stats/muscle-sets';
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
@@ -23,17 +23,19 @@ import { BodyMap } from '../../shared/ui/body-map/body-map';
       <header class="mb-4">
         <h1 class="page-title">{{ ex.name }}</h1>
         <p class="text-muted-foreground">
-          {{ muscleLabels[ex.muscle_group] }} · {{ equipmentLabels[ex.equipment] }}
+          {{ categoryLabel(ex) }} · {{ equipmentLabels[ex.equipment] }}
           @if (ex.is_unilateral) { · Unilateral }
           @if (ex.uses_bodyweight) { · Peso corporal }
         </p>
         @if (ex.notes) { <p class="mt-2 whitespace-pre-line">{{ ex.notes }}</p> }
       </header>
 
+      @if (ex.kind !== 'cardio') {
       <section class="card mb-6 p-4" aria-label="Músculos que trabaja">
         <app-body-map [intensities]="intensities(ex)" />
         <p class="mt-3 text-center">{{ muscles(ex) }}</p>
       </section>
+      }
 
       <div class="mb-6 grid grid-cols-2 gap-3">
         @if (ex.has_history) {
@@ -85,7 +87,7 @@ export class ExerciseDetailPage {
 
   readonly id = input.required<string>();
 
-  protected readonly muscleLabels = MUSCLE_GROUP_LABELS;
+  protected readonly categoryLabel = categoryLabel;
   protected readonly equipmentLabels = EQUIPMENT_LABELS;
   protected readonly setTypeLabels = SET_TYPE_LABELS;
   protected readonly formatDate = formatDate;

@@ -19,16 +19,17 @@ import {
   EQUIPMENTS,
   EQUIPMENT_LABELS,
   MUSCLE_GROUP_LABELS,
+  categoryLabel,
   MUSCLE_GROUPS,
 } from '../../core/models/labels';
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
-import { MiniBodyMap } from '../../shared/ui/body-map/mini-body-map';
+import { ExerciseThumb } from '../../shared/ui/exercise-thumb';
 import { filterLibrary } from './filter-exercises';
 
 /** Pestaña "Biblioteca": todos los ejercicios de la app con su esquema muscular. */
 @Component({
   selector: 'app-library-list',
-  imports: [RouterLink, NgIcon, HlmButton, HlmInput, AppSkeleton, MiniBodyMap],
+  imports: [RouterLink, NgIcon, HlmButton, HlmInput, AppSkeleton, ExerciseThumb],
   providers: [provideIcons({ lucideCheck, lucideChevronRight })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -89,14 +90,11 @@ import { filterLibrary } from './filter-exercises';
               [routerLink]="['/ejercicios/biblioteca', exercise.slug]"
               class="flex min-h-16 items-center gap-3 px-4 py-2"
             >
-              <app-mini-body-map
-                [primary]="exercise.muscle_group"
-                [secondaries]="exercise.secondary_muscles"
-              />
+              <app-exercise-thumb [exercise]="exercise" />
               <span class="min-w-0 flex-1">
                 <span data-name class="block font-medium">{{ exercise.name }}</span>
                 <span class="text-sm text-muted-foreground">
-                  {{ muscleLabels[exercise.muscle_group] }} ·
+                  {{ categoryLabel(exercise) }} ·
                   {{ equipmentLabels[exercise.equipment] }}
                 </span>
               </span>
@@ -133,6 +131,7 @@ export class LibraryList {
   protected readonly groups = MUSCLE_GROUPS;
   protected readonly equipments = EQUIPMENTS;
   protected readonly muscleLabels = MUSCLE_GROUP_LABELS;
+  protected readonly categoryLabel = categoryLabel;
   protected readonly equipmentLabels = EQUIPMENT_LABELS;
 
   protected readonly search = signal('');

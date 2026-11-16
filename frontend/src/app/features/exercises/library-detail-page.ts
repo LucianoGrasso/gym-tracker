@@ -39,6 +39,7 @@ import { BodyMap } from '../../shared/ui/body-map/body-map';
         <header class="mb-4">
           <h1 class="page-title">{{ ex.name }}</h1>
           <p class="text-muted-foreground">
+            @if (ex.kind === 'cardio') { Cardio · }
             {{ equipmentLabels[ex.equipment] }}
             @if (ex.is_unilateral) {
               · Unilateral
@@ -49,6 +50,7 @@ import { BodyMap } from '../../shared/ui/body-map/body-map';
           </p>
         </header>
 
+        @if (ex.kind !== 'cardio') {
         <section class="card mb-6 p-4">
           <app-body-map [intensities]="intensities()" />
           <p class="mt-3 text-center">{{ muscles() }}</p>
@@ -56,6 +58,7 @@ import { BodyMap } from '../../shared/ui/body-map/body-map';
             Los secundarios cuentan media serie en tus estadísticas.
           </p>
         </section>
+        }
 
         @if (ex.owned_exercise_id) {
           <a hlmBtn class="h-12 w-full" [routerLink]="['/ejercicios', ex.owned_exercise_id]"
