@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Workout;
 use App\Models\WorkoutExercise;
 use App\Models\WorkoutSet;
+use App\Services\Stats\CardioRow;
 use App\Services\Stats\SetRow;
 use App\Services\Stats\StatsDataLoader;
 
@@ -82,4 +83,27 @@ it('leaves cardio out of the strength sets', function () {
 
     expect($sets)->toHaveCount(1)
         ->and($sets->first()->exerciseName)->toBe('Press de banca');
+});
+
+it('flattens own cardio segments, optionally for one exercise', function () {
+    $walk = Exercise::factory()->for($this->user)->create(['name' => 'Caminata', 'kind' => ExerciseKind::Cardio, 'muscle_group' => MuscleGroup::Other]);
+    $bike = Exercise::factory()->for($this->user)->create(['name' => 'Bicicleta', 'kind' => ExerciseKind::Cardio, 'muscle_group' => MuscleGroup::Other]);
+    $bench = Exercise::factory()->for($this->user)->create(['name' => 'Press']);
+    loggedWorkout($this->user, $bench, '2026-11-10', [[60, 8, SetType::Normal]]);
+    $workout = loggedWorkout($this->user, $walk, '2026-11-11', [[0, 0, SetType::Normal]]);
+    WorkoutSet::query()->update(['duration_seconds' => 2100, 'speed_kmh' => 5.5, 'incline_pct' => 12, 'distance_km' => 3.2, 'avg_heart_rate' => 128, 'calories' => 250]);
+    loggedWorkout($this->user, $bike, '2026-11-12', [[0, 0, SetType::Normal]]);
+    WorkoutSet::query()->whereNull('duration_seconds')->update(['duration_seconds' => 600]);
+    $other = User::factory()->create();
+    loggedWorkout($other, Exercise::factory()->for($other)->create(['kind' => ExerciseKind::Cardio]), '2026-11-12', [[0, 0, SetType::Normal]]);
+
+    $loader = app(StatsDataLoader::class);
+    $rows = $loader->cardioSegments();
+
+    expect($rows->pluck('exerciseName')->all())->toBe(['Caminata', 'Bicicleta'])
+        ->and($rows->first())->toEqual(new CardioRow(
+            workoutId: $workout->id, date: '2026-11-11', exerciseId: $walk->id, exerciseName: 'Caminata',
+            durationSeconds: 2100, speedKmh: 5.5, inclinePct: 12.0, distanceKm: 3.2, avgHeartRate: 128, calories: 250,
+        ))
+        ->and($loader->cardioSegments($bike->id)->pluck('exerciseName')->all())->toBe(['Bicicleta']);
 });

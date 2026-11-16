@@ -57,6 +57,42 @@ final class StatsDataLoader
             });
     }
 
+    /**
+     * Every cardio segment of the authenticated user (archived exercises included), oldest first.
+     *
+     * @return Collection<int, CardioRow>
+     */
+    public function cardioSegments(?int $exerciseId = null): Collection
+    {
+        return DB::table('workout_sets as s')
+            ->join('workout_exercises as we', 'we.id', '=', 's.workout_exercise_id')
+            ->join('workouts as w', 'w.id', '=', 'we.workout_id')
+            ->join('exercises as e', 'e.id', '=', 'we.exercise_id')
+            ->where('w.user_id', auth()->id())
+            ->where('e.kind', ExerciseKind::Cardio->value)
+            ->when($exerciseId, fn ($query) => $query->where('we.exercise_id', $exerciseId))
+            ->orderBy('w.date')
+            ->orderBy('w.started_at')
+            ->orderBy('we.position')
+            ->orderBy('s.set_number')
+            ->get([
+                'w.id as workout_id', 'w.date', 'we.exercise_id', 'e.name as exercise_name', 's.duration_seconds',
+                's.speed_kmh', 's.incline_pct', 's.distance_km', 's.avg_heart_rate', 's.calories',
+            ])
+            ->map(fn (object $row) => new CardioRow(
+                workoutId: $row->workout_id,
+                date: substr((string) $row->date, 0, 10),
+                exerciseId: (int) $row->exercise_id,
+                exerciseName: $row->exercise_name,
+                durationSeconds: (int) $row->duration_seconds,
+                speedKmh: $row->speed_kmh === null ? null : (float) $row->speed_kmh,
+                inclinePct: $row->incline_pct === null ? null : (float) $row->incline_pct,
+                distanceKm: $row->distance_km === null ? null : (float) $row->distance_km,
+                avgHeartRate: $row->avg_heart_rate === null ? null : (int) $row->avg_heart_rate,
+                calories: $row->calories === null ? null : (int) $row->calories,
+            ));
+    }
+
     /** @return list<string> local date of every session, oldest first */
     public function workoutDates(): array
     {
