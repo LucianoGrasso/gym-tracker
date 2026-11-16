@@ -160,4 +160,25 @@ describe('TodayPage', () => {
     )!;
     expect(link.getAttribute('href')).toBe('/entrenamiento/abc');
   });
+
+  it('shows a cardio item as segments with its last total', async () => {
+    const walk = { ...bench, id: 2, name: 'Caminata inclinada', kind: 'cardio' as const, muscle_group: 'other' as const, equipment: 'machine' as const };
+    const segment = {
+      id: 'c1', set_number: 1, set_type: 'normal' as const, weight_kg: 0, reps: 0, side: 'both' as const,
+      rir: null, pain_level: null, notes: null, duration_seconds: 2100, distance_km: 3.2,
+    };
+    const day = today.day!;
+    const { text } = await render({
+      ...today,
+      day: {
+        ...day,
+        exercises: [{
+          ...day.exercises[0], id: 101, exercise: walk, default_set_type: 'normal', target_text: '35 min · 12 %',
+          rest_seconds: 0, last_performance: { workout_id: 'w2', date: '2026-11-12', sets: [segment] },
+        }],
+      },
+    });
+    expect(text).toContain('1 tramo');
+    expect(text).toContain('Última vez: Total: 35 min · 3,2 km · 12/11/2026');
+  });
 });

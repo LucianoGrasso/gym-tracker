@@ -11,6 +11,7 @@ import { apiErrorMessage } from '../../core/api/api-error';
 import { ExercisesApi } from '../../core/api/exercises-api';
 import { RoutinesApi } from '../../core/api/routines-api';
 import { formatRest, formatTargets } from '../../core/format/training';
+import { formatSegments, isCardio } from '../../core/workout/cardio';
 import type { Exercise } from '../../core/models/exercise';
 import { SET_TYPE_LABELS, WEEKDAYS, WEEKDAY_LABELS } from '../../core/models/labels';
 import type { RoutineDay, RoutineDayExercise, RoutineDayExerciseInput } from '../../core/models/routine';
@@ -57,7 +58,11 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
                 <div class="min-w-0 flex-1">
                   <span class="block truncate font-medium">{{ item.exercise.name }}</span>
                   <span class="text-sm text-muted-foreground">
-                    {{ formatTargets(item) }} · {{ setTypeLabels[item.default_set_type] }} · {{ formatRest(item.rest_seconds) }}
+                    @if (isCardio(item.exercise)) {
+                      {{ formatSegments(item.target_sets) }}
+                    } @else {
+                      {{ formatTargets(item) }} · {{ setTypeLabels[item.default_set_type] }} · {{ formatRest(item.rest_seconds) }}
+                    }
                   </span>
                   @if (item.target_text) { <span class="block text-sm text-muted-foreground">{{ item.target_text }}</span> }
                 </div>
@@ -106,6 +111,8 @@ export class RoutineDayPage implements OnInit {
   protected readonly setTypeLabels = SET_TYPE_LABELS;
   protected readonly formatTargets = formatTargets;
   protected readonly formatRest = formatRest;
+  protected readonly formatSegments = formatSegments;
+  protected readonly isCardio = isCardio;
 
   protected readonly day = signal<RoutineDay | null>(null);
   protected readonly exercises = signal<Exercise[]>([]);

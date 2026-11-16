@@ -15,6 +15,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { formatDate } from '../../core/format/format';
 import { firstName, greeting } from '../../core/format/greeting';
 import { formatBestSet, formatTargets } from '../../core/format/training';
+import { formatCardioTotal, formatSegments, isCardio } from '../../core/workout/cardio';
 import { cachedFetch } from '../../core/local-db/cached-fetch';
 import { LOCAL_DB } from '../../core/local-db/local-db';
 import { SET_TYPE_LABELS, WEEKDAY_LABELS } from '../../core/models/labels';
@@ -101,11 +102,11 @@ import { AccountMenu } from '../account/account-menu';
               <div class="min-w-0 flex-1">
                 <div class="flex items-start justify-between gap-2">
                   <span class="text-lg leading-tight font-semibold">{{ item.exercise.name }}</span>
-                  @if (item.default_set_type !== 'normal') {
+                  @if (!isCardio(item.exercise) && item.default_set_type !== 'normal') {
                     <span class="shrink-0 rounded-md bg-primary/15 px-2 py-0.5 text-xs font-semibold tracking-wide text-primary uppercase">{{ setTypeLabels[item.default_set_type] }}</span>
                   }
                 </div>
-                <p class="num text-lg text-muted-foreground">{{ formatTargets(item) }}</p>
+                <p class="num text-lg text-muted-foreground">{{ isCardio(item.exercise) ? formatSegments(item.target_sets) : formatTargets(item) }}</p>
                 @if (item.target_text) {
                   <p class="text-sm text-muted-foreground">{{ item.target_text }}</p>
                 }
@@ -177,6 +178,8 @@ export class TodayPage {
   protected readonly setTypeLabels = SET_TYPE_LABELS;
   protected readonly formatDate = formatDate;
   protected readonly formatTargets = formatTargets;
+  protected readonly formatSegments = formatSegments;
+  protected readonly isCardio = isCardio;
 
   protected readonly salute = signal(greeting());
   protected readonly name = computed(() => firstName(this.auth.user()?.name ?? ''));
@@ -211,6 +214,7 @@ export class TodayPage {
 
   protected lastTime(item: TodayExercise): string {
     const last = item.last_performance;
+    if (last && isCardio(item.exercise)) return `Última vez: ${formatCardioTotal(last.sets)} · ${formatDate(last.date)}`;
     const best = last ? formatBestSet(last.sets, item.exercise.uses_bodyweight) : null;
     return last && best ? `Última vez: ${best} · ${formatDate(last.date)}` : 'Sin registros todavía';
   }

@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, input, output, signal } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
@@ -6,6 +7,7 @@ import { HlmLabel } from '@spartan-ng/helm/label';
 import type { Exercise, SetType } from '../../core/models/exercise';
 import { SET_TYPES, SET_TYPE_LABELS } from '../../core/models/labels';
 import type { RoutineDayExercise, RoutineDayExerciseInput } from '../../core/models/routine';
+import { isCardio } from '../../core/workout/cardio';
 import { ExercisePicker } from '../../shared/ui/exercise-picker';
 import { SELECT_CLASS } from '../../shared/ui/form-styles';
 
@@ -29,9 +31,10 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
       }
       <div class="grid grid-cols-3 gap-3">
         <div class="flex flex-col gap-2">
-          <label hlmLabel for="target_sets">Series</label>
+          <label hlmLabel for="target_sets">{{ cardio() ? 'Tramos' : 'Series' }}</label>
           <input hlmInput id="target_sets" type="number" inputmode="numeric" min="1" max="20" formControlName="target_sets" class="h-12 text-base" />
         </div>
+        @if (!cardio()) {
         <div class="flex flex-col gap-2">
           <label hlmLabel for="target_reps_min">Reps mín.</label>
           <input hlmInput id="target_reps_min" type="number" inputmode="numeric" min="1" formControlName="target_reps_min" class="h-12 text-base" />
@@ -40,7 +43,9 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
           <label hlmLabel for="target_reps_max">Reps máx.</label>
           <input hlmInput id="target_reps_max" type="number" inputmode="numeric" min="1" formControlName="target_reps_max" class="h-12 text-base" />
         </div>
+        }
       </div>
+      @if (!cardio()) {
       <div class="grid grid-cols-2 gap-3">
         <div class="flex flex-col gap-2">
           <label hlmLabel for="default_set_type">Tipo de serie</label>
@@ -53,9 +58,10 @@ import { SELECT_CLASS } from '../../shared/ui/form-styles';
           <input hlmInput id="rest_seconds" type="number" inputmode="numeric" min="0" max="900" step="15" formControlName="rest_seconds" class="h-12 text-base" />
         </div>
       </div>
+      }
       <div class="flex flex-col gap-2">
         <label hlmLabel for="target_text">Indicación (opcional)</label>
-        <input hlmInput id="target_text" formControlName="target_text" placeholder="Ej.: ~30 reps explosivas" class="h-12 text-base" />
+        <input hlmInput id="target_text" formControlName="target_text" [placeholder]="cardio() ? 'Ej.: 35 min · 12 %' : 'Ej.: ~30 reps explosivas'" class="h-12 text-base" />
       </div>
       <div class="flex flex-col gap-2">
         <label hlmLabel for="notes">Notas (opcional)</label>
@@ -99,6 +105,23 @@ export class RoutineExerciseForm implements OnInit {
     notes: new FormControl<string | null>(null),
   });
 
+  private readonly exerciseId = toSignal(this.form.controls.exercise_id.valueChanges, { initialValue: null });
+  /** Un ítem de cardio se planifica en tramos con una indicación libre: sin reps, tipo de serie ni descanso. */
+  protected readonly cardio = computed(() => {
+    const initial = this.initial();
+    if (initial) return isCardio(initial.exercise);
+    const exercise = this.exercises()?.find((e) => e.id === this.exerciseId());
+    return exercise ? isCardio(exercise) : false;
+  });
+
+  constructor() {
+    // Un ítem nuevo de cardio parte con un tramo.
+    this.form.controls.exercise_id.valueChanges.pipe(takeUntilDestroyed()).subscribe((id) => {
+      const exercise = this.exercises()?.find((e) => e.id === id);
+      if (!this.initial() && exercise && isCardio(exercise)) this.form.controls.target_sets.setValue(1);
+    });
+  }
+
   ngOnInit(): void {
     const initial = this.initial();
     if (initial) {
@@ -116,7 +139,8 @@ export class RoutineExerciseForm implements OnInit {
       this.error.set('Revisa las series y el descanso.');
       return;
     }
-    if (value.target_reps_min !== null && value.target_reps_max !== null && value.target_reps_max < value.target_reps_min) {
+    const cardio = this.cardio();
+    if (!cardio && value.target_reps_min !== null && value.target_reps_max !== null && value.target_reps_max < value.target_reps_min) {
       this.error.set('El máximo de reps no puede ser menor que el mínimo.');
       return;
     }
@@ -124,6 +148,7 @@ export class RoutineExerciseForm implements OnInit {
     this.saved.emit({
       ...value,
       exercise_id: value.exercise_id,
+      ...(cardio ? { target_reps_min: null, target_reps_max: null, default_set_type: 'normal' as const, rest_seconds: 0 } : {}),
       target_text: value.target_text || null,
       notes: value.notes || null,
     });
