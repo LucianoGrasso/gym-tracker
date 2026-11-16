@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Equipment;
+use App\Enums\ExerciseKind;
 use App\Enums\MuscleGroup;
 use App\Enums\SetType;
 use App\Models\BodyMetric;
@@ -42,6 +43,7 @@ it('returns the progress of an exercise with its records, archived or not', func
         ->assertOk()
         ->assertJsonPath('data.period', '1m')
         ->assertJsonPath('data.exercise.name', 'Press de banca')
+        ->assertJsonPath('data.exercise.kind', 'strength')
         ->assertJsonCount(1, 'data.sessions')
         ->assertJsonPath('data.sessions.0.date', '2026-10-26')
         ->assertJsonPath('data.sessions.0.e1rm_kg', 101.33)
@@ -164,4 +166,29 @@ it('tells whether an exercise is stalled in its stats', function () {
         ->assertOk()
         ->assertJsonPath('data.stalled.best_date', '2026-10-01')
         ->assertJsonPath('data.stalled.deload_kg', 87.5);
+});
+
+it('returns the progress of a cardio exercise', function () {
+    $walk = Exercise::factory()->for($this->user)->create(['name' => 'Caminata', 'kind' => ExerciseKind::Cardio, 'muscle_group' => MuscleGroup::Other]);
+    statsWorkout($this->user, $walk, '2026-11-04', [[0, 0, SetType::Normal]]);
+    WorkoutSet::query()->update(['duration_seconds' => 2100, 'incline_pct' => 12, 'distance_km' => 3.2]);
+
+    $this->getJson("/api/stats/exercises/{$walk->id}?period=1m")
+        ->assertOk()
+        ->assertJsonPath('data.exercise.kind', 'cardio')
+        ->assertJsonPath('data.sessions.0.minutes', 35.0)
+        ->assertJsonPath('data.sessions.0.avg_incline_pct', 12.0)
+        ->assertJsonMissingPath('data.records')
+        ->assertJsonMissingPath('data.stalled');
+});
+
+it('adds the cardio summary to the overview', function () {
+    $walk = Exercise::factory()->for($this->user)->create(['name' => 'Caminata', 'kind' => ExerciseKind::Cardio, 'muscle_group' => MuscleGroup::Other]);
+    statsWorkout($this->user, $walk, '2026-11-04', [[0, 0, SetType::Normal]]);
+    WorkoutSet::query()->update(['duration_seconds' => 2100, 'distance_km' => 3.2]);
+
+    $this->getJson('/api/stats/overview?period=1m')
+        ->assertOk()
+        ->assertJsonPath('data.cardio', ['minutes' => 35, 'sessions' => 1, 'distance_km' => 3.2])
+        ->assertJsonPath('data.exercises.0.kind', 'cardio');
 });

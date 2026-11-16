@@ -3,6 +3,7 @@
 use App\Enums\MuscleGroup;
 use App\Enums\SetType;
 use App\Services\Stats\BodyweightSeriesService;
+use App\Services\Stats\CardioRow;
 use App\Services\Stats\ConsistencyService;
 use App\Services\Stats\EffectiveLoadResolver;
 use App\Services\Stats\MuscleSetsService;
@@ -135,13 +136,29 @@ describe('OverviewService', function () use ($today) {
             ->and($result['sessions_per_week'])->toBe(0.6) // 2 sesiones en 24 días
             ->and($result['streak_weeks'])->toBe(2)
             ->and($result['exercises'])->toBe([
-                ['id' => 2, 'name' => 'Dominadas', 'sessions' => 1],
-                ['id' => 1, 'name' => 'Press de banca', 'sessions' => 2],
+                ['id' => 2, 'name' => 'Dominadas', 'sessions' => 1, 'kind' => 'strength'],
+                ['id' => 1, 'name' => 'Press de banca', 'sessions' => 2, 'kind' => 'strength'],
             ])
             ->and(array_map(fn ($r) => [$r['exercise_name'], $r['type']], $result['recent_records']))->toBe([
                 ['Press de banca', 'best_e1rm'],
                 ['Dominadas', 'heaviest'],
                 ['Dominadas', 'best_e1rm'],
+            ]);
+    });
+
+    it('adds the cardio summary and the cardio exercises', function () use ($overview, $today) {
+        $sets = collect([statsSet(['workoutId' => 'b', 'date' => '2026-10-27', 'weightKg' => 85.0, 'reps' => 5])]);
+        $cardio = collect([
+            new CardioRow('c', '2026-11-03', 7, 'Caminata', 2100, 5.5, 12.0, 3.2, null, null),
+            new CardioRow('c', '2026-11-03', 7, 'Caminata', 300, null, null, null, null, null),
+        ]);
+
+        $result = $overview->overview($sets, ['2026-10-27', '2026-11-03'], $today, '2026-10-12', $cardio);
+
+        expect($result['cardio'])->toBe(['minutes' => 40, 'sessions' => 1, 'distance_km' => 3.2])
+            ->and($result['exercises'])->toBe([
+                ['id' => 7, 'name' => 'Caminata', 'sessions' => 1, 'kind' => 'cardio'],
+                ['id' => 1, 'name' => 'Press de banca', 'sessions' => 1, 'kind' => 'strength'],
             ]);
     });
 });

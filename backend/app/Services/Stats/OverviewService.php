@@ -2,6 +2,7 @@
 
 namespace App\Services\Stats;
 
+use App\Enums\ExerciseKind;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
@@ -12,15 +13,18 @@ final class OverviewService
     public function __construct(
         private readonly PersonalRecordsService $records,
         private readonly ConsistencyService $consistency,
+        private readonly CardioService $cardio = new CardioService,
     ) {}
 
     /**
      * @param  Collection<int, SetRow>  $sets  every set of the user
      * @param  list<string>  $workoutDates  oldest first
+     * @param  Collection<int, CardioRow>|null  $cardio  every cardio segment of the user
      * @return array<string, mixed>
      */
-    public function overview(Collection $sets, array $workoutDates, CarbonImmutable $today, ?string $from): array
+    public function overview(Collection $sets, array $workoutDates, CarbonImmutable $today, ?string $from, ?Collection $cardio = null): array
     {
+        $cardio ??= new Collection;
         $inPeriod = fn (string $date) => $from === null || $date >= $from;
         $working = $sets->reject(fn (SetRow $set) => $set->isWarmup());
         $sessions = count(array_filter($workoutDates, $inPeriod));
@@ -32,17 +36,32 @@ final class OverviewService
             'effective_sets' => $working->filter(fn (SetRow $set) => $inPeriod($set->date))->count(),
             'streak_weeks' => $this->consistency->streak($workoutDates, $today),
             'recent_records' => $this->recentRecords($sets, $inPeriod),
-            'exercises' => $working
-                ->groupBy('exerciseId')
-                ->map(fn (Collection $exerciseSets) => [
-                    'id' => $exerciseSets->first()->exerciseId,
-                    'name' => $exerciseSets->first()->exerciseName,
-                    'sessions' => $exerciseSets->pluck('workoutId')->unique()->count(),
-                ])
+            'cardio' => $this->cardio->summary($cardio, $from),
+            'exercises' => $this->exercises($working, ExerciseKind::Strength)
+                ->concat($this->exercises($cardio, ExerciseKind::Cardio))
                 ->sortBy('name')
                 ->values()
                 ->all(),
         ];
+    }
+
+    /**
+     * Every exercise with history (strength sets or cardio segments) and how many sessions it has.
+     *
+     * @param  Collection<int, SetRow|CardioRow>  $rows
+     * @return Collection<int, array{id: int, name: string, sessions: int, kind: string}>
+     */
+    private function exercises(Collection $rows, ExerciseKind $kind): Collection
+    {
+        return $rows
+            ->groupBy('exerciseId')
+            ->map(fn (Collection $exerciseRows) => [
+                'id' => $exerciseRows->first()->exerciseId,
+                'name' => $exerciseRows->first()->exerciseName,
+                'sessions' => $exerciseRows->pluck('workoutId')->unique()->count(),
+                'kind' => $kind->value,
+            ])
+            ->values();
     }
 
     /**

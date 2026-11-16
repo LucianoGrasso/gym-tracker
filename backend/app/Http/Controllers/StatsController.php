@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ExerciseKind;
 use App\Http\Requests\StatsRequest;
 use App\Models\Exercise;
 use App\Services\Stats\BodyweightSeriesService;
+use App\Services\Stats\CardioService;
 use App\Services\Stats\ConsistencyService;
 use App\Services\Stats\ExerciseProgressService;
 use App\Services\Stats\MuscleSetsService;
@@ -18,13 +20,20 @@ class StatsController extends Controller
 {
     public function __construct(private readonly StatsDataLoader $data) {}
 
-    public function exercise(StatsRequest $request, Exercise $exercise, ExerciseProgressService $progress, StalledExercisesService $stalled): JsonResponse
+    public function exercise(StatsRequest $request, Exercise $exercise, ExerciseProgressService $progress, StalledExercisesService $stalled, CardioService $cardio): JsonResponse
     {
+        if ($exercise->kind === ExerciseKind::Cardio) {
+            return $this->respond($request, [
+                'exercise' => ['id' => $exercise->id, 'name' => $exercise->name, 'kind' => $exercise->kind],
+                'sessions' => $cardio->progress($this->data->cardioSegments($exercise->id), $request->from()),
+            ]);
+        }
+
         $sets = $this->data->sets($exercise->id);
         $active = $exercise->archived_at === null ? [$exercise->id => $exercise->equipment] : [];
 
         return $this->respond($request, [
-            'exercise' => ['id' => $exercise->id, 'name' => $exercise->name, 'uses_bodyweight' => $exercise->uses_bodyweight],
+            'exercise' => ['id' => $exercise->id, 'name' => $exercise->name, 'uses_bodyweight' => $exercise->uses_bodyweight, 'kind' => $exercise->kind],
             ...$progress->progress($sets, $request->from()),
             'stalled' => $stalled->stalled($sets, $active, $request->today()->toDateString())[0] ?? null,
         ]);
@@ -46,7 +55,7 @@ class StatsController extends Controller
     public function overview(StatsRequest $request, OverviewService $overview): JsonResponse
     {
         return $this->respond($request, $overview->overview(
-            $this->data->sets(), $this->data->workoutDates(), $request->today(), $request->from(),
+            $this->data->sets(), $this->data->workoutDates(), $request->today(), $request->from(), $this->data->cardioSegments(),
         ));
     }
 
