@@ -23,14 +23,14 @@ import { RestTimerService } from '../../core/workout/rest-timer.service';
 import { isPending, parseDecimal } from '../../core/workout/set-suggestions';
 import { WorkoutSessionService } from '../../core/workout/workout-session.service';
 import { ExercisePicker } from '../../shared/ui/exercise-picker';
+import { isCardio } from '../../core/workout/cardio';
+import { CardioCard } from './cardio-card';
 import { ExerciseCard } from './exercise-card';
-
-
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
 @Component({
   selector: 'app-workout-page',
-  imports: [RouterLink, NgIcon, HlmButton, HlmInput, ExerciseCard, AppSkeleton, ExercisePicker],
+  imports: [RouterLink, NgIcon, HlmButton, HlmInput, ExerciseCard, CardioCard, AppSkeleton, ExercisePicker],
   providers: [provideIcons({ lucideChevronLeft })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -57,11 +57,19 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
       <div class="flex flex-col gap-3">
         @for (item of s.exercises; track item.id) {
-          <app-exercise-card
-            [item]="item"
-            [finished]="!isActive()"
-            [current]="item.id === currentId()"
-          />
+          @if (isCardio(item.exercise)) {
+            <app-cardio-card
+              [item]="item"
+              [finished]="!isActive()"
+              [current]="item.id === currentId()"
+            />
+          } @else {
+            <app-exercise-card
+              [item]="item"
+              [finished]="!isActive()"
+              [current]="item.id === currentId()"
+            />
+          }
         } @empty {
           <p class="text-muted-foreground">Agrega un ejercicio para empezar.</p>
         }
@@ -142,6 +150,7 @@ export class WorkoutPage implements OnInit {
   readonly id = input.required<string>();
 
   protected readonly formatDate = formatDate;
+  protected readonly isCardio = isCardio;
   protected readonly session = this.sessions.session;
   protected readonly isActive = computed(() => this.session()?.id === this.sessions.activeId());
   /** El primer ejercicio pendiente de la sesión en curso. */
