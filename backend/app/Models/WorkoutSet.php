@@ -16,6 +16,7 @@ class WorkoutSet extends Model
     protected $fillable = [
         'id', 'workout_exercise_id', 'set_number', 'set_type', 'weight_kg',
         'reps', 'side', 'rir', 'pain_level', 'notes',
+        'duration_seconds', 'speed_kmh', 'incline_pct', 'distance_km', 'avg_heart_rate', 'calories',
     ];
 
     protected function casts(): array
@@ -28,6 +29,12 @@ class WorkoutSet extends Model
             'reps' => 'integer',
             'rir' => 'integer',
             'pain_level' => 'integer',
+            'duration_seconds' => 'integer',
+            'speed_kmh' => 'float',
+            'incline_pct' => 'float',
+            'distance_km' => 'float',
+            'avg_heart_rate' => 'integer',
+            'calories' => 'integer',
         ];
     }
 

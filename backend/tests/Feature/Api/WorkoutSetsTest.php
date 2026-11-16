@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\ExerciseKind;
+use App\Models\Exercise;
 use App\Models\User;
 use App\Models\Workout;
 use App\Models\WorkoutExercise;
@@ -73,4 +75,65 @@ it('deletes a set idempotently', function () {
     $this->deleteJson("/api/workout-sets/{$set->id}")->assertNoContent();
 
     expect(WorkoutSet::count())->toBe(0);
+});
+
+function cardioItem(User $user): WorkoutExercise
+{
+    return WorkoutExercise::factory()->create([
+        'workout_id' => Workout::factory()->for($user)->create()->id,
+        'exercise_id' => Exercise::factory()->for($user)->create(['kind' => ExerciseKind::Cardio])->id,
+    ]);
+}
+
+function segmentPayload(array $overrides = []): array
+{
+    return array_merge([
+        'set_number' => 1, 'set_type' => 'normal', 'weight_kg' => 0, 'reps' => 0, 'side' => 'both',
+        'duration_seconds' => 2100, 'speed_kmh' => 5.5, 'incline_pct' => 12, 'distance_km' => 3.2,
+        'avg_heart_rate' => 128, 'calories' => 250,
+    ], $overrides);
+}
+
+it('stores a cardio segment', function () {
+    $item = cardioItem($this->user);
+    $id = strtolower((string) Str::ulid());
+
+    $this->putJson("/api/workout-sets/{$id}", segmentPayload(['workout_exercise_id' => $item->id]))
+        ->assertCreated()
+        ->assertJsonPath('data.duration_seconds', 2100)
+        ->assertJsonPath('data.speed_kmh', 5.5)
+        ->assertJsonPath('data.incline_pct', 12)
+        ->assertJsonPath('data.distance_km', 3.2)
+        ->assertJsonPath('data.avg_heart_rate', 128)
+        ->assertJsonPath('data.calories', 250);
+});
+
+it('requires the duration of a cardio segment', function () {
+    $item = cardioItem($this->user);
+    $id = strtolower((string) Str::ulid());
+
+    $this->putJson("/api/workout-sets/{$id}", segmentPayload(['workout_exercise_id' => $item->id, 'duration_seconds' => null]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['duration_seconds' => 'La duración es obligatoria.']);
+});
+
+it('validates the cardio ranges', function () {
+    $item = cardioItem($this->user);
+    $id = strtolower((string) Str::ulid());
+
+    $this->putJson("/api/workout-sets/{$id}", segmentPayload([
+        'workout_exercise_id' => $item->id, 'duration_seconds' => 0, 'speed_kmh' => 61, 'incline_pct' => 41,
+        'distance_km' => 1000, 'avg_heart_rate' => 29, 'calories' => 10000,
+    ]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['duration_seconds', 'speed_kmh', 'incline_pct', 'distance_km', 'avg_heart_rate', 'calories']);
+});
+
+it('keeps strength sets without cardio fields', function () {
+    $id = strtolower((string) Str::ulid());
+
+    $this->putJson("/api/workout-sets/{$id}", setPayload(['workout_exercise_id' => $this->item->id]))
+        ->assertCreated()
+        ->assertJsonPath('data.duration_seconds', null)
+        ->assertJsonPath('data.speed_kmh', null);
 });

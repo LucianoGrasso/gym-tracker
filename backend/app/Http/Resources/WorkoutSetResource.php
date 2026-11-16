@@ -20,6 +20,12 @@ class WorkoutSetResource extends JsonResource
             'rir' => $this->rir,
             'pain_level' => $this->pain_level,
             'notes' => $this->notes,
+            'duration_seconds' => $this->duration_seconds,
+            'speed_kmh' => $this->speed_kmh,
+            'incline_pct' => $this->incline_pct,
+            'distance_km' => $this->distance_km,
+            'avg_heart_rate' => $this->avg_heart_rate,
+            'calories' => $this->calories,
         ];
     }
 }
