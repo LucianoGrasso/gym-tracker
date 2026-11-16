@@ -15,6 +15,8 @@ import {
   workoutExercisePayload,
   workoutPayload,
 } from './session-mapping';
+import { moveBefore } from './session-flow';
+import { isPending } from './set-suggestions';
 
 const ACTIVE_KEY = 'activeSessionId';
 
@@ -91,6 +93,28 @@ export class WorkoutSessionService {
       exercises: session.exercises.filter((e) => e.id !== workoutExerciseId),
     });
     await this.sync.enqueue('DELETE', `/api/workout-exercises/${workoutExerciseId}`);
+  }
+
+  /** Da por terminado un ejercicio aunque le falten series (solo en este dispositivo). */
+  async endExercise(workoutExerciseId: string): Promise<void> {
+    await this.replaceExercise({ ...this.exercise(workoutExerciseId), ended_early: true });
+  }
+
+  async resumeExercise(workoutExerciseId: string): Promise<void> {
+    await this.replaceExercise({ ...this.exercise(workoutExerciseId), ended_early: false });
+  }
+
+  /** Mueve un ejercicio pendiente justo antes del que toca y sincroniza las posiciones que cambiaron. */
+  async doNow(workoutExerciseId: string): Promise<void> {
+    const session = this.require();
+    const current = session.exercises.find(isPending);
+    if (!current) return;
+    const before = new Map(session.exercises.map((e) => [e.id, e.position]));
+    const exercises = moveBefore(session.exercises, workoutExerciseId, current.id);
+    await this.save({ ...session, exercises });
+    for (const item of exercises.filter((e) => before.get(e.id) !== e.position)) {
+      await this.sync.enqueue('PUT', `/api/workout-exercises/${item.id}`, workoutExercisePayload(session.id, item));
+    }
   }
 
   async addSet(workoutExerciseId: string, input: WorkoutSetInput): Promise<WorkoutSet> {

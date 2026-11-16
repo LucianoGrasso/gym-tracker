@@ -198,4 +198,49 @@ describe('WorkoutSessionService', () => {
     expect(await db.sessions.get(session.id)).toBeUndefined();
     expect(enqueue).toHaveBeenLastCalledWith('DELETE', `/api/workouts/${session.id}`);
   });
+
+  const threeExercises: Today = {
+    ...today,
+    day: {
+      ...today.day!,
+      exercises: [0, 1, 2].map((position) => ({
+        ...today.day!.exercises[0],
+        id: 100 + position,
+        position,
+        exercise: { ...bench, id: position + 1, name: `E${position}` },
+      })),
+    },
+  };
+
+  it('ends an exercise early and resumes it, locally only', async () => {
+    const service = create();
+    const session = await service.startFromDay(threeExercises);
+    const first = session.exercises[0].id;
+    enqueue.mockClear();
+
+    await service.endExercise(first);
+    expect(service.session()!.exercises[0].ended_early).toBe(true);
+    expect((await db.sessions.get(session.id))!.exercises[0].ended_early).toBe(true);
+
+    await service.resumeExercise(first);
+    expect(service.session()!.exercises[0].ended_early).toBe(false);
+    expect(enqueue).not.toHaveBeenCalled();
+  });
+
+  it('does an exercise now: before the current one, queuing only the moved positions', async () => {
+    const service = create();
+    const session = await service.startFromDay(threeExercises);
+    const [e0, e1, e2] = session.exercises.map((e) => e.id);
+    await service.endExercise(e0);
+    enqueue.mockClear();
+
+    await service.doNow(e2);
+
+    expect(service.session()!.exercises.map((e) => e.id)).toEqual([e0, e2, e1]);
+    expect(enqueue.mock.calls.map(([method, url, body]) => `${method} ${url} ${body.position}`)).toEqual([
+      `PUT /api/workout-exercises/${e2} 1`,
+      `PUT /api/workout-exercises/${e1} 2`,
+    ]);
+    expect(enqueue.mock.calls[0][2]).not.toHaveProperty('ended_early');
+  });
 });
