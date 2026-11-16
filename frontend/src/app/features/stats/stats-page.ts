@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, resource, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideChevronRight, lucideTrophy } from '@ng-icons/lucide';
+import { lucideChevronRight, lucideHeartPulse, lucideTrophy } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { NgxEchartsDirective } from 'ngx-echarts';
@@ -17,6 +17,7 @@ import { formatSetsPerWeek } from '../../core/stats/muscle-sets';
 import { parseDecimal } from '../../core/workout/set-suggestions';
 import { consistencyOption, heatmapRange, lineOption } from '../../shared/charts/chart-options';
 import { ChipGroup } from '../../shared/ui/chip-group';
+import { formatCardioSummary } from './cardio-stats';
 import { formatRecentRecord } from './format-record';
 import { MuscleSection } from './muscle-section';
 import { StalledSection } from './stalled-note';
@@ -26,7 +27,7 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
 @Component({
   selector: 'app-stats-page',
   imports: [RouterLink, NgIcon, HlmButton, HlmInput, NgxEchartsDirective, ChipGroup, AppSkeleton, MuscleSection, StalledSection],
-  providers: [provideIcons({ lucideChevronRight, lucideTrophy })],
+  providers: [provideIcons({ lucideChevronRight, lucideHeartPulse, lucideTrophy })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h1 class="page-title mb-4">Estadísticas</h1>
@@ -61,6 +62,17 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
           <dd class="num text-4xl font-bold">{{ formatSetsPerWeek(o.sessions_per_week) }}</dd>
         </div>
       </dl>
+      @if (o.cardio?.sessions) {
+        <div class="card mb-6 flex items-center gap-3 p-4">
+          <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <ng-icon name="lucideHeartPulse" size="20" aria-hidden="true" />
+          </span>
+          <div>
+            <p class="eyebrow">Cardio</p>
+            <p class="num text-xl font-bold">{{ formatCardioSummary(o.cardio!) }}</p>
+          </div>
+        </div>
+      }
     } @else {
       <app-skeleton variant="list" [rows]="2" />
     }
@@ -163,6 +175,7 @@ export class StatsPage {
   private readonly db = inject(LOCAL_DB);
 
   protected readonly formatSetsPerWeek = formatSetsPerWeek;
+  protected readonly formatCardioSummary = formatCardioSummary;
   protected readonly formatDate = formatDate;
   protected readonly formatRecentRecord = formatRecentRecord;
   protected readonly periodOptions = STATS_PERIODS.map((value) => ({ value, label: PERIOD_LABELS[value] }));
