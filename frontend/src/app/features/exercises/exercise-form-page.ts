@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } fro
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { map } from 'rxjs';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
@@ -33,13 +34,25 @@ export function toggleSecondary(list: readonly MuscleGroup[], muscle: MuscleGrou
         <label hlmLabel for="name">Nombre</label>
         <input hlmInput id="name" formControlName="name" class="h-12 text-base" autocomplete="off" />
       </div>
+      <div class="flex flex-col gap-2">
+        <label hlmLabel for="kind">Tipo</label>
+        <select id="kind" formControlName="kind" [class]="selectClass">
+          <option value="strength">Fuerza</option>
+          <option value="cardio">Cardio</option>
+        </select>
+        @if (form.controls.kind.disabled) {
+          <p class="text-sm text-muted-foreground">Tiene historial: el tipo no se puede cambiar.</p>
+        }
+      </div>
       <div class="grid grid-cols-2 gap-3">
-        <div class="flex flex-col gap-2">
-          <label hlmLabel for="muscle_group">Grupo muscular</label>
-          <select id="muscle_group" formControlName="muscle_group" [class]="selectClass">
-            @for (g of groups; track g) { <option [ngValue]="g">{{ muscleLabels[g] }}</option> }
-          </select>
-        </div>
+        @if (!cardio()) {
+          <div class="flex flex-col gap-2">
+            <label hlmLabel for="muscle_group">Grupo muscular</label>
+            <select id="muscle_group" formControlName="muscle_group" [class]="selectClass">
+              @for (g of groups; track g) { <option [ngValue]="g">{{ muscleLabels[g] }}</option> }
+            </select>
+          </div>
+        }
         <div class="flex flex-col gap-2">
           <label hlmLabel for="equipment">Equipamiento</label>
           <select id="equipment" formControlName="equipment" [class]="selectClass">
@@ -47,6 +60,7 @@ export function toggleSecondary(list: readonly MuscleGroup[], muscle: MuscleGrou
           </select>
         </div>
       </div>
+      @if (!cardio()) {
       <fieldset class="flex flex-col gap-2">
         <legend class="mb-2 text-sm font-medium">
           Músculos secundarios <span class="text-muted-foreground">(opcional, hasta {{ maxSecondary }} · cuentan ½ serie)</span>
@@ -78,6 +92,7 @@ export function toggleSecondary(list: readonly MuscleGroup[], muscle: MuscleGrou
         <input type="checkbox" class="size-5" formControlName="uses_bodyweight" />
         Usa peso corporal (el peso anotado es extra)
       </label>
+      }
       <div class="flex flex-col gap-2">
         <label hlmLabel for="notes">Notas</label>
         <textarea hlmTextarea id="notes" formControlName="notes" rows="3" class="text-base"></textarea>
@@ -119,6 +134,9 @@ export class ExerciseFormPage implements OnInit {
   });
 
   protected readonly maxSecondary = MAX_SECONDARY;
+  protected readonly cardio = toSignal(this.form.controls.kind.valueChanges.pipe(map((kind) => kind === 'cardio')), {
+    initialValue: false,
+  });
   protected readonly primary = toSignal(this.form.controls.muscle_group.valueChanges, {
     initialValue: this.form.controls.muscle_group.value,
   });
@@ -146,7 +164,8 @@ export class ExerciseFormPage implements OnInit {
     if (!id) return;
     try {
       const exercise = await this.api.get(Number(id));
-      this.form.patchValue(exercise);
+      this.form.patchValue({ ...exercise, kind: exercise.kind ?? 'strength' });
+      if (exercise.has_history) this.form.controls.kind.disable();
     } catch (e) {
       this.error.set(apiErrorMessage(e));
     }

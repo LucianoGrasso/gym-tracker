@@ -69,4 +69,42 @@ describe('ExerciseFormPage', () => {
     expect(chip('Tríceps').disabled).toBe(true);
     expect(chip('Tríceps').getAttribute('aria-pressed')).toBe('false');
   });
+
+  it('hides the muscles for a cardio exercise and saves its kind', async () => {
+    const { fixture, el, api } = await setup();
+    const kind = el.querySelector<HTMLSelectElement>('#kind')!;
+    kind.value = kind.options[1].value;
+    kind.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+
+    expect(el.querySelector('#muscle_group')).toBeNull();
+    expect(el.querySelector('[data-secondary]')).toBeNull();
+    expect(el.textContent).not.toContain('Unilateral');
+
+    const name = el.querySelector<HTMLInputElement>('#name')!;
+    name.value = 'Caminata';
+    name.dispatchEvent(new Event('input'));
+    el.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await fixture.whenStable();
+
+    expect(api.create).toHaveBeenCalledWith(expect.objectContaining({ kind: 'cardio' }));
+  });
+
+  it('locks the kind of an exercise with history', async () => {
+    const api = {
+      create: vi.fn(),
+      update: vi.fn(),
+      get: vi.fn().mockResolvedValue({
+        id: 3, name: 'Press', kind: 'strength', muscle_group: 'chest', secondary_muscles: [], equipment: 'barbell',
+        is_unilateral: false, uses_bodyweight: false, notes: null, archived_at: null, has_history: true,
+      }),
+    };
+    TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: ExercisesApi, useValue: api }] });
+    const fixture = TestBed.createComponent(ExerciseFormPage);
+    fixture.componentRef.setInput('id', '3');
+    await fixture.whenStable();
+    await fixture.whenStable();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector<HTMLSelectElement>('#kind')!.disabled).toBe(true);
+  });
 });
