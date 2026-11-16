@@ -24,6 +24,7 @@ import { isPending, parseDecimal } from '../../core/workout/set-suggestions';
 import { WorkoutSessionService } from '../../core/workout/workout-session.service';
 import { ExercisePicker } from '../../shared/ui/exercise-picker';
 import { isCardio } from '../../core/workout/cardio';
+import { endedLabel, flowState } from '../../core/workout/session-flow';
 import { CardioCard } from './cardio-card';
 import { ExerciseCard } from './exercise-card';
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
@@ -57,18 +58,50 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
       <div class="flex flex-col gap-3">
         @for (item of s.exercises; track item.id) {
-          @if (isCardio(item.exercise)) {
-            <app-cardio-card
-              [item]="item"
-              [finished]="!isActive()"
-              [current]="item.id === currentId()"
-            />
+          @let state = flowState(item, currentId(), isActive());
+          @if (state === 'ended') {
+            <article data-ended class="card flex items-center justify-between gap-3 p-4 opacity-70">
+              <div class="min-w-0">
+                <h2 class="truncate text-lg leading-tight font-semibold">{{ item.exercise.name }}</h2>
+                <p class="num text-sm text-muted-foreground">{{ endedLabel(item) }}</p>
+              </div>
+              <button hlmBtn variant="outline" class="h-12 shrink-0" (click)="sessions.resumeExercise(item.id)">
+                Retomar
+              </button>
+            </article>
           } @else {
-            <app-exercise-card
-              [item]="item"
-              [finished]="!isActive()"
-              [current]="item.id === currentId()"
-            />
+            @if (isCardio(item.exercise)) {
+              <app-cardio-card
+                [item]="item"
+                [finished]="!isActive()"
+                [current]="item.id === currentId()"
+              />
+            } @else {
+              <app-exercise-card
+                [item]="item"
+                [finished]="!isActive()"
+                [current]="item.id === currentId()"
+              />
+            }
+            @if (state === 'current') {
+              <button
+                hlmBtn
+                variant="ghost"
+                class="-mt-1 h-12 text-muted-foreground"
+                (click)="sessions.endExercise(item.id)"
+              >
+                Terminar ejercicio
+              </button>
+            } @else if (state === 'waiting') {
+              <button
+                hlmBtn
+                variant="ghost"
+                class="-mt-1 h-12 text-muted-foreground"
+                (click)="sessions.doNow(item.id)"
+              >
+                Hacer ahora
+              </button>
+            }
           }
         } @empty {
           <p class="text-muted-foreground">Agrega un ejercicio para empezar.</p>
@@ -141,7 +174,7 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
 })
 export class WorkoutPage implements OnInit {
   private readonly confirm = inject(ConfirmService);
-  private readonly sessions = inject(WorkoutSessionService);
+  protected readonly sessions = inject(WorkoutSessionService);
   private readonly timer = inject(RestTimerService);
   private readonly exercisesApi = inject(ExercisesApi);
   private readonly db = inject(LOCAL_DB);
@@ -151,6 +184,8 @@ export class WorkoutPage implements OnInit {
 
   protected readonly formatDate = formatDate;
   protected readonly isCardio = isCardio;
+  protected readonly endedLabel = endedLabel;
+  protected readonly flowState = flowState;
   protected readonly session = this.sessions.session;
   protected readonly isActive = computed(() => this.session()?.id === this.sessions.activeId());
   /** El primer ejercicio pendiente de la sesión en curso. */
