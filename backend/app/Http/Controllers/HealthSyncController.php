@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\HealthSyncRequest;
 use App\Http\Resources\WorkoutResource;
 use App\Models\Workout;
+use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 
 /** Endpoints del Atajo "GymTracker Salud" (token con habilidad health:sync). */
@@ -23,7 +24,18 @@ class HealthSyncController extends Controller
             'id' => $workout->id,
             'started_at' => $workout->started_at->setTimezone($timezone)->toIso8601String(),
             'finished_at' => $workout->finished_at->setTimezone($timezone)->toIso8601String(),
+            'started_seconds_ago' => $this->secondsAgo($workout->started_at),
+            'finished_seconds_ago' => $this->secondsAgo($workout->finished_at),
         ])->all()]);
+    }
+
+    /**
+     * Atajos interpreta mal las fechas ISO ("Obtener fechas de la entrada"); con segundos
+     * hacia atrás arma el rango con "Fecha actual" + "Ajustar fecha", sin depender del idioma.
+     */
+    private function secondsAgo(CarbonInterface $moment): int
+    {
+        return max(0, (int) round($moment->diffInSeconds(now())));
     }
 
     /** Sobrescribe; si los tres valores llegan vacíos no toca nada (corrida sin AirPods ni Watch). */

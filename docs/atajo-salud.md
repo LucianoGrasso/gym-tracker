@@ -37,8 +37,10 @@ Agrega estas acciones en orden (los nombres pueden variar un poco según la vers
 
 7. **Repetir con cada** elemento de *Valor del diccionario* (`data`). Dentro del bloque:
    1. **Obtener valor del diccionario** `id` de *Elemento de repetición* → **Establecer variable** `Sesion`.
-   2. **Obtener valor del diccionario** `started_at` de *Elemento de repetición* → **Obtener fechas de** (la entrada) → **Establecer variable** `Inicio`.
-   3. Igual con `finished_at` → **Establecer variable** `Fin`.
+   2. **Obtener valor del diccionario** `started_seconds_ago` de *Elemento de repetición* → **Fecha** (fecha actual) → **Ajustar fecha**: *Restar* *Valor del diccionario* **segundos** de *Fecha* → **Establecer variable** `Inicio`.
+   3. Igual con `finished_seconds_ago` → **Establecer variable** `Fin`.
+
+   > No uses "Obtener fechas de la entrada" con `started_at`: Atajos interpreta mal el formato ISO (12:14 −03:00 quedó como 12:00).
    4. **Buscar muestras de salud** donde **Todas** las condiciones:
       - Tipo es **Frecuencia cardíaca**
       - Fecha de inicio **está después de** `Inicio`

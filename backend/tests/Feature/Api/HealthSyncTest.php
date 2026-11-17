@@ -28,6 +28,8 @@ it('lists finished workouts of the last 48 hours with local offsets', function (
             'id' => $recent->id,
             'started_at' => '2026-11-17T19:00:00-03:00',
             'finished_at' => '2026-11-17T20:00:00-03:00',
+            'started_seconds_ago' => 3600,
+            'finished_seconds_ago' => 0,
         ]]]);
 });
 
