@@ -17,6 +17,7 @@ class Workout extends Model
     protected $fillable = [
         'id', 'user_id', 'routine_day_id', 'date', 'started_at',
         'finished_at', 'bodyweight_kg', 'notes',
+        'avg_heart_rate', 'max_heart_rate', 'active_calories', 'health_synced_at',
     ];
 
     protected function casts(): array
@@ -26,6 +27,10 @@ class Workout extends Model
             'started_at' => 'datetime',
             'finished_at' => 'datetime',
             'bodyweight_kg' => 'decimal:2',
+            'avg_heart_rate' => 'integer',
+            'max_heart_rate' => 'integer',
+            'active_calories' => 'integer',
+            'health_synced_at' => 'datetime',
         ];
     }
 

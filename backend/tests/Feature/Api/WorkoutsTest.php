@@ -122,3 +122,20 @@ it('shows a workout with exercises and sets', function () {
 
     $this->getJson('/api/workouts/'.Workout::factory()->create()->id)->assertNotFound();
 });
+
+it('exposes health data in the workout resource', function () {
+    $workout = Workout::factory()->for($this->user)->create([
+        'finished_at' => now(),
+        'avg_heart_rate' => 128,
+        'max_heart_rate' => 171,
+        'active_calories' => 412,
+        'health_synced_at' => '2026-11-17 23:00:00',
+    ]);
+
+    $this->getJson("/api/workouts/{$workout->id}")
+        ->assertOk()
+        ->assertJsonPath('data.avg_heart_rate', 128)
+        ->assertJsonPath('data.max_heart_rate', 171)
+        ->assertJsonPath('data.active_calories', 412)
+        ->assertJsonPath('data.health_synced_at', '2026-11-17T23:00:00+00:00');
+});
