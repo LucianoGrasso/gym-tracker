@@ -27,11 +27,12 @@ import { isCardio } from '../../core/workout/cardio';
 import { endedLabel, flowState } from '../../core/workout/session-flow';
 import { CardioCard } from './cardio-card';
 import { ExerciseCard } from './exercise-card';
+import { HealthSummary } from './health-summary';
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
 @Component({
   selector: 'app-workout-page',
-  imports: [RouterLink, NgIcon, HlmButton, HlmInput, ExerciseCard, CardioCard, AppSkeleton, ExercisePicker],
+  imports: [RouterLink, NgIcon, HlmButton, HlmInput, ExerciseCard, CardioCard, AppSkeleton, ExercisePicker, HealthSummary],
   providers: [provideIcons({ lucideChevronLeft })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -54,6 +55,10 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
       @if (error()) {
         <p class="mb-4 text-sm text-destructive" role="alert">{{ error() }}</p>
+      }
+
+      @if (!isActive() && s.finished_at) {
+        <app-health-summary [workoutId]="s.id" />
       }
 
       <div class="flex flex-col gap-3">

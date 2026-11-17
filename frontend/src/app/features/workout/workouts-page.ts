@@ -6,6 +6,7 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { apiErrorMessage } from '../../core/api/api-error';
 import { WorkoutsApi } from '../../core/api/workouts-api';
 import { formatDate } from '../../core/format/format';
+import { formatHealth } from '../../core/health/health-format';
 import type { WorkoutSummary } from '../../core/models/workout';
 
 /** Historial de sesiones sincronizadas, de la más reciente a la más antigua. */
@@ -49,6 +50,9 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
               <p class="num text-base text-muted-foreground">
                 {{ w.exercises_count }} ejercicios · {{ w.sets_count }} series
               </p>
+              @if (formatHealth(w); as health) {
+                <p class="num text-sm text-primary">{{ health }}</p>
+              }
             </div>
             <ng-icon name="lucideChevronRight" size="20" class="text-muted-foreground" />
           </a>
@@ -79,6 +83,7 @@ export class WorkoutsPage {
   private readonly api = inject(WorkoutsApi);
 
   protected readonly formatDate = formatDate;
+  protected readonly formatHealth = formatHealth;
   protected readonly workouts = signal<WorkoutSummary[]>([]);
   protected readonly loading = signal(false);
   protected readonly hasMore = signal(false);
