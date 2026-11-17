@@ -24,10 +24,11 @@ import { WorkoutSessionService } from '../../core/workout/workout-session.servic
 
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
 import { AccountMenu } from '../account/account-menu';
+import { HealthPromptCard } from './health-prompt-card';
 
 @Component({
   selector: 'app-today-page',
-  imports: [RouterLink, NgTemplateOutlet, NgIcon, HlmButton, AppSkeleton, AccountMenu],
+  imports: [RouterLink, NgTemplateOutlet, NgIcon, HlmButton, AppSkeleton, AccountMenu, HealthPromptCard],
   providers: [
     provideIcons({ lucideChevronRight, lucideHistory, lucideListChecks, lucideMoon, lucidePlay }),
   ],
@@ -45,6 +46,8 @@ import { AccountMenu } from '../account/account-menu';
         </div>
         <app-account-menu />
       </header>
+
+      <app-health-prompt-card [today]="t.date" />
 
       @if (!t.routine) {
         <section class="card p-5">

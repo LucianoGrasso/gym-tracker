@@ -28,6 +28,7 @@ import { endedLabel, flowState } from '../../core/workout/session-flow';
 import { CardioCard } from './cardio-card';
 import { ExerciseCard } from './exercise-card';
 import { HealthSummary } from './health-summary';
+import { HealthStore } from '../../core/health/health-store';
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
 @Component({
@@ -184,6 +185,7 @@ export class WorkoutPage implements OnInit {
   private readonly exercisesApi = inject(ExercisesApi);
   private readonly db = inject(LOCAL_DB);
   private readonly router = inject(Router);
+  private readonly health = inject(HealthStore);
 
   readonly id = input.required<string>();
 
@@ -238,7 +240,9 @@ export class WorkoutPage implements OnInit {
 
   protected async finish(bodyweightText: string): Promise<void> {
     const bodyweight = bodyweightText.trim() ? parseDecimal(bodyweightText, 0) || null : null;
+    const finished = this.session();
     await this.sessions.finish(bodyweight);
+    if (finished) this.health.rememberFinished(finished.id, finished.date);
     this.timer.stop();
     await this.router.navigateByUrl('/hoy');
   }

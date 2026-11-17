@@ -1,13 +1,14 @@
 import { provideHttpClient } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { describe, expect, it, vi } from 'vitest';
 import { LOCAL_DB, LocalDb } from '../../core/local-db/local-db';
 import type { WorkoutSet } from '../../core/models/exercise';
 import type { Session, SessionExercise } from '../../core/models/workout';
 import { RestTimerService } from '../../core/workout/rest-timer.service';
 import { WorkoutSessionService } from '../../core/workout/workout-session.service';
+import { HealthStore } from '../../core/health/health-store';
 import { WorkoutPage } from './workout-page';
 
 const set = (): WorkoutSet => ({
@@ -29,6 +30,7 @@ async function render(exercises: SessionExercise[], active = true) {
     session, activeId: signal(active ? 'w1' : null), open: vi.fn().mockResolvedValue(undefined),
     endExercise: vi.fn(), resumeExercise: vi.fn(), doNow: vi.fn(),
     addSet: vi.fn(), updateSet: vi.fn(), deleteSet: vi.fn(), removeExercise: vi.fn(),
+    finish: vi.fn().mockResolvedValue(undefined),
   };
   TestBed.configureTestingModule({
     providers: [
@@ -77,5 +79,18 @@ describe('WorkoutPage session flow', () => {
     const { buttons } = await render([item('a', 0), item('b', 1)], false);
     expect(buttons('Terminar ejercicio')).toHaveLength(0);
     expect(buttons('Hacer ahora')).toHaveLength(0);
+  });
+});
+
+describe('WorkoutPage finish', () => {
+  it('remembers the finished session to offer the health shortcut', async () => {
+    const { buttons, sessions } = await render([item('a', 0)]);
+    vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    buttons('Terminar entrenamiento')[0].click();
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(sessions.finish).toHaveBeenCalledWith(null);
+    expect(TestBed.inject(HealthStore).lastFinished()).toEqual({ id: 'w1', date: '2026-11-16' });
+    localStorage.clear();
   });
 });
