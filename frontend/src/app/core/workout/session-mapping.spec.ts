@@ -65,6 +65,7 @@ describe('session mapping', () => {
     const detail: WorkoutDetail = {
       id: 'w', routine_day_id: null, routine_day_name: null, date: '2026-10-01', started_at: 'a', finished_at: 'b',
       bodyweight_kg: 79, notes: null,
+      avg_heart_rate: null, max_heart_rate: null, active_calories: null, health_synced_at: null,
       exercises: [{
         id: 'we', workout_id: 'w', exercise: bench, position: 0, target_sets: null, target_reps_min: null,
         target_reps_max: null, target_text: null, default_set_type: 'normal', rest_seconds: 120, notes: null,

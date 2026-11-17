@@ -17,11 +17,12 @@ import { AuthService } from '../../core/auth/auth.service';
 import { formatDate } from '../../core/format/format';
 import { MAX_PENDING_INVITATIONS } from '../../core/models/invitation';
 import { PushService } from '../../core/push/push.service';
+import { HealthShortcutSection } from './health-shortcut-section';
 
 /** Botón "Mi cuenta" con menú desplegable: datos del usuario, invitaciones y cerrar sesión. */
 @Component({
   selector: 'app-account-menu',
-  imports: [HlmButton, NgIcon],
+  imports: [HlmButton, NgIcon, HealthShortcutSection],
   providers: [provideIcons({ lucideChevronDown, lucideLogOut, lucideUserPlus, lucideUserRound })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -96,6 +97,9 @@ import { PushService } from '../../core/push/push.service';
               }
             </ul>
           }
+
+          <div class="my-4 border-t border-border"></div>
+          <app-health-shortcut-section />
         }
 
         <div class="my-4 border-t border-border"></div>

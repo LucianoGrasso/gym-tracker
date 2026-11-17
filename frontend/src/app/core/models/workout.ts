@@ -49,6 +49,11 @@ export interface WorkoutSummary {
   notes: string | null;
   exercises_count: number;
   sets_count: number;
+  /** Datos de Apple Salud que envía el Atajo "GymTracker Salud". */
+  avg_heart_rate: number | null;
+  max_heart_rate: number | null;
+  active_calories: number | null;
+  health_synced_at: string | null;
 }
 
 export interface WorkoutExerciseDetail extends Omit<SessionExercise, 'exercise' | 'last_performance'> {
