@@ -5,6 +5,7 @@ use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\ExerciseHistoryController;
 use App\Http\Controllers\ExerciseLibraryController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\HealthSyncController;
 use App\Http\Controllers\HealthTokenController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\PushController;
@@ -22,6 +23,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
+
+/** Atajo de iOS "GymTracker Salud": solo con un token que tenga la habilidad health:sync. */
+Route::middleware(['auth:sanctum', 'demo.active', 'abilities:health:sync'])->group(function () {
+    Route::get('/health-sync/workouts', [HealthSyncController::class, 'index']);
+    Route::put('/health-sync/workouts/{workout}', [HealthSyncController::class, 'update']);
+});
 
 Route::middleware(['auth:sanctum', 'demo.active', 'spa.only'])->group(function () {
     Route::get('/user', fn (Request $request) => new UserResource($request->user()));
