@@ -99,3 +99,13 @@ it('requires the health:sync ability', function () {
 it('rejects requests without a token', function () {
     $this->getJson('/api/health-sync/workouts')->assertUnauthorized();
 });
+
+it('treats zeros from empty statistics as missing data', function () {
+    $workout = Workout::factory()->for($this->user)->create(['finished_at' => now(), 'avg_heart_rate' => 128]);
+
+    $this->withToken($this->token)->putJson("/api/health-sync/workouts/{$workout->id}", [
+        'avg_heart_rate' => 0, 'max_heart_rate' => '0', 'active_calories' => 0,
+    ])->assertOk();
+
+    expect($workout->refresh()->avg_heart_rate)->toBe(128);
+});

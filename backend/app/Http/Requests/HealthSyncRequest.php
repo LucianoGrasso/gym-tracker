@@ -4,7 +4,10 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-/** Resumen que envía el Atajo; acepta decimales (con coma o punto) y los redondea. */
+/**
+ * Resumen que envía el Atajo; acepta decimales (con coma o punto) y los redondea.
+ * Un 0 significa "sin muestras" (Calcular estadísticas de Atajos devuelve 0 con la lista vacía).
+ */
 class HealthSyncRequest extends FormRequest
 {
     public const FIELDS = ['avg_heart_rate', 'max_heart_rate', 'active_calories'];
@@ -25,7 +28,8 @@ class HealthSyncRequest extends FormRequest
             if ($value === '' || $value === null) {
                 $normalized[$field] = null;
             } elseif (is_numeric($value)) {
-                $normalized[$field] = (int) round((float) $value);
+                $rounded = (int) round((float) $value);
+                $normalized[$field] = $rounded === 0 ? null : $rounded;
             } else {
                 $normalized[$field] = $value;
             }
@@ -41,7 +45,7 @@ class HealthSyncRequest extends FormRequest
         return [
             'avg_heart_rate' => ['nullable', 'integer', 'between:30,250'],
             'max_heart_rate' => ['nullable', 'integer', 'between:30,250'],
-            'active_calories' => ['nullable', 'integer', 'between:0,5000'],
+            'active_calories' => ['nullable', 'integer', 'between:1,5000'],
         ];
     }
 }

@@ -48,7 +48,7 @@ Grupo `auth:sanctum` + `abilities:health:sync` (sin `spa.only`):
 
 - `GET /api/health-sync/workouts` → `{data: [{id, started_at, finished_at}]}`: sesiones del usuario con `finished_at` no nulo y dentro de las últimas 48 h, ordenadas por `started_at`. Fechas ISO 8601 con offset de `America/Santiago` (p. ej. `2026-11-17T19:05:00-03:00`), que "Obtener fechas" de Atajos interpreta bien.
 - `PUT /api/health-sync/workouts/{workout}` con `{avg_heart_rate, max_heart_rate, active_calories}`:
-  - Form Request `HealthSyncRequest`: cada campo `nullable|integer`; FC entre 30 y 250; kcal entre 0 y 5000. Atajos puede mandar decimales en el promedio: se redondean en `prepareForValidation`. Cadena vacía = null.
+  - Form Request `HealthSyncRequest`: cada campo `nullable|integer`; FC entre 30 y 250; kcal entre 1 y 5000. Atajos puede mandar decimales en el promedio: se redondean en `prepareForValidation`. Cadena vacía o 0 = null (Calcular estadísticas devuelve 0 sin muestras).
   - Si los tres llegan null → `200` sin cambios (una corrida sin AirPods no borra datos buenos).
   - Si no, sobrescribe los tres y marca `health_synced_at = now()`. Devuelve el `WorkoutResource`.
   - Sesión de otro usuario o inexistente → 404 (`BelongsToUser`).
