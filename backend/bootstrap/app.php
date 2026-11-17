@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Middleware\EnsureDemoActive;
+use App\Http\Middleware\RejectPersonalAccessTokens;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,7 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
-        $middleware->alias(['demo.active' => EnsureDemoActive::class]);
+        $middleware->alias([
+            'demo.active' => EnsureDemoActive::class,
+            'spa.only' => RejectPersonalAccessTokens::class,
+            'abilities' => CheckAbilities::class,
+        ]);
         $middleware->redirectGuestsTo(
             fn (Request $request) => $request->is('api/*', 'auth/*') ? null : '/login',
         );

@@ -5,6 +5,7 @@ use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\ExerciseHistoryController;
 use App\Http\Controllers\ExerciseLibraryController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\HealthTokenController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\PushController;
 use App\Http\Controllers\RoutineController;
@@ -22,12 +23,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
 
-Route::middleware(['auth:sanctum', 'demo.active'])->group(function () {
+Route::middleware(['auth:sanctum', 'demo.active', 'spa.only'])->group(function () {
     Route::get('/user', fn (Request $request) => new UserResource($request->user()));
 
     Route::get('/invitations', [InvitationController::class, 'index']);
     Route::post('/invitations', [InvitationController::class, 'store']);
     Route::delete('/invitations/{invitation}', [InvitationController::class, 'destroy']);
+    Route::post('/health-token', [HealthTokenController::class, 'store']);
+    Route::delete('/health-token', [HealthTokenController::class, 'destroy']);
     Route::get('/push/config', [PushController::class, 'config']);
     Route::post('/push/token', [PushController::class, 'token']);
     Route::get('/today', TodayController::class);
