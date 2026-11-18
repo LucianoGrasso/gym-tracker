@@ -32,6 +32,7 @@ class HealthSamplesRequest extends FormRequest
             'heart_rate_dates' => ['nullable'],
             'energy_values' => ['nullable'],
             'energy_dates' => ['nullable'],
+            'heart_rate_end_dates' => ['nullable'],
         ];
     }
 
@@ -46,6 +47,10 @@ class HealthSamplesRequest extends FormRequest
                 $dates = $this->lines("{$kind}_dates");
                 if (count($values) !== count($dates)) {
                     $validator->errors()->add("{$kind}_dates", 'Debe haber una fecha por cada valor.');
+                }
+                $ends = $this->lines("{$kind}_end_dates");
+                if ($ends !== [] && count($ends) !== count($values)) {
+                    $validator->errors()->add("{$kind}_end_dates", 'Debe haber una fecha de fin por cada valor.');
                 }
                 if (count($values) > self::MAX_SAMPLES) {
                     $validator->errors()->add("{$kind}_values", 'Demasiadas muestras.');
@@ -71,21 +76,31 @@ class HealthSamplesRequest extends FormRequest
     {
         $values = $this->lines("{$kind}_values");
         $dates = $this->lines("{$kind}_dates");
+        $ends = $this->lines("{$kind}_end_dates");
         $samples = [];
         foreach ($values as $index => $raw) {
             $value = str_replace(',', '.', $raw);
             if (! is_numeric($value) || ! isset($dates[$index])) {
                 continue;
             }
-            try {
-                $at = Carbon::parse($dates[$index], config('app.user_timezone'))->utc();
-            } catch (Throwable) {
+            $at = $this->parseDate($dates[$index]);
+            if ($at === null) {
                 continue;
             }
-            $samples[] = new HealthSample($at, (float) $value);
+            $end = isset($ends[$index]) ? $this->parseDate($ends[$index]) : null;
+            $samples[] = new HealthSample($at, (float) $value, $end);
         }
 
         return $samples;
+    }
+
+    private function parseDate(string $value): ?Carbon
+    {
+        try {
+            return Carbon::parse($value, config('app.user_timezone'))->utc();
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     /** @return list<string> */

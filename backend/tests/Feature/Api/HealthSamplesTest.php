@@ -42,13 +42,12 @@ it('computes heart rate and calories inside each session window', function () {
         ->assertOk()
         ->assertJsonPath('data.0.id', $this->workout->id)
         ->assertJsonPath('data.0.avg_heart_rate', 144)
-        ->assertJsonPath('data.0.max_heart_rate', 162)
         ->assertJsonPath('data.0.active_calories', 351)
-        ->assertJsonPath('summary', '16/11: ♥ 144 ppm prom · 162 máx · 351 kcal');
+        ->assertJsonPath('summary', '16/11: ♥ 144 ppm prom · 351 kcal');
 
     $this->workout->refresh();
     expect($this->workout->avg_heart_rate)->toBe(144)
-        ->and($this->workout->max_heart_rate)->toBe(162)
+        ->and($this->workout->max_heart_rate)->toBeNull()
         ->and($this->workout->active_calories)->toBe(351)
         ->and($this->workout->health_synced_at)->not->toBeNull();
 });
@@ -100,4 +99,31 @@ it('reads dates without offset as Chilean local time', function () {
         'heart_rate_values' => "120\n80",
         'heart_rate_dates' => "2026-11-16T12:20:00\n2026-11-16T15:20:00",
     ])->assertOk()->assertJsonPath('data.0.avg_heart_rate', 120);
+});
+
+it('weights the average heart rate by how long each sample lasts', function () {
+    $this->workout->update(['max_heart_rate' => 170]);
+
+    // Bloque de 5 min a 100 lpm y una muestra de 5 s a 160 lpm: sin ponderar daría 130.
+    $this->withToken($this->token)->postJson('/api/health-sync/samples', [
+        'heart_rate_values' => "100\n160",
+        'heart_rate_dates' => "2026-11-16T12:20:00-03:00\n2026-11-16T13:01:00-03:00",
+        'heart_rate_end_dates' => "2026-11-16T12:25:00-03:00\n2026-11-16T13:01:05-03:00",
+    ])->assertOk()->assertJsonPath('data.0.avg_heart_rate', 101);
+
+    expect($this->workout->refresh()->max_heart_rate)->toBeNull();
+});
+
+it('only counts the part of a sample that falls inside the session', function () {
+    // El bloque empieza a las 13:00 y dura 10 min, pero la sesión termina 13:02: pesa 2 min.
+    $this->withToken($this->token)->postJson('/api/health-sync/samples', [
+        'heart_rate_values' => "100\n130",
+        'heart_rate_dates' => "2026-11-16T12:20:00-03:00\n2026-11-16T13:00:00-03:00",
+        'heart_rate_end_dates' => "2026-11-16T12:22:00-03:00\n2026-11-16T13:10:00-03:00",
+    ])->assertOk()->assertJsonPath('data.0.avg_heart_rate', 115);
+});
+
+it('rejects end dates that do not match the values', function () {
+    $this->withToken($this->token)->postJson('/api/health-sync/samples', samplesPayload(['heart_rate_end_dates' => '2026-11-16T12:25:00-03:00']))
+        ->assertUnprocessable()->assertJsonValidationErrors('heart_rate_end_dates');
 });

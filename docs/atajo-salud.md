@@ -1,8 +1,8 @@
 # Atajo "GymTracker Salud"
 
-Lleva la **FC promedio, FC máxima y kcal** que registró Apple Salud (AirPods con sensor de FC o Apple Watch) a cada sesión de GymTracker. Se arma **una sola vez**; después se comparte como enlace de iCloud y cualquiera lo instala desde **Mi cuenta → Atajo de Salud → Instalar Atajo**.
+Lleva la **FC promedio y las kcal** que registró Apple Salud (AirPods con sensor de FC o Apple Watch) a cada sesión de GymTracker. Se arma **una sola vez**; después se comparte como enlace de iCloud y cualquiera lo instala desde **Mi cuenta → Atajo de Salud → Instalar Atajo**.
 
-**Cómo funciona:** el Atajo busca en Salud la FC y la energía de los últimos 2 días y las envía tal cual (valores y fechas) a GymTracker. El **servidor** reparte cada muestra según el horario exacto de cada sesión terminada en las últimas 48 h, calcula promedio, máximo y suma, y responde un resumen que el Atajo muestra como notificación. Reenviar no duplica nada; una sesión sin muestras no se toca.
+**Cómo funciona:** el Atajo busca en Salud la FC y la energía de los últimos 2 días y las envía tal cual (valores y fechas) a GymTracker. El **servidor** reparte cada muestra según el horario exacto de cada sesión terminada en las últimas 48 h, calcula la FC promedio (ponderada por la duración de cada muestra) y la suma de kcal, y responde un resumen que el Atajo muestra como notificación. Reenviar no duplica nada; una sesión sin muestras no se toca.
 
 > Por qué el servidor filtra y no el Atajo: en Atajos, los filtros de fecha de "Buscar muestras de salud" comparan **por día**, no por hora, y "Obtener fechas de la entrada" interpreta mal las fechas ISO. Probado en el iPhone de Luciano (2026-11-17).
 
@@ -30,23 +30,26 @@ Regla de oro: todo lo que dice *variable* va como **burbuja** (barra sobre el te
 6. **Obtener detalles de muestras de salud** → **Fecha de inicio**, con la entrada apuntando a las *Muestras de salud* del paso 3 (mantener presionado → Seleccionar variable).
 7. **Dar formato a fecha** → Formato de fecha **ISO 8601**, con **Incluir hora ISO 8601** activado.
 8. **Combinar texto** *Fecha formateada* con **Nueva línea** → **Establecer variable** `FCFechas`.
+9. **Obtener detalles de muestras de salud** → **Fecha de finalización** (entrada: *Muestras de salud* del paso 3) → **Dar formato a fecha** ISO 8601 con hora → **Combinar texto** con **Nueva línea** → **Establecer variable** `FCFinales`.
+
+> La FC llega en bloques de ~5 min con el promedio del bloque: con la fecha de fin, el servidor pondera cada bloque por su duración (así cuadra con Fitness). Por lo mismo no hay FC máxima: el pico real no está disponible en Atajos.
 
 ### Energía
 
-9. **Buscar muestras de salud**: Tipo es **Energía de actividad**; últimos 2 días; **Unidad: kcal**; Límite apagado.
-10. Repite 4 a 8 sobre estas muestras → variables `EValores` y `EFechas`.
+10. **Buscar muestras de salud**: Tipo es **Energía de actividad**; últimos 2 días; **Unidad: kcal**; Límite apagado.
+11. Repite 4 a 8 sobre estas muestras → variables `EValores` y `EFechas`.
 
 ### Envío
 
-11. **Obtener contenido de URL**
+12. **Obtener contenido de URL**
     - URL: `https://d2vs4ifr98bzf3.cloudfront.net/api/health-sync/samples`
     - Método **POST**.
     - Encabezados: `Authorization` = `Bearer ` + *Token*; `Accept` = `application/json`.
-    - Cuerpo de la solicitud **JSON**, cuatro campos de tipo **Texto**: `heart_rate_values` = *FCValores*, `heart_rate_dates` = *FCFechas*, `energy_values` = *EValores*, `energy_dates` = *EFechas*.
-12. **Obtener valor del diccionario** `message` en *Contenido de URL* → **Si** *Valor del diccionario* tiene algún valor → **Mostrar notificación** `GymTracker: token inválido. Genera uno nuevo en Mi cuenta.` → **Detener este atajo** → **Terminar si**.
-13. **Obtener valor del diccionario** `summary` en *Contenido de URL* → **Mostrar notificación** *Valor del diccionario*.
+    - Cuerpo de la solicitud **JSON**, cinco campos de tipo **Texto**: `heart_rate_values` = *FCValores*, `heart_rate_dates` = *FCFechas*, `heart_rate_end_dates` = *FCFinales*, `energy_values` = *EValores*, `energy_dates` = *EFechas*.
+13. **Obtener valor del diccionario** `message` en *Contenido de URL* → **Si** *Valor del diccionario* tiene algún valor → **Mostrar notificación** `GymTracker: token inválido. Genera uno nuevo en Mi cuenta.` → **Detener este atajo** → **Terminar si**.
+14. **Obtener valor del diccionario** `summary` en *Contenido de URL* → **Mostrar notificación** *Valor del diccionario*.
 
-Resultado esperado: una notificación como `16/11: ♥ 128 ppm prom · 162 máx · 412 kcal`, o `Sin datos de Salud en tus sesiones de las últimas 48 h.`
+Resultado esperado: una notificación como `16/11: ♥ 107 ppm prom · 240 kcal`, o `Sin datos de Salud en tus sesiones de las últimas 48 h.`
 
 ## 2. Primera ejecución
 
@@ -76,5 +79,5 @@ iOS protege los datos de Salud con el iPhone **bloqueado**: si corre bloqueado n
 
 ## API
 
-- `POST /api/health-sync/samples` (token con habilidad `health:sync`): `heart_rate_values`, `heart_rate_dates`, `energy_values`, `energy_dates` — texto con una línea por muestra o arreglos JSON. Responde `{data: [{id, date, avg_heart_rate, max_heart_rate, active_calories}], summary}`.
+- `POST /api/health-sync/samples` (token con habilidad `health:sync`): `heart_rate_values`, `heart_rate_dates`, `heart_rate_end_dates` (opcional, para ponderar), `energy_values`, `energy_dates` — texto con una línea por muestra o arreglos JSON. Responde `{data: [{id, date, avg_heart_rate, max_heart_rate (siempre null), active_calories}], summary}`.
 - `GET /api/health-sync/workouts` y `PUT /api/health-sync/workouts/{id}`: variante anterior (el Atajo calcula); se mantienen por compatibilidad.

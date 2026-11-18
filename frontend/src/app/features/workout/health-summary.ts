@@ -3,7 +3,8 @@ import { WorkoutsApi } from '../../core/api/workouts-api';
 import { type HealthFields, hasHealth } from '../../core/health/health-format';
 
 /**
- * FC y kcal de una sesión terminada, tal como las dejó el Atajo de Salud.
+ * FC promedio y kcal de una sesión terminada, tal como las dejó el Atajo de Salud.
+ * (La FC máxima no se muestra: Atajos solo entrega promedios de bloques de ~5 min.)
  * Se piden siempre al servidor (no viven en la copia local) y se recargan al volver a la app.
  */
 @Component({
@@ -19,12 +20,6 @@ import { type HealthFields, hasHealth } from '../../core/health/health-format';
             <div>
               <dt class="text-xs text-muted-foreground">FC prom.</dt>
               <dd class="num text-2xl font-bold">{{ h.avg_heart_rate }}<span class="ml-1 text-sm font-semibold">ppm</span></dd>
-            </div>
-          }
-          @if (h.max_heart_rate !== null) {
-            <div>
-              <dt class="text-xs text-muted-foreground">FC máx.</dt>
-              <dd class="num text-2xl font-bold">{{ h.max_heart_rate }}<span class="ml-1 text-sm font-semibold">ppm</span></dd>
             </div>
           }
           @if (h.active_calories !== null) {

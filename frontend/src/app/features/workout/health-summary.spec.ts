@@ -20,11 +20,11 @@ async function render(...responses: object[]) {
 }
 
 describe('HealthSummary', () => {
-  it('shows heart rate and calories from the server', async () => {
+  it('shows average heart rate and calories, not the max', async () => {
     const { el, get } = await render({ avg_heart_rate: 128, max_heart_rate: 171, active_calories: 412 });
     expect(get).toHaveBeenCalledWith('w1');
     expect(el.textContent).toContain('128');
-    expect(el.textContent).toContain('171');
+    expect(el.textContent).not.toContain('171');
     expect(el.textContent).toContain('412');
   });
 

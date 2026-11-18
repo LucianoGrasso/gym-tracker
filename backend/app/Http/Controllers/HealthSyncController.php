@@ -55,13 +55,12 @@ class HealthSyncController extends Controller
         ]);
     }
 
-    /** "16/11: ♥ 144 ppm prom · 162 máx · 351 kcal" */
+    /** "16/11: ♥ 107 ppm prom · 240 kcal" */
     private function describe(Workout $workout): string
     {
         $parts = [];
         if ($workout->avg_heart_rate !== null) {
             $parts[] = "♥ {$workout->avg_heart_rate} ppm prom";
-            $parts[] = "{$workout->max_heart_rate} máx";
         }
         if ($workout->active_calories !== null) {
             $parts[] = "{$workout->active_calories} kcal";
