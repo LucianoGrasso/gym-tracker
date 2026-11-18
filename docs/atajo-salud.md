@@ -32,12 +32,12 @@ Regla de oro: todo lo que dice *variable* va como **burbuja** (barra sobre el te
 8. **Combinar texto** *Fecha formateada* con **Nueva línea** → **Establecer variable** `FCFechas`.
 9. **Obtener detalles de muestras de salud** → **Fecha de finalización** (entrada: *Muestras de salud* del paso 3) → **Dar formato a fecha** ISO 8601 con hora → **Combinar texto** con **Nueva línea** → **Establecer variable** `FCFinales`.
 
-> La FC llega en bloques de ~5 min con el promedio del bloque: con la fecha de fin, el servidor pondera cada bloque por su duración (así cuadra con Fitness). Por lo mismo no hay FC máxima: el pico real no está disponible en Atajos.
+> La FC llega en bloques de ~5 min con el promedio del bloque: con la fecha de fin, el servidor pondera cada bloque por los segundos que se superponen con la sesión y prorratea las kcal de los bloques que cruzan el inicio o el fin (así cuadra con Fitness aunque lo inicies antes que GymTracker). Por lo mismo no hay FC máxima: el pico real no está disponible en Atajos.
 
 ### Energía
 
 10. **Buscar muestras de salud**: Tipo es **Energía de actividad**; últimos 2 días; **Unidad: kcal**; Límite apagado.
-11. Repite 4 a 8 sobre estas muestras → variables `EValores` y `EFechas`.
+11. Repite 4 a 9 sobre estas muestras → variables `EValores`, `EFechas` y `EFinales`.
 
 ### Envío
 
@@ -45,7 +45,7 @@ Regla de oro: todo lo que dice *variable* va como **burbuja** (barra sobre el te
     - URL: `https://d2vs4ifr98bzf3.cloudfront.net/api/health-sync/samples`
     - Método **POST**.
     - Encabezados: `Authorization` = `Bearer ` + *Token*; `Accept` = `application/json`.
-    - Cuerpo de la solicitud **JSON**, cinco campos de tipo **Texto**: `heart_rate_values` = *FCValores*, `heart_rate_dates` = *FCFechas*, `heart_rate_end_dates` = *FCFinales*, `energy_values` = *EValores*, `energy_dates` = *EFechas*.
+    - Cuerpo de la solicitud **JSON**, seis campos de tipo **Texto**: `heart_rate_values` = *FCValores*, `heart_rate_dates` = *FCFechas*, `heart_rate_end_dates` = *FCFinales*, `energy_values` = *EValores*, `energy_dates` = *EFechas*, `energy_end_dates` = *EFinales*.
 13. **Obtener valor del diccionario** `message` en *Contenido de URL* → **Si** *Valor del diccionario* tiene algún valor → **Mostrar notificación** `GymTracker: token inválido. Genera uno nuevo en Mi cuenta.` → **Detener este atajo** → **Terminar si**.
 14. **Obtener valor del diccionario** `summary` en *Contenido de URL* → **Mostrar notificación** *Valor del diccionario*.
 
@@ -79,5 +79,5 @@ iOS protege los datos de Salud con el iPhone **bloqueado**: si corre bloqueado n
 
 ## API
 
-- `POST /api/health-sync/samples` (token con habilidad `health:sync`): `heart_rate_values`, `heart_rate_dates`, `heart_rate_end_dates` (opcional, para ponderar), `energy_values`, `energy_dates` — texto con una línea por muestra o arreglos JSON. Responde `{data: [{id, date, avg_heart_rate, max_heart_rate (siempre null), active_calories}], summary}`.
+- `POST /api/health-sync/samples` (token con habilidad `health:sync`): `heart_rate_values`, `heart_rate_dates`, `heart_rate_end_dates` (opcional, para ponderar), `energy_values`, `energy_dates`, `energy_end_dates` (opcional, para prorratear) — texto con una línea por muestra o arreglos JSON. Responde `{data: [{id, date, avg_heart_rate, max_heart_rate (siempre null), active_calories}], summary}`.
 - `GET /api/health-sync/workouts` y `PUT /api/health-sync/workouts/{id}`: variante anterior (el Atajo calcula); se mantienen por compatibilidad.

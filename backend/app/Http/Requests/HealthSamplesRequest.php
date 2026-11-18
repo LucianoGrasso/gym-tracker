@@ -33,6 +33,7 @@ class HealthSamplesRequest extends FormRequest
             'energy_values' => ['nullable'],
             'energy_dates' => ['nullable'],
             'heart_rate_end_dates' => ['nullable'],
+            'energy_end_dates' => ['nullable'],
         ];
     }
 

@@ -127,3 +127,21 @@ it('rejects end dates that do not match the values', function () {
     $this->withToken($this->token)->postJson('/api/health-sync/samples', samplesPayload(['heart_rate_end_dates' => '2026-11-16T12:25:00-03:00']))
         ->assertUnprocessable()->assertJsonValidationErrors('heart_rate_end_dates');
 });
+
+it('counts the overlapping part of samples that start before the session', function () {
+    // Sesión 12:14–13:02. Bloque 12:10–12:20 a 80 lpm pesa 6 min; bloque 12:20–12:26 a 110 pesa 6 min.
+    $this->withToken($this->token)->postJson('/api/health-sync/samples', [
+        'heart_rate_values' => "80\n110",
+        'heart_rate_dates' => "2026-11-16T12:10:00-03:00\n2026-11-16T12:20:00-03:00",
+        'heart_rate_end_dates' => "2026-11-16T12:20:00-03:00\n2026-11-16T12:26:00-03:00",
+    ])->assertOk()->assertJsonPath('data.0.avg_heart_rate', 95);
+});
+
+it('prorates calories by the overlapping part of each sample', function () {
+    // 100 kcal entre 12:04 y 12:24: 10 de sus 20 min caen en la sesión → 50; 30 kcal adentro → total 80.
+    $this->withToken($this->token)->postJson('/api/health-sync/samples', [
+        'energy_values' => "100\n30",
+        'energy_dates' => "2026-11-16T12:04:00-03:00\n2026-11-16T12:30:00-03:00",
+        'energy_end_dates' => "2026-11-16T12:24:00-03:00\n2026-11-16T12:35:00-03:00",
+    ])->assertOk()->assertJsonPath('data.0.active_calories', 80);
+});

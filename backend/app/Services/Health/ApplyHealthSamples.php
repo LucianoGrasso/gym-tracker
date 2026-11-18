@@ -7,7 +7,8 @@ use Illuminate\Support\Collection;
 
 /**
  * Cruza muestras crudas de Salud con el horario de cada sesión terminada en las últimas 48 h
- * y guarda FC promedio (ponderada por la duración de cada muestra dentro de la sesión) y kcal.
+ * y guarda FC promedio (ponderada por los segundos de cada muestra dentro de la sesión) y kcal
+ * (cada bloque aporta la fracción que se superpone). Así cuadra aunque Fitness parta antes.
  * La FC máxima no se calcula: Atajos solo expone promedios de bloques de ~5 min, no el pico real.
  * Una sesión sin muestras no se toca.
  */
@@ -36,9 +37,7 @@ class ApplyHealthSamples
             $workout->update([
                 'avg_heart_rate' => $beats === [] ? null : (int) round($this->weightedAverage($beats, $workout)),
                 'max_heart_rate' => null,
-                'active_calories' => $calories === []
-                    ? null
-                    : (int) round(array_sum(array_map(fn (HealthSample $sample) => $sample->value, $calories))),
+                'active_calories' => $calories === [] ? null : (int) round($this->proratedSum($calories, $workout)),
                 'health_synced_at' => now(),
             ]);
 
@@ -47,7 +46,7 @@ class ApplyHealthSamples
     }
 
     /**
-     * Cada muestra pesa los segundos que dura dentro de la sesión (mínimo 1); sin fin, pesa 1.
+     * Cada muestra pesa los segundos que se superpone con la sesión (mínimo 1).
      *
      * @param  non-empty-list<HealthSample>  $samples
      */
@@ -56,11 +55,7 @@ class ApplyHealthSamples
         $total = 0.0;
         $weights = 0.0;
         foreach ($samples as $sample) {
-            $weight = 1.0;
-            if ($sample->end !== null) {
-                $end = $sample->end->min($workout->finished_at);
-                $weight = max(1.0, $sample->at->diffInSeconds($end));
-            }
+            $weight = max(1.0, $this->overlapSeconds($sample, $workout) ?? 1.0);
             $total += $sample->value * $weight;
             $weights += $weight;
         }
@@ -69,14 +64,46 @@ class ApplyHealthSamples
     }
 
     /**
+     * Suma de kcal; un bloque que cruza el inicio o el fin aporta solo la fracción que cae dentro.
+     *
+     * @param  non-empty-list<HealthSample>  $samples
+     */
+    private function proratedSum(array $samples, Workout $workout): float
+    {
+        $total = 0.0;
+        foreach ($samples as $sample) {
+            $overlap = $this->overlapSeconds($sample, $workout);
+            $duration = $sample->end === null ? 0.0 : $sample->at->diffInSeconds($sample->end);
+            $total += $overlap === null || $duration <= 0 ? $sample->value : $sample->value * $overlap / $duration;
+        }
+
+        return $total;
+    }
+
+    /**
      * @param  list<HealthSample>  $samples
      * @return list<HealthSample>
      */
     private function within(array $samples, Workout $workout): array
     {
-        return array_values(array_filter(
-            $samples,
-            fn (HealthSample $sample) => $sample->at->between($workout->started_at, $workout->finished_at),
-        ));
+        return array_values(array_filter($samples, function (HealthSample $sample) use ($workout) {
+            $overlap = $this->overlapSeconds($sample, $workout);
+
+            return $overlap === null
+                ? $sample->at->between($workout->started_at, $workout->finished_at)
+                : $overlap > 0;
+        }));
+    }
+
+    /** Segundos de la muestra dentro de la sesión; null si la muestra es instantánea o no trae fin. */
+    private function overlapSeconds(HealthSample $sample, Workout $workout): ?float
+    {
+        if ($sample->end === null || $sample->end->lessThanOrEqualTo($sample->at)) {
+            return null;
+        }
+        $from = $sample->at->max($workout->started_at);
+        $to = $sample->end->min($workout->finished_at);
+
+        return $to->greaterThan($from) ? $from->diffInSeconds($to) : 0.0;
     }
 }
