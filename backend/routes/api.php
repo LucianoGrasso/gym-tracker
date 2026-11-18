@@ -28,6 +28,7 @@ Route::get('/health', HealthController::class);
 Route::middleware(['auth:sanctum', 'demo.active', 'abilities:health:sync'])->group(function () {
     Route::get('/health-sync/workouts', [HealthSyncController::class, 'index']);
     Route::put('/health-sync/workouts/{workout}', [HealthSyncController::class, 'update']);
+    Route::post('/health-sync/samples', [HealthSyncController::class, 'samples']);
 });
 
 Route::middleware(['auth:sanctum', 'demo.active', 'spa.only'])->group(function () {
