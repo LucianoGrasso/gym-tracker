@@ -264,10 +264,47 @@ body::before {
 .cdk-drag-animating {
   transition: transform 260ms cubic-bezier(0.2, 0, 0, 1);
 }
+/* Tablero semanal: todo lo de una fila ocupa la misma celda, así arrastrar no cambia alturas. */
+.board-slot > * {
+  grid-area: 1 / 1;
+}
+.board-slot > .cdk-drag-placeholder {
+  z-index: 1;
+}
+.board-preview {
+  rotate: -1.5deg;
+  @apply shadow-primary/20;
+}
+.board-rest {
+  @apply flex min-h-[4.125rem] items-center justify-center rounded-2xl border border-dashed border-border text-sm text-muted-foreground transition-colors duration-200;
+}
+.cdk-drop-list-receiving > .board-rest {
+  @apply border-primary/40;
+}
+.board-ghost {
+  @apply flex min-h-[4.125rem] items-center rounded-2xl px-4 font-medium text-primary;
+  animation: board-fade-in 160ms ease-out;
+}
+.board-note {
+  z-index: 2;
+  pointer-events: none;
+  @apply flex items-center justify-center text-sm font-semibold text-primary;
+  animation: board-fade-in 160ms ease-out;
+}
+@keyframes board-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder),
   .cdk-drag-animating {
     transition: none;
+  }
+  .board-ghost,
+  .board-note {
+    animation: none;
   }
 }
 

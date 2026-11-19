@@ -12,7 +12,7 @@ import type { RoutineDay } from '../../core/models/routine';
   imports: [CdkDragHandle, RouterLink, NgIcon, HlmButton],
   providers: [provideIcons({ lucideCopy, lucideGripVertical, lucideTrash2 })],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'card flex items-center gap-2 p-2' },
+  host: { class: 'card flex items-center gap-2 p-2 transition-opacity duration-200' },
   template: `
     <button
       cdkDragHandle

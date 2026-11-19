@@ -31,7 +31,8 @@ async function render() {
   await fixture.whenStable();
   const moved = vi.fn();
   fixture.componentInstance.moved.subscribe(moved);
-  return { board: fixture.componentInstance, el: fixture.nativeElement as HTMLElement, moved };
+  const refresh = () => fixture.detectChanges();
+  return { board: fixture.componentInstance, el: fixture.nativeElement as HTMLElement, moved, refresh };
 }
 
 describe('WeeklyBoard', () => {
@@ -66,5 +67,40 @@ describe('WeeklyBoard', () => {
     const { board, moved } = await render();
     board.drop(dropEvent(1, 1, 1));
     expect(moved).not.toHaveBeenCalled();
+  });
+
+  it('previews the dragged day on the rest day it hovers', async () => {
+    const { board, el, refresh } = await render();
+    board.startDrag(days[0]);
+    board.enter(3);
+    refresh();
+    expect(el.querySelector('[data-weekday="3"]')?.textContent).toContain('Pecho');
+    expect(el.querySelector('[data-weekday="3"]')?.textContent).not.toContain('Descanso');
+    expect(el.querySelector('[data-weekday="1"]')?.textContent).toContain('Descanso');
+  });
+
+  it('shows that the hovered day will swap places', async () => {
+    const { board, el, refresh } = await render();
+    board.startDrag(days[0]);
+    board.enter(4);
+    refresh();
+    expect(el.querySelector('[data-weekday="4"]')?.textContent).toContain('Pasa a lunes');
+    expect(el.querySelector('[data-weekday="1"]')?.textContent).toContain('Piernas');
+  });
+
+  it('goes back to normal when the drag ends', async () => {
+    const { board, el, refresh } = await render();
+    board.startDrag(days[0]);
+    board.enter(3);
+    board.endDrag();
+    refresh();
+    expect(el.querySelector('[data-weekday="3"]')?.textContent).toContain('Descanso');
+  });
+
+  it('pulses the days that moved after a drop', async () => {
+    const { board, el, refresh } = await render();
+    board.drop(dropEvent(1, 4, 1));
+    refresh();
+    expect(el.querySelectorAll('app-routine-day-card.routine-activated')).toHaveLength(2);
   });
 });
