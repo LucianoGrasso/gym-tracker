@@ -49,7 +49,7 @@ const LANDED_MS = 900;
               (cdkDropListDropped)="drop($event)"
               (cdkDropListEntered)="enter(w)"
               [attr.data-weekday]="w"
-              class="board-slot grid min-h-[4.125rem] min-w-0 flex-1"
+              class="board-slot grid min-h-[4.125rem] min-w-0 flex-1 grid-cols-[minmax(0,1fr)]"
             >
               @if (byWeekday().get(w); as day) {
                 <app-routine-day-card
