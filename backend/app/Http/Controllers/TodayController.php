@@ -8,20 +8,23 @@ use App\Models\Routine;
 use App\Models\RoutineDay;
 use App\Models\RoutineDayExercise;
 use App\Services\LastPerformanceService;
+use App\Services\TodaySuggestion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TodayController extends Controller
 {
-    public function __invoke(Request $request, LastPerformanceService $lastPerformance): JsonResponse
+    public function __invoke(Request $request, LastPerformanceService $lastPerformance, TodaySuggestion $suggestions): JsonResponse
     {
         $now = now(config('app.user_timezone'));
         $routine = Routine::query()->where('is_active', true)->with('days')->first();
         // ?day=ID: hacer hoy otro día de la rutina activa, sin cambiar la rutina.
         $requested = $request->integer('day') ?: null;
-        $day = $requested
-            ? ($routine?->days->firstWhere('id', $requested) ?? abort(404))
-            : $routine?->days->firstWhere('weekday', $now->dayOfWeekIso);
+        $result = $suggestions->for($routine, $now, $requested);
+        if ($requested && ! $result['day']) {
+            abort(404);
+        }
+        $day = $result['day'];
 
         return response()->json(['data' => [
             'date' => $now->toDateString(),
@@ -31,6 +34,9 @@ class TodayController extends Controller
             'days' => $routine
                 ? $routine->days->map(fn (RoutineDay $d) => ['id' => $d->id, 'name' => $d->name, 'weekday' => $d->weekday])->values()
                 : [],
+            'suggestion' => $result['suggestion'],
+            'replaced' => $result['replaced'],
+            'week' => $result['week'],
         ]]);
     }
 
