@@ -3,11 +3,13 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, resource, 
 import { Router, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
+  lucideCheck,
   lucideChevronRight,
   lucideHistory,
   lucideListChecks,
   lucideMoon,
   lucidePlay,
+  lucideTrophy,
 } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { TodayApi } from '../../core/api/today-api';
@@ -25,12 +27,13 @@ import { WorkoutSessionService } from '../../core/workout/workout-session.servic
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
 import { AccountMenu } from '../account/account-menu';
 import { HealthPromptCard } from './health-prompt-card';
+import { WeekStrip } from './week-strip';
 
 @Component({
   selector: 'app-today-page',
-  imports: [RouterLink, NgTemplateOutlet, NgIcon, HlmButton, AppSkeleton, AccountMenu, HealthPromptCard],
+  imports: [RouterLink, NgTemplateOutlet, NgIcon, HlmButton, AppSkeleton, AccountMenu, HealthPromptCard, WeekStrip],
   providers: [
-    provideIcons({ lucideChevronRight, lucideHistory, lucideListChecks, lucideMoon, lucidePlay }),
+    provideIcons({ lucideCheck, lucideChevronRight, lucideHistory, lucideListChecks, lucideMoon, lucidePlay, lucideTrophy }),
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -48,6 +51,9 @@ import { HealthPromptCard } from './health-prompt-card';
       </header>
 
       <app-health-prompt-card [today]="t.date" />
+      @if (t.routine) {
+        <app-week-strip [today]="t" />
+      }
 
       @if (!t.routine) {
         <section class="card p-5">
@@ -64,9 +70,12 @@ import { HealthPromptCard } from './health-prompt-card';
         @if (chosenDay()) {
           <a routerLink="/hoy" class="mb-3 inline-block text-sm text-muted-foreground">← Volver a lo de hoy</a>
         }
+        @if (!chosenDay() && t.suggestion === 'pending' && t.replaced; as replaced) {
+          <p class="mb-3 text-sm text-muted-foreground">{{ replaced.name }} ya lo hiciste el {{ weekdayOfDate(replaced.done_on) }}.</p>
+        }
         <section class="rounded-3xl bg-primary p-5 text-primary-foreground">
           <p class="text-xs font-semibold tracking-[0.1em] uppercase opacity-70">
-            {{ sessions.activeId() ? 'Entrenamiento en curso' : chosenDay() ? 'Elegiste para hoy' : 'Te toca hoy' }}
+            {{ heroLabel(t) }}
           </p>
           <h2 class="num mt-1 text-3xl leading-none font-bold uppercase">{{ day.name }}</h2>
 
@@ -129,7 +138,7 @@ import { HealthPromptCard } from './health-prompt-card';
           <ul class="flex flex-col gap-2">
             @for (d of t.days; track d.id) {
               @if (d.id !== day.id) {
-                <li><ng-container *ngTemplateOutlet="dayLink; context: { $implicit: d }" /></li>
+                <li><ng-container *ngTemplateOutlet="dayLink; context: { $implicit: d, done: isDone(t, d.id) }" /></li>
               }
             }
           </ul>
@@ -137,17 +146,22 @@ import { HealthPromptCard } from './health-prompt-card';
       } @else {
         <section class="card p-5">
           <span class="mb-3 flex size-11 items-center justify-center rounded-xl bg-primary/15 text-primary">
-            <ng-icon name="lucideMoon" size="22" aria-hidden="true" />
+            <ng-icon [name]="t.suggestion === 'week_done' ? 'lucideTrophy' : 'lucideMoon'" size="22" aria-hidden="true" />
           </span>
-          <h2 class="section-title text-2xl">Hoy es día de descanso</h2>
-          <p class="mt-1 text-sm text-muted-foreground">Recuperar también es entrenar. Si igual quieres moverte:</p>
+          @if (t.suggestion === 'week_done') {
+            <h2 class="section-title text-2xl">¡Semana completa!</h2>
+            <p class="mt-1 text-sm text-muted-foreground">Ya hiciste los {{ weekTotal(t) }} días de tu rutina. Si igual quieres moverte:</p>
+          } @else {
+            <h2 class="section-title text-2xl">Hoy es día de descanso</h2>
+            <p class="mt-1 text-sm text-muted-foreground">Recuperar también es entrenar. Si igual quieres moverte:</p>
+          }
           <ng-container *ngTemplateOutlet="freeOrContinue; context: { $implicit: t }" />
         </section>
 
         <h2 class="section-title mt-6 mb-3">Días de {{ t.routine.name }}</h2>
         <ul class="flex flex-col gap-2">
           @for (d of t.days; track d.id) {
-            <li><ng-container *ngTemplateOutlet="dayLink; context: { $implicit: d }" /></li>
+            <li><ng-container *ngTemplateOutlet="dayLink; context: { $implicit: d, done: isDone(t, d.id) }" /></li>
           }
         </ul>
       }
@@ -158,7 +172,7 @@ import { HealthPromptCard } from './health-prompt-card';
         <ng-icon name="lucideChevronRight" size="20" class="text-muted-foreground" />
       </a>
 
-      <ng-template #dayLink let-d>
+      <ng-template #dayLink let-d let-done="done">
         <a routerLink="/hoy" [queryParams]="{ dia: d.id }" class="card flex items-center gap-3 p-4">
           <div class="min-w-0 flex-1">
             @if (d.weekday) {
@@ -166,6 +180,11 @@ import { HealthPromptCard } from './health-prompt-card';
             }
             <span class="font-medium">{{ d.name }}</span>
           </div>
+          @if (done) {
+            <span class="flex items-center gap-1 text-sm font-semibold text-primary">
+              <ng-icon name="lucideCheck" size="16" aria-hidden="true" />Hecho
+            </span>
+          }
           <ng-icon name="lucideChevronRight" size="20" class="text-muted-foreground" />
         </a>
       </ng-template>
@@ -240,6 +259,26 @@ export class TodayPage {
     } finally {
       this.starting.set(false);
     }
+  }
+
+  protected heroLabel(t: Today): string {
+    if (this.sessions.activeId()) return 'Entrenamiento en curso';
+    if (this.chosenDay()) return 'Elegiste para hoy';
+    return t.suggestion === 'pending' ? 'Te falta esta semana' : 'Te toca hoy';
+  }
+
+  /** "2026-11-04" → "miércoles". */
+  protected weekdayOfDate(date: string): string {
+    const day = new Date(`${date}T12:00:00`).getDay(); // 0 = domingo
+    return WEEKDAY_LABELS[day === 0 ? 7 : day].toLowerCase();
+  }
+
+  protected weekTotal(t: Today): number {
+    return t.days.filter((d) => d.weekday !== null).length;
+  }
+
+  protected isDone(t: Today, dayId: number): boolean {
+    return t.week?.done_day_ids.includes(dayId) ?? false;
   }
 
   /** Series objetivo del día (los ejercicios sin objetivo no suman). */

@@ -39,10 +39,16 @@ export interface TodayExercise extends RoutineDayExercise {
   last_performance: ExerciseSession | null;
 }
 
+export type TodaySuggestion = 'planned' | 'chosen' | 'pending' | 'week_done';
+
 export interface Today {
   date: string;
   weekday: number;
   routine: Pick<Routine, 'id' | 'name'> | null;
   day: (Omit<RoutineDay, 'exercises'> & { exercises: TodayExercise[] }) | null;
   days: Pick<RoutineDay, 'id' | 'name' | 'weekday'>[];
+  /** Opcionales: un "Hoy" guardado en el dispositivo antes de la franja semanal no los trae. */
+  suggestion?: TodaySuggestion | null;
+  replaced?: (Pick<RoutineDay, 'id' | 'name' | 'weekday'> & { done_on: string }) | null;
+  week?: { start: string; done_day_ids: number[] };
 }

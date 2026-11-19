@@ -219,4 +219,44 @@ describe('TodayPage', () => {
     expect(el.querySelector('a[href="/hoy?dia=10"]')).not.toBeNull();
     expect(el.querySelector('a[href="/rutinas/1/dias/10"]')).toBeNull();
   });
+
+  it('shows the week with done and pending days', async () => {
+    const { el, text } = await render({ ...twoDays, weekday: 4, week: { start: '2026-11-02', done_day_ids: [10] } });
+    expect(el.querySelectorAll('app-week-strip [data-state="done"]')).toHaveLength(1);
+    expect(el.querySelectorAll('app-week-strip [data-state="pending"]')).toHaveLength(1);
+    expect(el.querySelectorAll('app-week-strip [data-state="rest"]')).toHaveLength(5);
+    expect(text).toContain('1 de 2 días esta semana');
+  });
+
+  it('suggests the day still pending this week', async () => {
+    const { text } = await render({
+      ...twoDays,
+      weekday: 4,
+      suggestion: 'pending',
+      replaced: { id: 11, name: 'Jueves – Piernas', weekday: 4, done_on: '2026-11-04' },
+      week: { start: '2026-11-02', done_day_ids: [11] },
+    });
+    expect(text).toContain('Te falta esta semana');
+    expect(text).toContain('Jueves – Piernas ya lo hiciste el miércoles.');
+    expect(text).not.toContain('Te toca hoy');
+  });
+
+  it('celebrates a complete week', async () => {
+    const { text } = await render({
+      ...twoDays,
+      weekday: 4,
+      day: null,
+      suggestion: 'week_done',
+      replaced: { id: 11, name: 'Jueves – Piernas', weekday: 4, done_on: '2026-11-04' },
+      week: { start: '2026-11-02', done_day_ids: [10, 11] },
+    });
+    expect(text).toContain('¡Semana completa!');
+    expect(text).toContain('Ya hiciste los 2 días de tu rutina');
+    expect(text).not.toContain('Hoy es día de descanso');
+  });
+
+  it('marks the days done this week in the list', async () => {
+    const { el } = await render({ ...twoDays, week: { start: '2026-11-02', done_day_ids: [11] } });
+    expect(el.querySelector('a[href="/hoy?dia=11"]')?.textContent).toContain('Hecho');
+  });
 });
