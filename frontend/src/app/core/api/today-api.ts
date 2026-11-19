@@ -7,7 +7,9 @@ import type { Today } from '../models/routine';
 export class TodayApi {
   private readonly http = inject(HttpClient);
 
-  async get(): Promise<Today> {
-    return (await firstValueFrom(this.http.get<{ data: Today }>('/api/today'))).data;
+  /** `day`: hacer hoy otro día de la rutina activa (sin cambiar la rutina). */
+  async get(day?: number): Promise<Today> {
+    const options = day ? { params: { day } } : {};
+    return (await firstValueFrom(this.http.get<{ data: Today }>('/api/today', options))).data;
   }
 }

@@ -68,19 +68,28 @@ const today: Today = {
   days: [{ id: 10, name: 'Lunes – Pecho (Bilbo)', weekday: 1 }],
 };
 
+const twoDays: Today = {
+  ...today,
+  days: [
+    { id: 10, name: 'Lunes – Pecho (Bilbo)', weekday: 1 },
+    { id: 11, name: 'Jueves – Piernas', weekday: 4 },
+  ],
+};
+
 @Component({ template: '' })
 class Blank {}
 
-async function render(data: Today, activeId: string | null = null) {
+async function render(data: Today, activeId: string | null = null, dia?: string) {
   const sessions = {
     activeId: signal(activeId),
     startFromDay: vi.fn().mockResolvedValue({ id: 'new-session' }),
     startFree: vi.fn().mockResolvedValue({ id: 'free-session' }),
   };
+  const api = { get: vi.fn(() => Promise.resolve(data)) };
   TestBed.configureTestingModule({
     providers: [
       provideRouter([{ path: 'entrenamiento/:id', component: Blank }]),
-      { provide: TodayApi, useValue: { get: () => Promise.resolve(data) } },
+      { provide: TodayApi, useValue: api },
       { provide: WorkoutSessionService, useValue: sessions },
       {
         provide: AuthService,
@@ -91,9 +100,10 @@ async function render(data: Today, activeId: string | null = null) {
     ],
   });
   const fixture = TestBed.createComponent(TodayPage);
+  if (dia) fixture.componentRef.setInput('dia', dia);
   await fixture.whenStable();
   const el = fixture.nativeElement as HTMLElement;
-  return { fixture, sessions, el, text: el.textContent as string };
+  return { fixture, sessions, api, el, text: el.textContent as string };
 }
 
 describe('TodayPage', () => {
@@ -180,5 +190,33 @@ describe('TodayPage', () => {
     });
     expect(text).toContain('1 tramo');
     expect(text).toContain('Última vez: Total: 35 min · 3,2 km · 12/11/2026');
+  });
+
+  it('offers the other days of the routine below the exercises', async () => {
+    const { el, text } = await render(twoDays);
+    expect(text).toContain('¿Otro día?');
+    expect(el.querySelector('a[href="/hoy?dia=11"]')?.textContent).toContain('Jueves – Piernas');
+    expect(el.querySelector('a[href="/hoy?dia=10"]')).toBeNull();
+  });
+
+  it('does not offer other days during a workout', async () => {
+    const { text } = await render(twoDays, 'abc');
+    expect(text).not.toContain('¿Otro día?');
+  });
+
+  it('loads the chosen day and offers to go back', async () => {
+    const chosen: Today = { ...twoDays, day: { ...twoDays.day!, id: 11, name: 'Jueves – Piernas', weekday: 4 } };
+    const { api, el, text } = await render(chosen, null, '11');
+    expect(api.get).toHaveBeenCalledWith(11);
+    expect(text).toContain('Elegiste para hoy');
+    expect(text).not.toContain('Te toca hoy');
+    expect(el.querySelector('a[href="/hoy"]')?.textContent).toContain('Volver a lo de hoy');
+    expect(el.querySelector('a[href="/hoy?dia=10"]')).not.toBeNull();
+  });
+
+  it('lets a rest day pick a day of the routine for today', async () => {
+    const { el } = await render({ ...twoDays, weekday: 3, date: '2026-11-04', day: null });
+    expect(el.querySelector('a[href="/hoy?dia=10"]')).not.toBeNull();
+    expect(el.querySelector('a[href="/rutinas/1/dias/10"]')).toBeNull();
   });
 });

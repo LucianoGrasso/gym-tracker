@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, resource, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
@@ -61,9 +61,12 @@ import { HealthPromptCard } from './health-prompt-card';
           <ng-container *ngTemplateOutlet="freeOrContinue; context: { $implicit: t }" />
         </section>
       } @else if (t.day; as day) {
+        @if (chosenDay()) {
+          <a routerLink="/hoy" class="mb-3 inline-block text-sm text-muted-foreground">← Volver a lo de hoy</a>
+        }
         <section class="rounded-3xl bg-primary p-5 text-primary-foreground">
           <p class="text-xs font-semibold tracking-[0.1em] uppercase opacity-70">
-            {{ sessions.activeId() ? 'Entrenamiento en curso' : 'Te toca hoy' }}
+            {{ sessions.activeId() ? 'Entrenamiento en curso' : chosenDay() ? 'Elegiste para hoy' : 'Te toca hoy' }}
           </p>
           <h2 class="num mt-1 text-3xl leading-none font-bold uppercase">{{ day.name }}</h2>
 
@@ -120,6 +123,17 @@ import { HealthPromptCard } from './health-prompt-card';
             <li class="text-muted-foreground">Este día no tiene ejercicios todavía.</li>
           }
         </ol>
+
+        @if (!sessions.activeId() && t.days.length > 1) {
+          <h2 class="section-title mt-6 mb-3">¿Otro día?</h2>
+          <ul class="flex flex-col gap-2">
+            @for (d of t.days; track d.id) {
+              @if (d.id !== day.id) {
+                <li><ng-container *ngTemplateOutlet="dayLink; context: { $implicit: d }" /></li>
+              }
+            }
+          </ul>
+        }
       } @else {
         <section class="card p-5">
           <span class="mb-3 flex size-11 items-center justify-center rounded-xl bg-primary/15 text-primary">
@@ -133,17 +147,7 @@ import { HealthPromptCard } from './health-prompt-card';
         <h2 class="section-title mt-6 mb-3">Días de {{ t.routine.name }}</h2>
         <ul class="flex flex-col gap-2">
           @for (d of t.days; track d.id) {
-            <li>
-              <a [routerLink]="['/rutinas', t.routine.id, 'dias', d.id]" class="card flex items-center gap-3 p-4">
-                <div class="min-w-0 flex-1">
-                  @if (d.weekday) {
-                    <span class="eyebrow block text-primary">{{ weekdayLabels[d.weekday] }}</span>
-                  }
-                  <span class="font-medium">{{ d.name }}</span>
-                </div>
-                <ng-icon name="lucideChevronRight" size="20" class="text-muted-foreground" />
-              </a>
-            </li>
+            <li><ng-container *ngTemplateOutlet="dayLink; context: { $implicit: d }" /></li>
           }
         </ul>
       }
@@ -153,6 +157,18 @@ import { HealthPromptCard } from './health-prompt-card';
         <span class="flex-1 font-medium">Ver entrenamientos anteriores</span>
         <ng-icon name="lucideChevronRight" size="20" class="text-muted-foreground" />
       </a>
+
+      <ng-template #dayLink let-d>
+        <a routerLink="/hoy" [queryParams]="{ dia: d.id }" class="card flex items-center gap-3 p-4">
+          <div class="min-w-0 flex-1">
+            @if (d.weekday) {
+              <span class="eyebrow block text-primary">{{ weekdayLabels[d.weekday] }}</span>
+            }
+            <span class="font-medium">{{ d.name }}</span>
+          </div>
+          <ng-icon name="lucideChevronRight" size="20" class="text-muted-foreground" />
+        </a>
+      </ng-template>
 
       <ng-template #freeOrContinue let-t>
         @if (sessions.activeId(); as activeId) {
@@ -164,6 +180,9 @@ import { HealthPromptCard } from './health-prompt-card';
     } @else if (today.error()) {
       <p class="text-destructive">No se pudo cargar el día de hoy.</p>
       <button hlmBtn variant="outline" class="mt-3 h-12 w-full" (click)="today.reload()">Reintentar</button>
+      @if (chosenDay()) {
+        <a routerLink="/hoy" class="mt-3 block text-center text-sm text-muted-foreground underline">Volver a lo de hoy</a>
+      }
     } @else {
       <app-skeleton />
     }
@@ -187,8 +206,21 @@ export class TodayPage {
   protected readonly salute = signal(greeting());
   protected readonly name = computed(() => firstName(this.auth.user()?.name ?? ''));
 
-  /** Con respaldo local: sin señal muestra el último "Hoy" descargado. */
-  protected readonly today = resource({ loader: () => cachedFetch(this.db, 'today', () => this.api.get()) });
+  /** `/hoy?dia=12`: hacer hoy otro día de la rutina activa. */
+  readonly dia = input<string>();
+  protected readonly chosenDay = computed(() => {
+    const id = Number(this.dia());
+    return Number.isInteger(id) && id > 0 ? id : null;
+  });
+
+  /** Con respaldo local: sin señal muestra el último "Hoy" (o día elegido) descargado. */
+  protected readonly today = resource({
+    params: () => ({ day: this.chosenDay() }),
+    loader: ({ params }) =>
+      params.day
+        ? cachedFetch(this.db, `today:day:${params.day}`, () => this.api.get(params.day!))
+        : cachedFetch(this.db, 'today', () => this.api.get()),
+  });
 
   protected async start(today: Today): Promise<void> {
     this.starting.set(true);
