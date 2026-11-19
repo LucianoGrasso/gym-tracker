@@ -67,3 +67,22 @@ it('returns nulls without an active routine of the user', function () {
         ->assertJsonPath('data.day', null)
         ->assertJsonPath('data.days', []);
 });
+
+it('returns another day of the active routine when asked for it', function () {
+    $this->travelTo(Carbon::parse('2026-11-04 15:00:00', 'UTC')); // miércoles, descanso
+
+    $this->getJson("/api/today?day={$this->monday->id}")
+        ->assertOk()
+        ->assertJsonPath('data.date', '2026-11-04')
+        ->assertJsonPath('data.weekday', 3)
+        ->assertJsonPath('data.day.name', 'Lunes – Pecho')
+        ->assertJsonPath('data.day.exercises.0.exercise.name', 'Press de banca')
+        ->assertJsonPath('data.day.exercises.0.last_performance', null);
+});
+
+it('returns 404 for a day outside the active routine', function () {
+    $inactive = Routine::factory()->for($this->user)->create(['is_active' => false]);
+    $day = RoutineDay::factory()->for($inactive)->create(['weekday' => 1]);
+
+    $this->getJson("/api/today?day={$day->id}")->assertNotFound();
+});

@@ -9,14 +9,19 @@ use App\Models\RoutineDay;
 use App\Models\RoutineDayExercise;
 use App\Services\LastPerformanceService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class TodayController extends Controller
 {
-    public function __invoke(LastPerformanceService $lastPerformance): JsonResponse
+    public function __invoke(Request $request, LastPerformanceService $lastPerformance): JsonResponse
     {
         $now = now(config('app.user_timezone'));
         $routine = Routine::query()->where('is_active', true)->with('days')->first();
-        $day = $routine?->days->firstWhere('weekday', $now->dayOfWeekIso);
+        // ?day=ID: hacer hoy otro día de la rutina activa, sin cambiar la rutina.
+        $requested = $request->integer('day') ?: null;
+        $day = $requested
+            ? ($routine?->days->firstWhere('id', $requested) ?? abort(404))
+            : $routine?->days->firstWhere('weekday', $now->dayOfWeekIso);
 
         return response()->json(['data' => [
             'date' => $now->toDateString(),
