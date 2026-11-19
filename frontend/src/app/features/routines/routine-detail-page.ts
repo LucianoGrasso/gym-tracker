@@ -1,16 +1,7 @@
-import {
-  CdkDrag,
-  CdkDragDrop,
-  CdkDragHandle,
-  CdkDropList,
-  moveItemInArray,
-} from '@angular/cdk/drag-drop';
 import { ConfirmService } from '../../shared/ui/confirm-dialog';
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideCopy, lucideGripVertical, lucideTrash2 } from '@ng-icons/lucide';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
@@ -20,6 +11,8 @@ import { RoutinesApi } from '../../core/api/routines-api';
 import { WEEKDAYS, WEEKDAY_LABELS } from '../../core/models/labels';
 import type { Routine, RoutineDay } from '../../core/models/routine';
 import { SELECT_CLASS } from '../../shared/ui/form-styles';
+import { toAssignments } from '../../core/routine/schedule';
+import { WeeklyBoard } from './weekly-board';
 
 import { AppSkeleton } from '../../shared/ui/app-skeleton';
 
@@ -28,17 +21,13 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
   imports: [
     ReactiveFormsModule,
     RouterLink,
-    CdkDropList,
-    CdkDrag,
-    CdkDragHandle,
-    NgIcon,
+    WeeklyBoard,
     HlmBadge,
     HlmButton,
     HlmInput,
     HlmLabel,
     AppSkeleton
   ],
-  providers: [provideIcons({ lucideGripVertical, lucideCopy, lucideTrash2 })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a routerLink="/rutinas" class="mb-4 inline-block text-sm text-muted-foreground">← Rutinas</a>
@@ -80,52 +69,12 @@ import { AppSkeleton } from '../../shared/ui/app-skeleton';
       }
 
       <h2 class="mb-2 section-title">Días</h2>
-      <ul
-        cdkDropList
-        cdkDropListLockAxis="y"
-        (cdkDropListDropped)="dropDay($event)"
-        class="mb-6 flex flex-col gap-2"
-      >
-        @for (day of r.days; track day.id) {
-          <li cdkDrag class="flex items-center gap-2 card p-2">
-            <button
-              cdkDragHandle
-              type="button"
-              class="flex size-12 shrink-0 cursor-grab items-center justify-center text-muted-foreground"
-              aria-label="Arrastrar para reordenar"
-            >
-              <ng-icon name="lucideGripVertical" size="20" />
-            </button>
-            <a [routerLink]="['/rutinas', r.id, 'dias', day.id]" class="min-w-0 flex-1 py-2">
-              <span class="block truncate font-medium">{{ day.name }}</span>
-              <span class="text-sm text-muted-foreground">
-                {{ day.weekday ? weekdayLabels[day.weekday] : 'Sin día fijo' }} ·
-                {{ day.exercises?.length ?? 0 }} ejercicios
-              </span>
-            </a>
-            <button
-              hlmBtn
-              variant="ghost"
-              size="icon-lg"
-              (click)="duplicate(day)"
-              aria-label="Duplicar día"
-            >
-              <ng-icon name="lucideCopy" />
-            </button>
-            <button
-              hlmBtn
-              variant="ghost"
-              size="icon-lg"
-              (click)="removeDay(day)"
-              aria-label="Eliminar día"
-            >
-              <ng-icon name="lucideTrash2" />
-            </button>
-          </li>
-        } @empty {
-          <li class="text-muted-foreground">Agrega el primer día de la rutina.</li>
-        }
-      </ul>
+      <app-weekly-board
+        [days]="r.days ?? []"
+        (moved)="schedule(r, $event)"
+        (duplicateDay)="duplicate($event)"
+        (removeDay)="removeDay($event)"
+      />
 
       <h2 class="mb-2 section-title">Agregar día</h2>
       <form
@@ -222,18 +171,10 @@ export class RoutineDetailPage implements OnInit {
     return this.run(() => this.api.activate(routine.id));
   }
 
-  async dropDay(event: CdkDragDrop<RoutineDay[]>): Promise<void> {
-    const routine = this.routine();
-    if (!routine?.days || event.previousIndex === event.currentIndex) return;
-    const days = [...routine.days];
-    moveItemInArray(days, event.previousIndex, event.currentIndex);
+  /** Optimista: el tablero cambia al tiro y se guarda en segundo plano (si falla, `run` recarga). */
+  async schedule(routine: Routine, days: RoutineDay[]): Promise<void> {
     this.routine.set({ ...routine, days });
-    await this.run(() =>
-      this.api.reorderDays(
-        routine.id,
-        days.map((d) => d.id),
-      ),
-    );
+    await this.run(() => this.api.schedule(routine.id, toAssignments(days)));
   }
 
   async addDay(routine: Routine): Promise<void> {
