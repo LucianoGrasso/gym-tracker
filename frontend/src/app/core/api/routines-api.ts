@@ -8,6 +8,7 @@ import type {
   RoutineDayExerciseInput,
   RoutineDayExerciseTargets,
 } from '../models/routine';
+import type { DayAssignment } from '../routine/schedule';
 
 interface Data<T> {
   data: T;
@@ -69,6 +70,10 @@ export class RoutinesApi {
 
   async reorderDays(routineId: number, ids: number[]): Promise<void> {
     await firstValueFrom(this.http.put(`/api/routines/${routineId}/days/reorder`, { ids }));
+  }
+
+  async schedule(routineId: number, days: DayAssignment[]): Promise<void> {
+    await firstValueFrom(this.http.put(`/api/routines/${routineId}/schedule`, { days }));
   }
 
   duplicateDay(dayId: number): Promise<RoutineDay> {
