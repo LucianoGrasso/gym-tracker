@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ReorderRequest;
 use App\Http\Requests\RoutineDayRequest;
+use App\Http\Requests\RoutineScheduleRequest;
 use App\Http\Resources\RoutineDayResource;
 use App\Models\Routine;
 use App\Models\RoutineDay;
@@ -41,6 +42,21 @@ class RoutineDayController extends Controller
     public function reorder(ReorderRequest $request, Routine $routine): Response
     {
         Reorder::apply($routine->days(), $request->validated('ids'));
+
+        return response()->noContent();
+    }
+
+    /** Reasigna día de la semana y posición de todos los días (tablero semanal). */
+    public function schedule(RoutineScheduleRequest $request, Routine $routine): Response
+    {
+        DB::transaction(function () use ($request, $routine) {
+            foreach ($request->validated('days') as $position => $day) {
+                $routine->days()->whereKey($day['id'])->update([
+                    'weekday' => $day['weekday'],
+                    'position' => $position,
+                ]);
+            }
+        });
 
         return response()->noContent();
     }

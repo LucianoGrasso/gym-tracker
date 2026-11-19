@@ -78,6 +78,7 @@ Route::middleware(['auth:sanctum', 'demo.active', 'spa.only'])->group(function (
         Route::post('/routines/{routine}/activate', [RoutineController::class, 'activate']);
         Route::post('/routines/{routine}/days', [RoutineDayController::class, 'store']);
         Route::put('/routines/{routine}/days/reorder', [RoutineDayController::class, 'reorder']);
+        Route::put('/routines/{routine}/schedule', [RoutineDayController::class, 'schedule']);
     });
     Route::middleware('can:manage,routineDay')->group(function () {
         Route::put('/routine-days/{routineDay}', [RoutineDayController::class, 'update']);
